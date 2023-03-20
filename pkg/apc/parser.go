@@ -4,7 +4,7 @@ import "errors"
 
 type Node interface{}
 
-// TODO: need some type of parser to indicate not to backtrack further
+// TODO: need some type of parser to indicate not to backtrack further (actually doesn't work like that yet)
 type Parser interface {
 	Parse(ctx Context) (Node, error)
 }
