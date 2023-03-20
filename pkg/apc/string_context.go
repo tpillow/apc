@@ -1,8 +1,11 @@
 package apc
 
+import "fmt"
+
 type StringContext struct {
-	data      []rune
-	curOrigin Origin
+	data        []rune
+	curOrigin   Origin
+	skipParsers map[Parser]bool
 }
 
 func NewStringContext(originName string, data string) *StringContext {
@@ -13,6 +16,7 @@ func NewStringContext(originName string, data string) *StringContext {
 			LineNum: 1,
 			ColNum:  1,
 		},
+		skipParsers: make(map[Parser]bool),
 	}
 }
 
@@ -41,4 +45,31 @@ func (ctx *StringContext) ConsumeRune() (rune, error) {
 
 func (ctx *StringContext) GetOrigin() Origin {
 	return ctx.curOrigin
+}
+
+func (ctx *StringContext) AddSkipParser(parser Parser) {
+	if _, has := ctx.skipParsers[parser]; has {
+		panic(fmt.Errorf("cannot add duplicate parser %v to skip", parser))
+	}
+	ctx.skipParsers[parser] = true
+}
+
+func (ctx *StringContext) RemoveSkipParser(parser Parser) {
+	if _, has := ctx.skipParsers[parser]; !has {
+		panic(fmt.Errorf("cannot remove un-added skip parser %v", parser))
+	}
+	delete(ctx.skipParsers, parser)
+}
+
+func (ctx *StringContext) ProcessSkips() {
+	skipped := true
+	for skipped {
+		skipped = false
+		for p := range ctx.skipParsers {
+			if _, err := p.Parse(ctx); err == nil {
+				skipped = true
+				break
+			}
+		}
+	}
 }

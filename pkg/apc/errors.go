@@ -2,6 +2,8 @@ package apc
 
 import "fmt"
 
+// TODO: better way to propagate parse errors vs. IO errors / etc.
+// TODO: better error messages for range/one/etc. combinators
 type ParseError struct {
 	Origin Origin
 	Err    error

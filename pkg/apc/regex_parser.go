@@ -23,6 +23,10 @@ func Regex(pattern string) *RegexParser {
 	}
 }
 
+func Whitespace() *RegexParser {
+	return Regex("\\s+")
+}
+
 func (p *RegexParser) Parse(ctx Context) (Node, error) {
 	peek, err := PeekNRunes(ctx, 0, regexPeekRuneBufferSize)
 	if !errors.Is(err, &EOFError{}) {

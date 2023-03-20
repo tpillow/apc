@@ -37,16 +37,16 @@ func OneOrMore(parser Parser) Parser {
 
 func (p *RangeParser) Parse(ctx Context) (Node, error) {
 	nodes := make([]Node, 0)
+	ctx.ProcessSkips()
 	for node, err := p.Parser.Parse(ctx); err == nil; {
 		nodes = append(nodes, node)
+		ctx.ProcessSkips()
 		node, err = p.Parser.Parse(ctx)
 	}
 	if p.Min >= 0 && len(nodes) < p.Min {
-		// TODO: better error
 		return nil, NewParseError(ctx.GetOrigin(), "expected at least %v but got %v", p.Min, len(nodes))
 	}
 	if p.Max >= 0 && len(nodes) > p.Max {
-		// TODO: better error
 		return nil, NewParseError(ctx.GetOrigin(), "expected at most %v but got %v", p.Max, len(nodes))
 	}
 	return nodes, nil

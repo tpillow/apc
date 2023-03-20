@@ -19,9 +19,16 @@ type OriginGetter interface {
 	GetOrigin() Origin
 }
 
+type ParserSkipper interface {
+	AddSkipParser(parser Parser)
+	RemoveSkipParser(parser Parser)
+	ProcessSkips()
+}
+
 type Context interface {
 	RunePeekerConsumer
 	OriginGetter
+	ParserSkipper
 }
 
 // Return value may be less the `len` runes long.
