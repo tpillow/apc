@@ -15,10 +15,11 @@ type Context interface {
 }
 
 type StringContext struct {
-	data        []rune
-	curOrigin   Origin
-	skipParsers []Parser[any]
-	skipping    bool
+	data                    []rune
+	curOrigin               Origin
+	skipParsers             []Parser[any]
+	skipping                bool
+	skippedSinceLastConsume bool
 }
 
 func NewStringContext(originName string, data []rune) *StringContext {
@@ -29,8 +30,9 @@ func NewStringContext(originName string, data []rune) *StringContext {
 			LineNum: 1,
 			ColNum:  1,
 		},
-		skipParsers: make([]Parser[any], 0),
-		skipping:    false,
+		skipParsers:             make([]Parser[any], 0),
+		skipping:                false,
+		skippedSinceLastConsume: false,
 	}
 }
 
@@ -50,6 +52,7 @@ func (ctx *StringContext) Peek(offset int, num int) (string, error) {
 
 func (ctx *StringContext) Consume(num int) (string, error) {
 	var sb strings.Builder
+	ctx.skippedSinceLastConsume = false
 
 	for i := 0; i < num; i++ {
 		if i < len(ctx.data) {
@@ -99,7 +102,7 @@ func (ctx *StringContext) RemoveSkipParser(parser Parser[any]) {
 }
 
 func (ctx *StringContext) RunSkipParsers() {
-	if ctx.skipping {
+	if ctx.skipping || ctx.skippedSinceLastConsume {
 		return
 	}
 
@@ -115,5 +118,6 @@ func (ctx *StringContext) RunSkipParsers() {
 			}
 		}
 	}
+	ctx.skippedSinceLastConsume = true
 	ctx.skipping = false
 }

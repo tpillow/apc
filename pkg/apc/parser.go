@@ -7,6 +7,8 @@ package apc
 // Should return a ParseError error if parsing failed, and no input was consumed.
 // Should return a ParseErrorConsumed error if parsing failed, but some input was consumed.
 // Any other error type may be returned, and is treated like ParseErrorConsumed.
+//
+// Any terminal parser (such as Exact or Regex) should call ctx.RunSkipParsers() first.
 type Parser[T any] func(ctx Context) (T, error)
 
 // ParseConfig contains settings that can be passed to the Parse function.
