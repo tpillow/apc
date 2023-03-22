@@ -15,7 +15,6 @@ func Seq[T any](name string, parsers ...Parser[T]) Parser[[]T] {
 	return func(ctx Context) ([]T, error) {
 		nodes := make([]T, 0)
 		for i, parser := range parsers {
-			ctx.RunSkipParsers()
 			node, err := parser(ctx)
 			if err != nil {
 				if !errors.Is(err, ErrParseErr) {
@@ -41,7 +40,6 @@ func Seq2[T1, T2 any](name string, parser1 Parser[T1], parser2 Parser[T2]) Parse
 	return func(ctx Context) (Seq2Node[T1, T2], error) {
 		result := Seq2Node[T1, T2]{}
 
-		ctx.RunSkipParsers()
 		node1, err := parser1(ctx)
 		if err != nil {
 			if !errors.Is(err, ErrParseErr) {
@@ -51,7 +49,6 @@ func Seq2[T1, T2 any](name string, parser1 Parser[T1], parser2 Parser[T2]) Parse
 		}
 		result.Result1 = node1
 
-		ctx.RunSkipParsers()
 		node2, err := parser2(ctx)
 		if err != nil {
 			if !errors.Is(err, ErrParseErr) {
@@ -77,7 +74,6 @@ func Seq3[T1, T2, T3 any](name string, parser1 Parser[T1], parser2 Parser[T2],
 	return func(ctx Context) (Seq3Node[T1, T2, T3], error) {
 		result := Seq3Node[T1, T2, T3]{}
 
-		ctx.RunSkipParsers()
 		node1, err := parser1(ctx)
 		if err != nil {
 			if !errors.Is(err, ErrParseErr) {
@@ -87,7 +83,6 @@ func Seq3[T1, T2, T3 any](name string, parser1 Parser[T1], parser2 Parser[T2],
 		}
 		result.Result1 = node1
 
-		ctx.RunSkipParsers()
 		node2, err := parser2(ctx)
 		if err != nil {
 			if !errors.Is(err, ErrParseErr) {
@@ -97,7 +92,6 @@ func Seq3[T1, T2, T3 any](name string, parser1 Parser[T1], parser2 Parser[T2],
 		}
 		result.Result2 = node2
 
-		ctx.RunSkipParsers()
 		node3, err := parser3(ctx)
 		if err != nil {
 			if !errors.Is(err, ErrParseErr) {
@@ -124,7 +118,6 @@ func Seq4[T1, T2, T3, T4 any](name string, parser1 Parser[T1], parser2 Parser[T2
 	return func(ctx Context) (Seq4Node[T1, T2, T3, T4], error) {
 		result := Seq4Node[T1, T2, T3, T4]{}
 
-		ctx.RunSkipParsers()
 		node1, err := parser1(ctx)
 		if err != nil {
 			if !errors.Is(err, ErrParseErr) {
@@ -134,7 +127,6 @@ func Seq4[T1, T2, T3, T4 any](name string, parser1 Parser[T1], parser2 Parser[T2
 		}
 		result.Result1 = node1
 
-		ctx.RunSkipParsers()
 		node2, err := parser2(ctx)
 		if err != nil {
 			if !errors.Is(err, ErrParseErr) {
@@ -144,7 +136,6 @@ func Seq4[T1, T2, T3, T4 any](name string, parser1 Parser[T1], parser2 Parser[T2
 		}
 		result.Result2 = node2
 
-		ctx.RunSkipParsers()
 		node3, err := parser3(ctx)
 		if err != nil {
 			if !errors.Is(err, ErrParseErr) {
@@ -154,7 +145,6 @@ func Seq4[T1, T2, T3, T4 any](name string, parser1 Parser[T1], parser2 Parser[T2
 		}
 		result.Result3 = node3
 
-		ctx.RunSkipParsers()
 		node4, err := parser4(ctx)
 		if err != nil {
 			if !errors.Is(err, ErrParseErr) {
@@ -182,7 +172,6 @@ func Seq5[T1, T2, T3, T4, T5 any](name string, parser1 Parser[T1], parser2 Parse
 	return func(ctx Context) (Seq5Node[T1, T2, T3, T4, T5], error) {
 		result := Seq5Node[T1, T2, T3, T4, T5]{}
 
-		ctx.RunSkipParsers()
 		node1, err := parser1(ctx)
 		if err != nil {
 			if !errors.Is(err, ErrParseErr) {
@@ -192,7 +181,6 @@ func Seq5[T1, T2, T3, T4, T5 any](name string, parser1 Parser[T1], parser2 Parse
 		}
 		result.Result1 = node1
 
-		ctx.RunSkipParsers()
 		node2, err := parser2(ctx)
 		if err != nil {
 			if !errors.Is(err, ErrParseErr) {
@@ -202,7 +190,6 @@ func Seq5[T1, T2, T3, T4, T5 any](name string, parser1 Parser[T1], parser2 Parse
 		}
 		result.Result2 = node2
 
-		ctx.RunSkipParsers()
 		node3, err := parser3(ctx)
 		if err != nil {
 			if !errors.Is(err, ErrParseErr) {
@@ -212,7 +199,6 @@ func Seq5[T1, T2, T3, T4, T5 any](name string, parser1 Parser[T1], parser2 Parse
 		}
 		result.Result3 = node3
 
-		ctx.RunSkipParsers()
 		node4, err := parser4(ctx)
 		if err != nil {
 			if !errors.Is(err, ErrParseErr) {
@@ -222,7 +208,6 @@ func Seq5[T1, T2, T3, T4, T5 any](name string, parser1 Parser[T1], parser2 Parse
 		}
 		result.Result4 = node4
 
-		ctx.RunSkipParsers()
 		node5, err := parser5(ctx)
 		if err != nil {
 			if !errors.Is(err, ErrParseErr) {

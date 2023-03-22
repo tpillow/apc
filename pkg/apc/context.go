@@ -18,6 +18,7 @@ type StringContext struct {
 	data        []rune
 	curOrigin   Origin
 	skipParsers []Parser[any]
+	skipping    bool
 }
 
 func NewStringContext(originName string, data []rune) *StringContext {
@@ -29,6 +30,7 @@ func NewStringContext(originName string, data []rune) *StringContext {
 			ColNum:  1,
 		},
 		skipParsers: make([]Parser[any], 0),
+		skipping:    false,
 	}
 }
 
@@ -97,6 +99,11 @@ func (ctx *StringContext) RemoveSkipParser(parser Parser[any]) {
 }
 
 func (ctx *StringContext) RunSkipParsers() {
+	if ctx.skipping {
+		return
+	}
+
+	ctx.skipping = true
 	skip := true
 	for skip {
 		skip = false
@@ -108,4 +115,5 @@ func (ctx *StringContext) RunSkipParsers() {
 			}
 		}
 	}
+	ctx.skipping = false
 }

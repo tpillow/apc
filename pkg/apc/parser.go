@@ -17,7 +17,6 @@ type ParseConfig struct {
 
 // Executes the provided parser using the given context, first applying the parseConfig.
 func Parse[T any](ctx Context, parser Parser[T], parseConfig ParseConfig) (T, error) {
-	ctx.RunSkipParsers()
 	node, err := parser(ctx)
 	if err != nil {
 		return zeroVal[T](), err

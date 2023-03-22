@@ -15,6 +15,8 @@ func Regex(name string, pattern string) Parser[string] {
 	regex := regexp.MustCompile(pattern)
 
 	return func(ctx Context) (string, error) {
+		ctx.RunSkipParsers()
+
 		val, err := ctx.Peek(0, regexPeekBufferSize)
 		if err != nil && !errors.Is(err, ErrEOF) {
 			return "", err

@@ -8,8 +8,6 @@ func Any[T any](name string, parsers ...Parser[T]) Parser[T] {
 	}
 
 	return func(ctx Context) (T, error) {
-		ctx.RunSkipParsers()
-
 		for _, parser := range parsers {
 			node, err := parser(ctx)
 			if err == nil {

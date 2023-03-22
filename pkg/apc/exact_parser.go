@@ -6,6 +6,8 @@ import (
 
 func Exact(value string) Parser[string] {
 	return func(ctx Context) (string, error) {
+		ctx.RunSkipParsers()
+
 		val, err := ctx.Peek(0, len(value))
 		if err != nil && !errors.Is(err, ErrEOF) {
 			return "", err

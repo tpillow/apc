@@ -2,11 +2,11 @@ package apc
 
 import "fmt"
 
-var ErrEOF = &EOFError{}
-
-var ErrParseErr = &ParseError{}
-
-var ErrParseErrConsumed = &ParseErrorConsumed{}
+var (
+	ErrEOF              = &EOFError{}
+	ErrParseErr         = &ParseError{}
+	ErrParseErrConsumed = &ParseErrorConsumed{}
+)
 
 type EOFError struct{}
 

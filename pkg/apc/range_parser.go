@@ -9,11 +9,9 @@ func Range[T any](name string, min int, max int, parser Parser[T]) Parser[[]T] {
 	return func(ctx Context) ([]T, error) {
 		nodes := make([]T, 0)
 
-		ctx.RunSkipParsers()
 		node, err := parser(ctx)
 		for err == nil {
 			nodes = append(nodes, node)
-			ctx.RunSkipParsers()
 			node, err = parser(ctx)
 		}
 		if !errors.Is(err, ErrParseErr) {
