@@ -50,13 +50,13 @@ func Maybe[T any](name string, parser Parser[T]) Parser[T] {
 
 func OneOrMoreSeparated[T, U any](name string, parser Parser[T], sepParser Parser[U]) Parser[[]T] {
 	sepParse := Map(
-		Seq2("", sepParser, parser),
+		Seq2(name, sepParser, parser),
 		func(node Seq2Node[U, T]) T {
 			return node.Result2
 		})
 
 	return Map(
-		Seq2("", parser, ZeroOrMore("", sepParse)),
+		Seq2(name, parser, ZeroOrMore("", sepParse)),
 		func(node Seq2Node[T, []T]) []T {
 			result := []T{node.Result1}
 			return append(result, node.Result2...)

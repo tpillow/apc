@@ -3,8 +3,11 @@ package apc
 import "fmt"
 
 var (
-	ErrEOF              = &EOFError{}
-	ErrParseErr         = &ParseError{}
+	// Instance of EOFError to compare.
+	ErrEOF = &EOFError{}
+	// Instance of ParseError to compare.
+	ErrParseErr = &ParseError{}
+	// Instance of ParseErrorConsumed to compare.
 	ErrParseErrConsumed = &ParseErrorConsumed{}
 )
 

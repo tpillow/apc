@@ -2,11 +2,6 @@ package apc
 
 import "errors"
 
-type SeqParser[T any] struct {
-	Name    string
-	Parsers []Parser[T]
-}
-
 func Seq[T any](name string, parsers ...Parser[T]) Parser[[]T] {
 	if len(parsers) < 2 {
 		panic("must provide at least 2 parsers to Seq")

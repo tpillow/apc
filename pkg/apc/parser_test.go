@@ -43,7 +43,7 @@ func TestAnyParser(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, []rune("###hi##"))
 	p1 := Regex("", "#+")
 	p2 := Exact("hi")
-	p := Any("", p1, p2)
+	p := OneOf("", p1, p2)
 
 	node, err := p(ctx)
 	assert.NoError(t, err)

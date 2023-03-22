@@ -2,9 +2,9 @@ package apc
 
 import "errors"
 
-func Any[T any](name string, parsers ...Parser[T]) Parser[T] {
+func OneOf[T any](name string, parsers ...Parser[T]) Parser[T] {
 	if len(parsers) < 2 {
-		panic("must provide at least 2 parsers to Any")
+		panic("must provide at least 2 parsers to OneOf")
 	}
 
 	return func(ctx Context) (T, error) {

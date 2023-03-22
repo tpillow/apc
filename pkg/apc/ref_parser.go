@@ -4,7 +4,7 @@ package apc
 //
 // Useful for avoiding circular variable dependencies. For example:
 //
-//	var value = Any("", MapToAny(Exact("hello")), MapToAny(hashValue))
+//	var value = OneOf("", MapToAny(Exact("hello")), MapToAny(hashValue))
 //	var hashValue = Seq("", MapToAny(Exact("#")), value)
 //
 // Is invalid, however this can be remedied by:
@@ -14,7 +14,7 @@ package apc
 //	var hashValue = Seq("", MapToAny(Exact("#")), valueRef)
 //
 //	// At runtime, in some initialization function:
-//	value = Any("", MapToAny(Exact("hello")), MapToAny(hashValue))
+//	value = OneOf("", MapToAny(Exact("hello")), MapToAny(hashValue))
 func Ref[T any](parserPtr *Parser[T]) Parser[T] {
 	return func(ctx Context) (T, error) {
 		parser := *parserPtr
