@@ -61,7 +61,7 @@ func main() {
 }
 
 type PairNode struct {
-	Key   any
+	Key   string
 	Value any
 }
 
