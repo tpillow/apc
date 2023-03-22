@@ -172,3 +172,72 @@ func Seq4[T1, T2, T3, T4 any](name string, parser1 Parser[T1], parser2 Parser[T2
 		return result, nil
 	}
 }
+
+type Seq5Node[T1, T2, T3, T4, T5 any] struct {
+	Result1 T1
+	Result2 T2
+	Result3 T3
+	Result4 T4
+	Result5 T5
+}
+
+func Seq5[T1, T2, T3, T4, T5 any](name string, parser1 Parser[T1], parser2 Parser[T2],
+	parser3 Parser[T3], parser4 Parser[T4], parser5 Parser[T5]) Parser[Seq5Node[T1, T2, T3, T4, T5]] {
+
+	return func(ctx Context) (Seq5Node[T1, T2, T3, T4, T5], error) {
+		debugRunning(name)
+		result := Seq5Node[T1, T2, T3, T4, T5]{}
+
+		ctx.RunSkipParsers()
+		node1, err := parser1(ctx)
+		if err != nil {
+			if !errors.Is(err, ErrParseErr) {
+				return result, err
+			}
+			return result, ParseErrExpectedButGotNext(ctx, name, err)
+		}
+		result.Result1 = node1
+
+		ctx.RunSkipParsers()
+		node2, err := parser2(ctx)
+		if err != nil {
+			if !errors.Is(err, ErrParseErr) {
+				return result, err
+			}
+			return result, ParseErrConsumedExpectedButGotNext(ctx, name, err)
+		}
+		result.Result2 = node2
+
+		ctx.RunSkipParsers()
+		node3, err := parser3(ctx)
+		if err != nil {
+			if !errors.Is(err, ErrParseErr) {
+				return result, err
+			}
+			return result, ParseErrConsumedExpectedButGotNext(ctx, name, err)
+		}
+		result.Result3 = node3
+
+		ctx.RunSkipParsers()
+		node4, err := parser4(ctx)
+		if err != nil {
+			if !errors.Is(err, ErrParseErr) {
+				return result, err
+			}
+			return result, ParseErrConsumedExpectedButGotNext(ctx, name, err)
+		}
+		result.Result4 = node4
+
+		ctx.RunSkipParsers()
+		node5, err := parser5(ctx)
+		if err != nil {
+			if !errors.Is(err, ErrParseErr) {
+				return result, err
+			}
+			return result, ParseErrConsumedExpectedButGotNext(ctx, name, err)
+		}
+		result.Result5 = node5
+
+		return result, nil
+	}
+}

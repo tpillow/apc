@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/tpillow/apc/pkg/apc"
@@ -14,10 +13,8 @@ var (
 	valueParser    apc.Parser[any]
 	valueParserRef = apc.Ref(&valueParser)
 
-	strParser = apc.Regex("quoted string", `".*?"`) // TODO: escaped chars
-
 	pairParser = apc.Map(
-		apc.Seq3("pair", strParser, apc.Exact(":"), valueParserRef),
+		apc.Seq3("pair", apc.DoubleQuotedStringParser, apc.Exact(":"), valueParserRef),
 		func(node apc.Seq3Node[string, string, any]) PairNode {
 			return PairNode{
 				Key:   node.Result1,
@@ -46,23 +43,14 @@ var (
 
 func main() {
 	valueParser = apc.Any("value",
-		apc.MapToAny(strParser),
-		apc.Map(
-			apc.Regex("number", "\\d+(\\.\\d+)?"),
-			func(node string) any {
-				val, err := strconv.ParseFloat(node, 64)
-				if err != nil {
-					panic(err)
-				}
-				return any(val)
-			}),
-		apc.MapToAny(apc.Bind(apc.Exact("true"), true)),
-		apc.MapToAny(apc.Bind(apc.Exact("false"), false)),
+		apc.MapToAny(apc.DoubleQuotedStringParser),
+		apc.MapToAny(apc.FloatParser),
+		apc.MapToAny(apc.BoolParser),
 		apc.MapToAny(apc.Bind[string, any](apc.Exact("null"), nil)),
 		apc.MapToAny(objParser),
 		apc.MapToAny(arrayParser))
 
-	input := ` { "name" : "Tom" , "age" : 55 , "weight":23.35,"hobbies" : [ "sports" , "stuff" , 55 ] } `
+	input := ` { "name" : "Tom" , "age" : 55 , "weight":23.35,"hobbies" : [ "sports" , "stuff" , -55, +3.4 ] } `
 	ctx := apc.NewStringContext("<string>", []rune(input))
 	ctx.AddSkipParser(apc.MapToAny(apc.WhitespaceParser))
 

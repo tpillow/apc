@@ -8,8 +8,6 @@ import (
 
 const regexPeekBufferSize = 1024 // TODO: better way (can make RuneReader wrapped around Peek)
 
-var WhitespaceParser = Regex("whitespace", "\\s+")
-
 func Regex(name string, pattern string) Parser[string] {
 	if pattern[0] != '^' {
 		pattern = fmt.Sprintf("^%v", pattern)

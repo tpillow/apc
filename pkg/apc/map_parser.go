@@ -34,9 +34,3 @@ func MapToAny[T any](parser Parser[T]) Parser[any] {
 		return node
 	})
 }
-
-func MapTo1ElementList[T any](parser Parser[T]) Parser[[]T] {
-	return Map(parser, func(node T) []T {
-		return []T{node}
-	})
-}
