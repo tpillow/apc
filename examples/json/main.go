@@ -7,8 +7,6 @@ import (
 	"github.com/tpillow/apc/pkg/apc"
 )
 
-type Node interface{}
-
 var (
 	valueParser    apc.Parser[any]
 	valueParserRef = apc.Ref(&valueParser)
