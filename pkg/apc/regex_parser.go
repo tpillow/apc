@@ -6,8 +6,6 @@ import (
 	"regexp"
 )
 
-const regexPeekBufferSize = 1024 // TODO: better way (can make RuneReader wrapped around Peek)
-
 func Regex(name string, pattern string) Parser[string] {
 	if pattern[0] != '^' {
 		pattern = fmt.Sprintf("^%v", pattern)
@@ -17,19 +15,16 @@ func Regex(name string, pattern string) Parser[string] {
 	return func(ctx Context) (string, error) {
 		ctx.RunSkipParsers()
 
-		val, err := ctx.Peek(0, regexPeekBufferSize)
-		if err != nil && !errors.Is(err, ErrEOF) {
-			return "", err
-		}
-		loc := regex.FindStringIndex(val)
+		reader := &ContextPeekingRuneReader{Context: ctx}
+		loc := regex.FindReaderIndex(reader)
 		if loc == nil {
 			return "", ParseErrExpectedButGotNext(ctx, name, nil)
 		}
 		if loc[0] != 0 {
 			panic("regex should always be normalized to match at start of line")
 		}
-		matchVal := val[:loc[1]]
-		_, err = ctx.Consume(len(matchVal))
+
+		matchVal, err := ctx.Consume(loc[1])
 		if err != nil && !errors.Is(err, ErrEOF) {
 			return "", err
 		}
