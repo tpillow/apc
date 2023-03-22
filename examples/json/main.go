@@ -48,12 +48,12 @@ func main() {
 		apc.MapToAny(objParser),
 		apc.MapToAny(arrayParser))
 
-	input := ` { "name" : "Tom" , "age" : 55 , "weight":23.35,"hobbies" : [ "sports" , "stuff" , -55, +3.4 ] } `
+	input := ` { "name" : "Tom" , "age" : 55 , "weight":23.35,"hobbies" : [ "sports" , "stuff" , -55, +3.4, [], {} ] } `
 	ctx := apc.NewStringContext("<string>", input)
 	ctx.AddSkipParser(apc.MapToAny(apc.WhitespaceParser))
 
 	fmt.Printf("Input: %v\n", input)
-	node, err := apc.Parse(ctx, valueParser, apc.ParseConfig{MustParseToEOF: true})
+	node, err := apc.Parse(ctx, valueParser, apc.DefaultParseConfig)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 	}

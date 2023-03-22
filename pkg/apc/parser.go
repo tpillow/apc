@@ -1,5 +1,12 @@
 // Package apc provides a minimalist parser combinator library.
+//
+// Backtracking once input is consumed is not currently supported.
 package apc
+
+// A sane default for ParseConfig.
+var DefaultParseConfig = ParseConfig{
+	MustParseToEOF: true,
+}
 
 // Parser[T] represents a parser that takes a Context and returns a result of type T or an error.
 //
@@ -8,7 +15,7 @@ package apc
 // Should return a ParseErrorConsumed error if parsing failed, but some input was consumed.
 // Any other error type may be returned, and is treated like ParseErrorConsumed.
 //
-// Any terminal parser (such as Exact or Regex) should call ctx.RunSkipParsers() first.
+// Any terminal parser (such as Exact or Regex) should call ctx.RunSkipParsers first.
 type Parser[T any] func(ctx Context) (T, error)
 
 // ParseConfig contains settings that can be passed to the Parse function.
@@ -25,7 +32,11 @@ func Parse[T any](ctx Context, parser Parser[T], parseConfig ParseConfig) (T, er
 	}
 
 	if parseConfig.MustParseToEOF {
-		ctx.RunSkipParsers()
+		err := ctx.RunSkipParsers()
+		if err != nil {
+			return zeroVal[T](), err
+		}
+
 		if _, err := ctx.Peek(0, 1); err == nil {
 			return zeroVal[T](), ParseErrExpectedButGotNext(ctx, "EOF", nil)
 		}

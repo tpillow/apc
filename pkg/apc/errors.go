@@ -11,12 +11,25 @@ var (
 	ErrParseErrConsumed = &ParseErrorConsumed{}
 )
 
+func IsMustReturnParseErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	if _, ok := err.(*ParseError); ok {
+		return false
+	}
+	return true
+}
+
+// EOFError represents that the end of a file or input has been reached.
 type EOFError struct{}
 
+// The error string.
 func (err *EOFError) Error() string {
 	return "EOF"
 }
 
+// Returns true if target is also an EOFError.
 func (err *EOFError) Is(target error) bool {
 	if _, ok := target.(*EOFError); ok {
 		return true
@@ -24,12 +37,18 @@ func (err *EOFError) Is(target error) bool {
 	return false
 }
 
+// ParseError represents a parser that could not match input and has
+// NOT consumed any input.
 type ParseError struct {
-	Err     error
+	// The optional error to wrap.
+	Err error
+	// The error message.
 	Message string
-	Origin  Origin
+	// The Origin of the error.
+	Origin Origin
 }
 
+// Returns a ParseError with an error message in the format of "expected but got".
 func ParseErrExpectedButGot(ctx Context, expected interface{}, got interface{}, wrapErr error) *ParseError {
 	return &ParseError{
 		Err:     wrapErr,
@@ -38,6 +57,8 @@ func ParseErrExpectedButGot(ctx Context, expected interface{}, got interface{}, 
 	}
 }
 
+// Returns a ParseError with an error message in the format of "expected but got" where
+// got is the next N input runes (truncated).
 func ParseErrExpectedButGotNext(ctx Context, expected interface{}, wrapErr error) *ParseError {
 	got, _ := ctx.Peek(0, 16) // Note: no error handle here
 	if len(got) >= 16 {
@@ -46,6 +67,7 @@ func ParseErrExpectedButGotNext(ctx Context, expected interface{}, wrapErr error
 	return ParseErrExpectedButGot(ctx, expected, got, wrapErr)
 }
 
+// The error string.
 func (err *ParseError) Error() string {
 	if err.Err == nil {
 		return fmt.Sprintf("Parse Error at %v: %v", err.Origin, err.Message)
@@ -53,10 +75,12 @@ func (err *ParseError) Error() string {
 	return fmt.Sprintf("Parse Error at %v: %v\n%v", err.Origin, err.Message, err.Err)
 }
 
+// Unwraps this error.
 func (err *ParseError) Unwrap() error {
 	return err.Err
 }
 
+// Returns true if target is also a ParseError.
 func (err *ParseError) Is(target error) bool {
 	if _, ok := target.(*ParseError); ok {
 		return true
@@ -64,10 +88,15 @@ func (err *ParseError) Is(target error) bool {
 	return false
 }
 
+// ParseErrorConsumed represents a parser that could not match input
+// and HAS consumed some input.
 type ParseErrorConsumed struct {
-	Err     error
+	// The optional error to wrap.
+	Err error
+	// The error message.
 	Message string
-	Origin  Origin
+	// The Origin of the error.
+	Origin Origin
 }
 
 func ParseErrConsumedExpectedButGot(ctx Context, expected interface{}, got interface{}, wrapErr error) *ParseErrorConsumed {
@@ -78,6 +107,8 @@ func ParseErrConsumedExpectedButGot(ctx Context, expected interface{}, got inter
 	}
 }
 
+// Returns a ParseError with an error message in the format of "expected but got" where
+// got is the next N input runes (truncated).
 func ParseErrConsumedExpectedButGotNext(ctx Context, expected interface{}, wrapErr error) *ParseErrorConsumed {
 	got, _ := ctx.Peek(0, 16) // Note: no error handle here
 	if len(got) >= 16 {
@@ -86,6 +117,7 @@ func ParseErrConsumedExpectedButGotNext(ctx Context, expected interface{}, wrapE
 	return ParseErrConsumedExpectedButGot(ctx, expected, got, wrapErr)
 }
 
+// The error string.
 func (err *ParseErrorConsumed) Error() string {
 	if err.Err == nil {
 		return fmt.Sprintf("Parse Error (cannot backtrack) at %v: %v", err.Origin, err.Message)
@@ -93,10 +125,12 @@ func (err *ParseErrorConsumed) Error() string {
 	return fmt.Sprintf("Parse Error (cannot backtrack) at %v: %v\n%v", err.Origin, err.Message, err.Err)
 }
 
+// Unwraps this error.
 func (err *ParseErrorConsumed) Unwrap() error {
 	return err.Err
 }
 
+// Returns true if target is also a ParseErrorConsumed.
 func (err *ParseErrorConsumed) Is(target error) bool {
 	if _, ok := target.(*ParseErrorConsumed); ok {
 		return true

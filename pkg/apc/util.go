@@ -15,7 +15,7 @@ type ContextPeekingRuneReader struct {
 	offset  int
 }
 
-// Peeks the next rune in the Context.
+// Peeks the next rune in the Context, and advances the reader offset.
 func (r *ContextPeekingRuneReader) ReadRune() (rune, int, error) {
 	val, err := r.Context.Peek(r.offset, 1)
 	if err != nil {

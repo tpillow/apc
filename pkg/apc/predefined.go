@@ -2,7 +2,7 @@ package apc
 
 import "strconv"
 
-// Parses one or more whitespace characters.
+// Parses one or more whitespace characters and returns the string result.
 var WhitespaceParser = Regex("whitespace", "\\s+")
 
 // Parses a string wrapped in (") characters.
@@ -23,13 +23,16 @@ var SingleQuotedStringParser = Map(
 		return node[1 : len(node)-1]
 	})
 
-// Parses a C-style identifier.
+// Parses a C-style identifier and returns the string result.
 var IdentifierParser = Regex("identifier", "[a-zA-Z_][a-zA-Z_0-9]*")
 
-// Parses "true" and "false" literals into a boolean.
-var BoolParser = OneOf("boolean", Bind(Exact("true"), true), Bind(Exact("false"), false))
+// Parses "true" and "false" literals into a boolean and returns
+// the boolean result.
+var BoolParser = OneOf("boolean",
+	Bind(Exact("true"), true), Bind(Exact("false"), false))
 
-// Parses floating point numbers. May be preceded with '+' or '-'.
+// Parses floating point numbers and returns a float64 result.
+// May be preceded with '+' or '-'.
 var FloatParser = Map(
 	Regex("float", "[+\\-]?\\d+(\\.\\d+)?"),
 	func(node string) float64 {
@@ -40,7 +43,8 @@ var FloatParser = Map(
 		return val
 	})
 
-// Parses integer numbers. May be preceded with '+' or '-'.
+// Parses integer numbers and returns an int64 result.
+// May be preceded with '+' or '-'.
 var IntParser = Map(
 	Regex("integer", "[+\\-]?\\d+"),
 	func(node string) int64 {

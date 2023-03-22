@@ -1,12 +1,19 @@
 package apc
 
-import (
-	"errors"
-)
+import "errors"
 
+// Returns a parser that parses the exact string value.
+// Returns the result as as string.
 func Exact(value string) Parser[string] {
+	if len(value) <= 0 {
+		panic("value for Exact must have a length > 0")
+	}
+
 	return func(ctx Context) (string, error) {
-		ctx.RunSkipParsers()
+		err := ctx.RunSkipParsers()
+		if err != nil {
+			return "", err
+		}
 
 		val, err := ctx.Peek(0, len(value))
 		if err != nil && !errors.Is(err, ErrEOF) {
