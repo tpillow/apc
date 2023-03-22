@@ -39,7 +39,7 @@ func TestRegexParser(t *testing.T) {
 	assert.Equal(t, "_", r)
 }
 
-func TestAnyParser(t *testing.T) {
+func TestOneOfParser(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, "###hi##")
 	p1 := Regex("", "#+")
 	p2 := Exact("hi")
