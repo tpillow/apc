@@ -26,6 +26,21 @@ func Seq[T any](name string, parsers ...Parser[T]) Parser[[]T] {
 	}
 }
 
+func seqSetResultHelper[T any](first bool, ctx Context, name string, parser Parser[T], resultField *T) error {
+	node, err := parser(ctx)
+	if err != nil {
+		if !errors.Is(err, ErrParseErr) {
+			return err
+		}
+		if first {
+			return ParseErrExpectedButGotNext(ctx, name, err)
+		}
+		return ParseErrConsumedExpectedButGotNext(ctx, name, err)
+	}
+	*resultField = node
+	return nil
+}
+
 type Seq2Node[T1, T2 any] struct {
 	Result1 T1
 	Result2 T2
@@ -35,23 +50,12 @@ func Seq2[T1, T2 any](name string, parser1 Parser[T1], parser2 Parser[T2]) Parse
 	return func(ctx Context) (Seq2Node[T1, T2], error) {
 		result := Seq2Node[T1, T2]{}
 
-		node1, err := parser1(ctx)
-		if err != nil {
-			if !errors.Is(err, ErrParseErr) {
-				return result, err
-			}
-			return result, ParseErrExpectedButGotNext(ctx, name, err)
+		if err := seqSetResultHelper(true, ctx, name, parser1, &result.Result1); err != nil {
+			return result, err
 		}
-		result.Result1 = node1
-
-		node2, err := parser2(ctx)
-		if err != nil {
-			if !errors.Is(err, ErrParseErr) {
-				return result, err
-			}
-			return result, ParseErrConsumedExpectedButGotNext(ctx, name, err)
+		if err := seqSetResultHelper(false, ctx, name, parser2, &result.Result2); err != nil {
+			return result, err
 		}
-		result.Result2 = node2
 
 		return result, nil
 	}
@@ -69,32 +73,15 @@ func Seq3[T1, T2, T3 any](name string, parser1 Parser[T1], parser2 Parser[T2],
 	return func(ctx Context) (Seq3Node[T1, T2, T3], error) {
 		result := Seq3Node[T1, T2, T3]{}
 
-		node1, err := parser1(ctx)
-		if err != nil {
-			if !errors.Is(err, ErrParseErr) {
-				return result, err
-			}
-			return result, ParseErrExpectedButGotNext(ctx, name, err)
+		if err := seqSetResultHelper(true, ctx, name, parser1, &result.Result1); err != nil {
+			return result, err
 		}
-		result.Result1 = node1
-
-		node2, err := parser2(ctx)
-		if err != nil {
-			if !errors.Is(err, ErrParseErr) {
-				return result, err
-			}
-			return result, ParseErrConsumedExpectedButGotNext(ctx, name, err)
+		if err := seqSetResultHelper(false, ctx, name, parser2, &result.Result2); err != nil {
+			return result, err
 		}
-		result.Result2 = node2
-
-		node3, err := parser3(ctx)
-		if err != nil {
-			if !errors.Is(err, ErrParseErr) {
-				return result, err
-			}
-			return result, ParseErrConsumedExpectedButGotNext(ctx, name, err)
+		if err := seqSetResultHelper(false, ctx, name, parser3, &result.Result3); err != nil {
+			return result, err
 		}
-		result.Result3 = node3
 
 		return result, nil
 	}
@@ -113,41 +100,18 @@ func Seq4[T1, T2, T3, T4 any](name string, parser1 Parser[T1], parser2 Parser[T2
 	return func(ctx Context) (Seq4Node[T1, T2, T3, T4], error) {
 		result := Seq4Node[T1, T2, T3, T4]{}
 
-		node1, err := parser1(ctx)
-		if err != nil {
-			if !errors.Is(err, ErrParseErr) {
-				return result, err
-			}
-			return result, ParseErrExpectedButGotNext(ctx, name, err)
+		if err := seqSetResultHelper(true, ctx, name, parser1, &result.Result1); err != nil {
+			return result, err
 		}
-		result.Result1 = node1
-
-		node2, err := parser2(ctx)
-		if err != nil {
-			if !errors.Is(err, ErrParseErr) {
-				return result, err
-			}
-			return result, ParseErrConsumedExpectedButGotNext(ctx, name, err)
+		if err := seqSetResultHelper(false, ctx, name, parser2, &result.Result2); err != nil {
+			return result, err
 		}
-		result.Result2 = node2
-
-		node3, err := parser3(ctx)
-		if err != nil {
-			if !errors.Is(err, ErrParseErr) {
-				return result, err
-			}
-			return result, ParseErrConsumedExpectedButGotNext(ctx, name, err)
+		if err := seqSetResultHelper(false, ctx, name, parser3, &result.Result3); err != nil {
+			return result, err
 		}
-		result.Result3 = node3
-
-		node4, err := parser4(ctx)
-		if err != nil {
-			if !errors.Is(err, ErrParseErr) {
-				return result, err
-			}
-			return result, ParseErrConsumedExpectedButGotNext(ctx, name, err)
+		if err := seqSetResultHelper(false, ctx, name, parser4, &result.Result4); err != nil {
+			return result, err
 		}
-		result.Result4 = node4
 
 		return result, nil
 	}
@@ -167,50 +131,21 @@ func Seq5[T1, T2, T3, T4, T5 any](name string, parser1 Parser[T1], parser2 Parse
 	return func(ctx Context) (Seq5Node[T1, T2, T3, T4, T5], error) {
 		result := Seq5Node[T1, T2, T3, T4, T5]{}
 
-		node1, err := parser1(ctx)
-		if err != nil {
-			if !errors.Is(err, ErrParseErr) {
-				return result, err
-			}
-			return result, ParseErrExpectedButGotNext(ctx, name, err)
+		if err := seqSetResultHelper(true, ctx, name, parser1, &result.Result1); err != nil {
+			return result, err
 		}
-		result.Result1 = node1
-
-		node2, err := parser2(ctx)
-		if err != nil {
-			if !errors.Is(err, ErrParseErr) {
-				return result, err
-			}
-			return result, ParseErrConsumedExpectedButGotNext(ctx, name, err)
+		if err := seqSetResultHelper(false, ctx, name, parser2, &result.Result2); err != nil {
+			return result, err
 		}
-		result.Result2 = node2
-
-		node3, err := parser3(ctx)
-		if err != nil {
-			if !errors.Is(err, ErrParseErr) {
-				return result, err
-			}
-			return result, ParseErrConsumedExpectedButGotNext(ctx, name, err)
+		if err := seqSetResultHelper(false, ctx, name, parser3, &result.Result3); err != nil {
+			return result, err
 		}
-		result.Result3 = node3
-
-		node4, err := parser4(ctx)
-		if err != nil {
-			if !errors.Is(err, ErrParseErr) {
-				return result, err
-			}
-			return result, ParseErrConsumedExpectedButGotNext(ctx, name, err)
+		if err := seqSetResultHelper(false, ctx, name, parser4, &result.Result4); err != nil {
+			return result, err
 		}
-		result.Result4 = node4
-
-		node5, err := parser5(ctx)
-		if err != nil {
-			if !errors.Is(err, ErrParseErr) {
-				return result, err
-			}
-			return result, ParseErrConsumedExpectedButGotNext(ctx, name, err)
+		if err := seqSetResultHelper(false, ctx, name, parser5, &result.Result5); err != nil {
+			return result, err
 		}
-		result.Result5 = node5
 
 		return result, nil
 	}

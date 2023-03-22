@@ -43,10 +43,10 @@ var (
 
 func main() {
 	valueParser = apc.OneOf("value",
-		apc.MapToAny(apc.DoubleQuotedStringParser),
 		apc.MapToAny(apc.FloatParser),
 		apc.MapToAny(apc.BoolParser),
 		apc.MapToAny(apc.Bind[string, any](apc.Exact("null"), nil)),
+		apc.MapToAny(apc.DoubleQuotedStringParser),
 		apc.MapToAny(objParser),
 		apc.MapToAny(arrayParser))
 
