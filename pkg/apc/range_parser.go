@@ -7,7 +7,6 @@ import (
 
 func Range[T any](name string, min int, max int, parser Parser[T]) Parser[[]T] {
 	return func(ctx Context) ([]T, error) {
-		debugRunning(name)
 		nodes := make([]T, 0)
 
 		ctx.RunSkipParsers()

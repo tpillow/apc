@@ -13,8 +13,6 @@ func Seq[T any](name string, parsers ...Parser[T]) Parser[[]T] {
 	}
 
 	return func(ctx Context) ([]T, error) {
-		debugRunning(name)
-
 		nodes := make([]T, 0)
 		for i, parser := range parsers {
 			ctx.RunSkipParsers()
@@ -41,7 +39,6 @@ type Seq2Node[T1, T2 any] struct {
 
 func Seq2[T1, T2 any](name string, parser1 Parser[T1], parser2 Parser[T2]) Parser[Seq2Node[T1, T2]] {
 	return func(ctx Context) (Seq2Node[T1, T2], error) {
-		debugRunning(name)
 		result := Seq2Node[T1, T2]{}
 
 		ctx.RunSkipParsers()
@@ -78,7 +75,6 @@ func Seq3[T1, T2, T3 any](name string, parser1 Parser[T1], parser2 Parser[T2],
 	parser3 Parser[T3]) Parser[Seq3Node[T1, T2, T3]] {
 
 	return func(ctx Context) (Seq3Node[T1, T2, T3], error) {
-		debugRunning(name)
 		result := Seq3Node[T1, T2, T3]{}
 
 		ctx.RunSkipParsers()
@@ -126,7 +122,6 @@ func Seq4[T1, T2, T3, T4 any](name string, parser1 Parser[T1], parser2 Parser[T2
 	parser3 Parser[T3], parser4 Parser[T4]) Parser[Seq4Node[T1, T2, T3, T4]] {
 
 	return func(ctx Context) (Seq4Node[T1, T2, T3, T4], error) {
-		debugRunning(name)
 		result := Seq4Node[T1, T2, T3, T4]{}
 
 		ctx.RunSkipParsers()
@@ -185,7 +180,6 @@ func Seq5[T1, T2, T3, T4, T5 any](name string, parser1 Parser[T1], parser2 Parse
 	parser3 Parser[T3], parser4 Parser[T4], parser5 Parser[T5]) Parser[Seq5Node[T1, T2, T3, T4, T5]] {
 
 	return func(ctx Context) (Seq5Node[T1, T2, T3, T4, T5], error) {
-		debugRunning(name)
 		result := Seq5Node[T1, T2, T3, T4, T5]{}
 
 		ctx.RunSkipParsers()

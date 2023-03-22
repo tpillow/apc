@@ -8,7 +8,6 @@ func Any[T any](name string, parsers ...Parser[T]) Parser[T] {
 	}
 
 	return func(ctx Context) (T, error) {
-		debugRunning(name)
 		ctx.RunSkipParsers()
 
 		for _, parser := range parsers {

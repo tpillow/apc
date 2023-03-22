@@ -6,6 +6,8 @@ var ErrEOF = &EOFError{}
 
 var ErrParseErr = &ParseError{}
 
+var ErrParseErrConsumed = &ParseErrorConsumed{}
+
 type EOFError struct{}
 
 func (err *EOFError) Error() string {

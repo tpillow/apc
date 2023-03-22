@@ -2,12 +2,17 @@ package apc
 
 import "fmt"
 
+// Origin represents a line and column number location in some source.
 type Origin struct {
-	Name    string
+	// The name of the origin (usually filename).
+	Name string
+	// The line number location.
 	LineNum int
-	ColNum  int
+	// The column number location.
+	ColNum int
 }
 
+// Returns a string representation of an Origin.
 func (origin Origin) String() string {
 	return fmt.Sprintf("%v:%v:%v", origin.Name, origin.LineNum, origin.ColNum)
 }

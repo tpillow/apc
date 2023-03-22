@@ -4,9 +4,17 @@ import "strconv"
 
 var WhitespaceParser = Regex("whitespace", "\\s+")
 
-var DoubleQuotedStringParser = Regex("double-quoted string", `"(?:[^"\\]|\\.)*"`)
+var DoubleQuotedStringParser = Map(
+	Regex("double-quoted string", `"(?:[^"\\]|\\.)*"`),
+	func(node string) string {
+		return node[1 : len(node)-1]
+	})
 
-var SingleQuotedStringParser = Regex("single-quoted string", `'(?:[^'\\]|\\.)*'`)
+var SingleQuotedStringParser = Map(
+	Regex("single-quoted string", `'(?:[^'\\]|\\.)*'`),
+	func(node string) string {
+		return node[1 : len(node)-1]
+	})
 
 var IdentifierParser = Regex("identifier", "[a-zA-Z_][a-zA-Z_0-9]*")
 

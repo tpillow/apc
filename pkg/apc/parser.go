@@ -1,11 +1,21 @@
+// Package apc provides a minimalist parser combinator library.
 package apc
 
+// Parser[T] represents a parser that takes a Context and returns a result of type T or an error.
+//
+// Should return a nil error if the result was parsed and consumed.
+// Should return a ParseError error if parsing failed, and no input was consumed.
+// Should return a ParseErrorConsumed error if parsing failed, but some input was consumed.
+// Any other error type may be returned, and is treated like ParseErrorConsumed.
 type Parser[T any] func(ctx Context) (T, error)
 
+// ParseConfig contains settings that can be passed to the Parse function.
 type ParseConfig struct {
+	// If true, parsing will fail if there is remaining input in the Context after parsing.
 	MustParseToEOF bool
 }
 
+// Executes the provided parser using the given context, first applying the parseConfig.
 func Parse[T any](ctx Context, parser Parser[T], parseConfig ParseConfig) (T, error) {
 	ctx.RunSkipParsers()
 	node, err := parser(ctx)
