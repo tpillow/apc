@@ -7,6 +7,9 @@ import (
 )
 
 func Regex(name string, pattern string) Parser[string] {
+	if len(pattern) < 1 {
+		panic("regex pattern length must be >= 1")
+	}
 	if pattern[0] != '^' {
 		pattern = fmt.Sprintf("^%v", pattern)
 	}
