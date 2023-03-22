@@ -1,33 +1,42 @@
 package apc
 
-type MapFunc func(node Node) Node
+type MapFunc[T, U any] func(node T) U
 
-type Mappable interface {
-	Map(mapFunc MapFunc) Parser
+type MapParser[T, U any] struct {
+	Parser  Parser[T]
+	MapFunc MapFunc[T, U]
 }
 
-type MapParser struct {
-	Parser  Parser
-	MapFunc MapFunc
-}
-
-func Map(parser Parser, mapFunc MapFunc) *MapParser {
-	return &MapParser{
-		Parser:  parser,
-		MapFunc: mapFunc,
+func Map[T, U any](parser Parser[T], mapFunc MapFunc[T, U]) Parser[U] {
+	return func(ctx Context) (U, error) {
+		node, err := parser(ctx)
+		if err != nil {
+			return zeroVal[U](), err
+		}
+		return mapFunc(node), nil
 	}
 }
 
-func (p *MapParser) Parse(ctx Context) (Node, error) {
-	node, err := p.Parser.Parse(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return p.MapFunc(node), err
-}
-
-func Bind(parser Parser, node Node) Parser {
-	return Map(parser, func(_ Node) Node {
+func Bind[T, U any](parser Parser[T], node U) Parser[U] {
+	return Map(parser, func(_ T) U {
 		return node
+	})
+}
+
+func MapCast[T, U any](parser Parser[T]) Parser[U] {
+	return Map(parser, func(node T) U {
+		return any(node).(U)
+	})
+}
+
+func MapToAny[T any](parser Parser[T]) Parser[any] {
+	return Map(parser, func(node T) any {
+		return node
+	})
+}
+
+func MapTo1ElementList[T any](parser Parser[T]) Parser[[]T] {
+	return Map(parser, func(node T) []T {
+		return []T{node}
 	})
 }

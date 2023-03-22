@@ -1,30 +1,25 @@
 package apc
 
-type ExactParser struct {
-	Value string
-}
+import (
+	"errors"
+	"fmt"
+)
 
-func Exact(value string) *ExactParser {
-	return &ExactParser{
-		Value: value,
-	}
-}
+func Exact(value string) Parser[string] {
+	return func(ctx Context) (string, error) {
+		debugRunning(fmt.Sprintf("exact %v", value))
 
-func (p *ExactParser) Parse(ctx Context) (Node, error) {
-	peek, err := PeekNRunes(ctx, 0, len(p.Value))
-	if err != nil {
-		return nil, NewParseError(ctx.GetOrigin(), "expected '%v' but got '%v'", p.Value, peek)
+		val, err := ctx.Peek(0, len(value))
+		if err != nil && !errors.Is(err, ErrEOF) {
+			return "", err
+		}
+		if val == value {
+			_, err := ctx.Consume(len(val))
+			if err != nil && !errors.Is(err, ErrEOF) {
+				return "", err
+			}
+			return val, nil
+		}
+		return "", ParseErrExpectedButGot(ctx, value, val, nil)
 	}
-	if peek != p.Value {
-		return nil, NewParseError(ctx.GetOrigin(), "expected '%v' but got '%v'", p.Value, peek)
-	}
-	val, err := ConsumeNRunes(ctx, len(p.Value))
-	if err != nil {
-		return nil, NewParseError(ctx.GetOrigin(), "expected '%v' but got '%v'", p.Value, peek)
-	}
-	return val, nil
-}
-
-func (p *ExactParser) Map(mapFunc MapFunc) Parser {
-	return Map(p, mapFunc)
 }

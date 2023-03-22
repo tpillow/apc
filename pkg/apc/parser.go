@@ -1,37 +1,22 @@
 package apc
 
-import "errors"
-
-type Node interface{}
-
-// TODO: need some type of parser to indicate not to backtrack further (actually doesn't work like that yet)
-type Parser interface {
-	Parse(ctx Context) (Node, error)
-}
+type Parser[T any] func(ctx Context) (T, error)
 
 type ParseConfig struct {
 	MustParseToEOF bool
-	SkipParsers    []Parser
 }
 
-func Parse(ctx Context, parser Parser, config ParseConfig) (Node, error) {
-	for _, p := range config.SkipParsers {
-		ctx.AddSkipParser(p)
-	}
-
-	ctx.ProcessSkips()
-	node, err := parser.Parse(ctx)
+func Parse[T any](ctx Context, parser Parser[T], parseConfig ParseConfig) (T, error) {
+	ctx.RunSkipParsers()
+	node, err := parser(ctx)
 	if err != nil {
-		return nil, err
+		return zeroVal[T](), err
 	}
-	ctx.ProcessSkips()
 
-	if config.MustParseToEOF {
-		r, err := ctx.PeekRune(0)
-		if err == nil {
-			return nil, NewParseError(ctx.GetOrigin(), "expected EOF but got '%v'", r)
-		} else if !errors.Is(err, &EOFError{}) {
-			return nil, NewParseError(ctx.GetOrigin(), "expected EOF but got %v", err)
+	if parseConfig.MustParseToEOF {
+		ctx.RunSkipParsers()
+		if _, err := ctx.Peek(0, 1); err == nil {
+			return zeroVal[T](), ParseErrExpectedButGotNext(ctx, "EOF", nil)
 		}
 	}
 

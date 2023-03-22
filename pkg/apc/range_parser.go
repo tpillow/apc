@@ -1,57 +1,78 @@
 package apc
 
-type RangeParser struct {
-	Parser Parser
-	Min    int
-	Max    int
-}
+import (
+	"errors"
+	"fmt"
+)
 
-func Range(parser Parser, min int, max int) *RangeParser {
-	return &RangeParser{
-		Parser: parser,
-		Min:    min,
-		Max:    max,
+func Range[T any](name string, min int, max int, parser Parser[T]) Parser[[]T] {
+	return func(ctx Context) ([]T, error) {
+		debugRunning(name)
+		nodes := make([]T, 0)
+
+		ctx.RunSkipParsers()
+		node, err := parser(ctx)
+		for err == nil {
+			nodes = append(nodes, node)
+			ctx.RunSkipParsers()
+			node, err = parser(ctx)
+		}
+		if !errors.Is(err, ErrParseErr) {
+			return nil, err
+		}
+
+		if len(nodes) < min {
+			return nil, ParseErrExpectedButGot(ctx, fmt.Sprintf("at least %v of %v", min, name), len(nodes), err)
+		}
+		if max != -1 && len(nodes) > max {
+			return nil, ParseErrExpectedButGot(ctx, fmt.Sprintf("at most %v of %v", max, name), len(nodes), err)
+		}
+		return nodes, nil
 	}
 }
 
-func ZeroOrOne(parser Parser) Parser {
-	return Range(parser, 0, 1).Map(func(node Node) Node {
-		nodes := node.([]Node)
-		if nodes == nil || len(nodes) <= 0 {
-			return nil
+func ZeroOrMore[T any](name string, parser Parser[T]) Parser[[]T] {
+	return Range(name, 0, -1, parser)
+}
+
+func OneOrMore[T any](name string, parser Parser[T]) Parser[[]T] {
+	return Range(name, 1, -1, parser)
+}
+
+func Maybe[T any](name string, parser Parser[T]) Parser[T] {
+	return Map(Range(name, 0, 1, parser), func(node []T) T {
+		if node == nil || len(node) <= 0 {
+			return zeroVal[T]()
 		}
-		if len(nodes) != 1 {
-			panic("unreachable")
+		if len(node) != 1 {
+			panic("unreachable: Range(0, 1) should return at most 1 node")
 		}
-		return nodes[0]
+		return node[0]
 	})
 }
 
-func ZeroOrMore(parser Parser) Parser {
-	return Range(parser, 0, -1)
+func OneOrMoreSeparated[T, U any](name string, parser Parser[T], sepParser Parser[U]) Parser[[]T] {
+	sepParse := Map(
+		Seq2("", sepParser, parser),
+		func(node Seq2Node[U, T]) T {
+			return node.Result2
+		})
+
+	return Map(
+		Seq2("", parser, ZeroOrMore("", sepParse)),
+		func(node Seq2Node[T, []T]) []T {
+			result := []T{node.Result1}
+			return append(result, node.Result2...)
+		})
 }
 
-func OneOrMore(parser Parser) Parser {
-	return Range(parser, 1, -1)
-}
-
-func (p *RangeParser) Parse(ctx Context) (Node, error) {
-	nodes := make([]Node, 0)
-	ctx.ProcessSkips()
-	for node, err := p.Parser.Parse(ctx); err == nil; {
-		nodes = append(nodes, node)
-		ctx.ProcessSkips()
-		node, err = p.Parser.Parse(ctx)
-	}
-	if p.Min >= 0 && len(nodes) < p.Min {
-		return nil, NewParseError(ctx.GetOrigin(), "expected at least %v but got %v", p.Min, len(nodes))
-	}
-	if p.Max >= 0 && len(nodes) > p.Max {
-		return nil, NewParseError(ctx.GetOrigin(), "expected at most %v but got %v", p.Max, len(nodes))
-	}
-	return nodes, nil
-}
-
-func (p *RangeParser) Map(mapFunc MapFunc) Parser {
-	return Map(p, mapFunc)
+func ZeroOrMoreSeparated[T, U any](name string, parser Parser[T], sepParser Parser[U]) Parser[[]T] {
+	return Map(
+		Maybe(name, OneOrMoreSeparated(name, parser, sepParser)),
+		func(node []T) []T {
+			if node == nil {
+				return []T{}
+			}
+			return node
+		})
 }

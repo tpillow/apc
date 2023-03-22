@@ -6,50 +6,35 @@ import (
 	"regexp"
 )
 
-// TODO: find a way to not limit max. length of match.
-// Might be able to create a RuneReader around ctx.PeekRune?
-const regexPeekRuneBufferSize = 1024
+const regexPeekBufferSize = 1024 // TODO: better way (can make RuneReader wrapped around Peek)
 
-type RegexParser struct {
-	Regex *regexp.Regexp
-}
+var WhitespaceParser = Regex("whitespace", "\\s+")
 
-func Regex(pattern string) *RegexParser {
+func Regex(name string, pattern string) Parser[string] {
 	if pattern[0] != '^' {
 		pattern = fmt.Sprintf("^%v", pattern)
 	}
-	return &RegexParser{
-		Regex: regexp.MustCompile(pattern),
-	}
-}
+	regex := regexp.MustCompile(pattern)
 
-func Whitespace() *RegexParser {
-	return Regex("\\s+")
-}
+	return func(ctx Context) (string, error) {
+		debugRunning(name)
 
-func (p *RegexParser) Parse(ctx Context) (Node, error) {
-	peek, err := PeekNRunes(ctx, 0, regexPeekRuneBufferSize)
-	if !errors.Is(err, &EOFError{}) {
-		return nil, NewParseError(ctx.GetOrigin(), "%v", err)
-	}
-	loc := p.Regex.FindStringIndex(peek)
-	if loc == nil {
-		peekPreview := peek
-		if len(peekPreview) > 16 {
-			peekPreview = fmt.Sprintf("%v ...more", peekPreview[16:])
+		val, err := ctx.Peek(0, regexPeekBufferSize)
+		if err != nil && !errors.Is(err, ErrEOF) {
+			return "", err
 		}
-		return nil, NewParseError(ctx.GetOrigin(), "expected regex match '%v' but got '%v'", p.Regex, peekPreview)
+		loc := regex.FindStringIndex(val)
+		if loc == nil {
+			return "", ParseErrExpectedButGotNext(ctx, name, nil)
+		}
+		if loc[0] != 0 {
+			panic("regex should always be normalized to match at start of line")
+		}
+		matchVal := val[:loc[1]]
+		_, err = ctx.Consume(len(matchVal))
+		if err != nil && !errors.Is(err, ErrEOF) {
+			return "", err
+		}
+		return matchVal, nil
 	}
-	if loc[0] != 0 {
-		panic("regex pattern must never start match past the start of the string")
-	}
-	val, err := ConsumeNRunes(ctx, loc[1])
-	if err != nil {
-		return nil, NewParseError(ctx.GetOrigin(), "expected regex match '%v' but got '%v'", p.Regex, val)
-	}
-	return val, nil
-}
-
-func (p *RegexParser) Map(mapFunc MapFunc) Parser {
-	return Map(p, mapFunc)
 }
