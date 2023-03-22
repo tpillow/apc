@@ -8,7 +8,7 @@ import (
 )
 
 func TestExactParser(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, []rune("hiho"))
+	ctx := NewStringContext(testStringOrigin, "hiho")
 	p := Exact("hi")
 
 	node, err := p(ctx)
@@ -24,7 +24,7 @@ func TestExactParser(t *testing.T) {
 }
 
 func TestRegexParser(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, []rune("###_##"))
+	ctx := NewStringContext(testStringOrigin, "###_##")
 	p := Regex("", "#+")
 
 	node, err := p(ctx)
@@ -40,7 +40,7 @@ func TestRegexParser(t *testing.T) {
 }
 
 func TestAnyParser(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, []rune("###hi##"))
+	ctx := NewStringContext(testStringOrigin, "###hi##")
 	p1 := Regex("", "#+")
 	p2 := Exact("hi")
 	p := OneOf("", p1, p2)
@@ -62,7 +62,7 @@ func TestAnyParser(t *testing.T) {
 }
 
 func TestMapParser(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, []rune("342_"))
+	ctx := NewStringContext(testStringOrigin, "342_")
 	p := Map(Regex("", "\\d+"), func(node string) int64 {
 		val, err := strconv.ParseInt(node, 10, 64)
 		assert.NoError(t, err)
@@ -82,7 +82,7 @@ func TestMapParser(t *testing.T) {
 }
 
 func TestSkipParser(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, []rune(" \t\nhi\n\n\t  hi_"))
+	ctx := NewStringContext(testStringOrigin, " \t\nhi\n\n\t  hi_")
 	p := Skip(MapToAny(WhitespaceParser), Exact("hi"))
 
 	node, err := p(ctx)
@@ -99,7 +99,7 @@ func TestSkipParser(t *testing.T) {
 }
 
 func TestUnskipParser(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, []rune(" hi hi_"))
+	ctx := NewStringContext(testStringOrigin, " hi hi_")
 	wsp := MapToAny(WhitespaceParser)
 	ctx.AddSkipParser(wsp)
 	p := Unskip(wsp, Exact("hi"))

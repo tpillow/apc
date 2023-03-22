@@ -9,7 +9,7 @@ import (
 const testStringOrigin = "<origin>"
 
 func TestStringContextEmptyInput(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, []rune(""))
+	ctx := NewStringContext(testStringOrigin, "")
 	assert.Equal(t, Origin{
 		Name:    testStringOrigin,
 		LineNum: 1,
@@ -33,7 +33,7 @@ func TestStringContextEmptyInput(t *testing.T) {
 }
 
 func TestStringContextBasic(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, []rune("ab\ncd"))
+	ctx := NewStringContext(testStringOrigin, "ab\ncd")
 
 	assert := func(val string, exp string, line int, col int, err error, expErr bool) {
 		if expErr {

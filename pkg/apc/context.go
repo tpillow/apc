@@ -22,7 +22,7 @@ type StringContext struct {
 	skippedSinceLastConsume bool
 }
 
-func NewStringContext(originName string, data []rune) *StringContext {
+func NewStringContextFromRunes(originName string, data []rune) *StringContext {
 	return &StringContext{
 		data: data,
 		curOrigin: Origin{
@@ -34,6 +34,10 @@ func NewStringContext(originName string, data []rune) *StringContext {
 		skipping:                false,
 		skippedSinceLastConsume: false,
 	}
+}
+
+func NewStringContext(originName string, data string) *StringContext {
+	return NewStringContextFromRunes(originName, []rune(data))
 }
 
 func (ctx *StringContext) Peek(offset int, num int) (string, error) {
