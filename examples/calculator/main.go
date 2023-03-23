@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/tpillow/apc/pkg/apc"
 )
@@ -65,6 +68,8 @@ var (
 			}
 			return left
 		})
+
+	maybeExprParser = apc.Maybe("expr", exprParser)
 )
 
 func initParser() {
@@ -84,21 +89,48 @@ func initParser() {
 			}))
 }
 
-func main() {
-	initParser()
-
-	input := "11 * (22 + 33) * 44 - 55 / 66"
-	ctx := apc.NewStringContext("<string>", input)
+func executeInput(input string) {
+	ctx := apc.NewStringContext("<user_input>", input)
 	ctx.AddSkipParser(apc.MapToAny(apc.WhitespaceParser))
 
-	node, err := apc.Parse(ctx, exprParser, apc.DefaultParseConfig)
-
-	fmt.Printf("Input: %v\n", input)
+	node, err := apc.Parse(ctx, maybeExprParser, apc.DefaultParseConfig)
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error parsing input: %v\n", err)
+		return
 	}
-	fmt.Printf("Result Node: %v\n", node)
-	fmt.Printf("Result: %v\n", node.Execute())
+	if node == nil {
+		return
+	}
+
+	fmt.Printf("Parse Node:       %v\n", node)
+	fmt.Printf("Result:           %v\n\n", node.Execute())
+}
+
+func main() {
+	initParser()
+	inputPrompt := "Input expression: "
+
+	input := "1 + 2 * (4 - 3)"
+	fmt.Print("Welcome to the APC calculator. Type 'q' to quit.\n")
+	fmt.Printf("Here, I'll do one first:\n\n%v%v\n", inputPrompt, input)
+	executeInput(input)
+
+	stdin := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print(inputPrompt)
+		input, err := stdin.ReadString('\n')
+		if err != nil {
+			fmt.Printf("Error reading input: %v\n", err)
+			continue
+		}
+		if strings.TrimSpace(input) == "q" {
+			break
+		}
+		executeInput(input)
+	}
+
+	fmt.Printf("Goodbye!\n")
 }
 
 type ValueNode struct {

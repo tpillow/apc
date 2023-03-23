@@ -14,7 +14,7 @@ package apc
 //	var hashValue = Seq("", MapToAny(Exact("#")), valueRef)
 //
 //	// At runtime, in some initialization function:
-//	value = OneOf("", MapToAny(Exact("hello")), MapToAny(hashValue))
+//	value = OneOf("", MapToAny(Exact("hello")), hashValue)
 func Ref[T any](parserPtr *Parser[T]) Parser[T] {
 	return func(ctx Context) (T, error) {
 		parser := *parserPtr
