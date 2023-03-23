@@ -25,53 +25,69 @@ var (
 	opMulParser = apc.Bind(apc.Exact(string(OpMul)), OpMul)
 	opDivParser = apc.Bind(apc.Exact(string(OpDiv)), OpDiv)
 
-	factorParser = apc.FloatParser
+	factorParser    apc.Parser[Executable]
+	factorParserRef = apc.Ref(&factorParser)
 
 	termParser = apc.Map(
 		apc.Seq2("term",
-			factorParser,
-			apc.Maybe("",
+			factorParserRef,
+			apc.ZeroOrMore("",
 				apc.Seq2("",
 					apc.OneOf("", opMulParser, opDivParser),
-					factorParser))),
-		func(node *apc.Seq2Node[float64, *apc.Seq2Node[Operator, float64]]) Executable {
-			if node.Result2 == nil {
-				return ValueNode{
-					Value: node.Result1,
+					factorParserRef))),
+		func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]]) Executable {
+			left := node.Result1
+			for _, seqRes := range node.Result2 {
+				left = BinOpNode{
+					Operator: seqRes.Result1,
+					Left:     left,
+					Right:    seqRes.Result2,
 				}
 			}
-			return BinOpNode{
-				Operator: node.Result2.Result1,
-				Left: ValueNode{
-					Value: node.Result1,
-				},
-				Right: ValueNode{
-					Value: node.Result2.Result2,
-				},
-			}
+			return left
 		})
 
 	exprParser = apc.Map(
 		apc.Seq2("expr",
 			termParser,
-			apc.Maybe("",
+			apc.ZeroOrMore("",
 				apc.Seq2("",
 					apc.OneOf("", opAddParser, opSubParser),
 					termParser))),
-		func(node *apc.Seq2Node[Executable, *apc.Seq2Node[Operator, Executable]]) Executable {
-			if node.Result2 == nil {
-				return node.Result1
+		func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]]) Executable {
+			left := node.Result1
+			for _, seqRes := range node.Result2 {
+				left = BinOpNode{
+					Operator: seqRes.Result1,
+					Left:     left,
+					Right:    seqRes.Result2,
+				}
 			}
-			return BinOpNode{
-				Operator: node.Result2.Result1,
-				Left:     node.Result1,
-				Right:    node.Result2.Result2,
-			}
+			return left
 		})
 )
 
+func initParser() {
+	factorParser = apc.OneOf("factor",
+		apc.Map(
+			apc.FloatParser,
+			func(node float64) Executable {
+				return ValueNode{Value: node}
+			}),
+		apc.Map(
+			apc.Seq3("",
+				apc.Exact("("),
+				exprParser,
+				apc.Exact(")")),
+			func(node *apc.Seq3Node[string, Executable, string]) Executable {
+				return node.Result2
+			}))
+}
+
 func main() {
-	input := "11 * 22 + 33 * 44"
+	initParser()
+
+	input := "11 * (22 + 33) * 44"
 	ctx := apc.NewStringContext("<string>", input)
 	ctx.AddSkipParser(apc.MapToAny(apc.WhitespaceParser))
 
