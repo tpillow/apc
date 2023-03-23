@@ -60,6 +60,8 @@ func init() {
 }
 ```
 
+Note that in the above example `MapToAny(hashValue)` is necessary because a `Seq[any]` returns `[]any` (not `any`).
+
 ### Origin
 
 The `Origin` type holds information about a location in the input stream. This includes a name (usually the source filename), along with a line number and column number.
