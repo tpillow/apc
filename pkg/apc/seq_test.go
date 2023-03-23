@@ -31,7 +31,7 @@ func TestSeq2Parser(t *testing.T) {
 
 	node, err := p(ctx)
 	assert.NoError(t, err)
-	assert.Equal(t, Seq2Node[int64, string]{
+	assert.Equal(t, &Seq2Node[int64, string]{
 		Result1: 55,
 		Result2: ",",
 	}, node)

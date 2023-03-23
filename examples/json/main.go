@@ -13,7 +13,7 @@ var (
 
 	pairParser = apc.Map(
 		apc.Seq3("pair", apc.DoubleQuotedStringParser, apc.Exact(":"), valueParserRef),
-		func(node apc.Seq3Node[string, string, any]) PairNode {
+		func(node *apc.Seq3Node[string, string, any]) PairNode {
 			return PairNode{
 				Key:   node.Result1,
 				Value: node.Result3,
@@ -25,14 +25,14 @@ var (
 
 	objParser = apc.Map(
 		apc.Seq3("object", apc.Exact("{"), pairListParser, apc.Exact("}")),
-		func(node apc.Seq3Node[string, []PairNode, string]) any {
+		func(node *apc.Seq3Node[string, []PairNode, string]) any {
 			return ObjNode{
 				Pairs: node.Result2,
 			}
 		})
 	arrayParser = apc.Map(
 		apc.Seq3("array", apc.Exact("["), valueListParser, apc.Exact("]")),
-		func(node apc.Seq3Node[string, []any, string]) ArrayNode {
+		func(node *apc.Seq3Node[string, []any, string]) ArrayNode {
 			return ArrayNode{
 				Nodes: node.Result2,
 			}
