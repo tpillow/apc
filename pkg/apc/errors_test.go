@@ -16,6 +16,9 @@ func TestParseErrorNoWrapsTypesIs(t *testing.T) {
 
 	assert.NotErrorIs(t, pe, ErrParseErrConsumed)
 	assert.NotErrorIs(t, pec, ErrParseErr)
+
+	assert.False(t, IsMustReturnParseErr(pe))
+	assert.True(t, IsMustReturnParseErr(pec))
 }
 
 func TestParseErrorConsumedWrapsTypesIs(t *testing.T) {
@@ -28,4 +31,7 @@ func TestParseErrorConsumedWrapsTypesIs(t *testing.T) {
 
 	assert.NotErrorIs(t, pe, ErrParseErrConsumed)
 	assert.ErrorIs(t, pec, ErrParseErr)
+
+	assert.False(t, IsMustReturnParseErr(pe))
+	assert.True(t, IsMustReturnParseErr(pec))
 }
