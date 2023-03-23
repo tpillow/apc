@@ -87,7 +87,7 @@ func initParser() {
 func main() {
 	initParser()
 
-	input := "11 * (22 + 33) * 44"
+	input := "11 * (22 + 33) * 44 - 55 / 66"
 	ctx := apc.NewStringContext("<string>", input)
 	ctx.AddSkipParser(apc.MapToAny(apc.WhitespaceParser))
 
