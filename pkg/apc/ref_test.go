@@ -7,8 +7,8 @@ import (
 )
 
 func TestRefParser(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, "#hello##hello")
-	var value Parser[string, any]
+	ctx := NewRuneContextFromStr(testStringOrigin, "#hello##hello")
+	var value Parser[rune, any]
 	var valueRef = Ref(&value)
 	var hashValue = Seq("", MapToAny(ExactStr("#")), valueRef)
 	value = OneOf("", MapToAny(ExactStr("hello")), MapToAny(hashValue))

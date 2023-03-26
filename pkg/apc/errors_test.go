@@ -7,9 +7,9 @@ import (
 )
 
 func TestParseErrorNoWrapsTypesIs(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, "")
-	pe := ParseErrExpectedButGot[string](ctx, false, true, nil)
-	pec := ParseErrConsumedExpectedButGot[string](ctx, false, true, nil)
+	ctx := NewRuneContextFromStr(testStringOrigin, "")
+	pe := ParseErrExpectedButGot[rune](ctx, false, true, nil)
+	pec := ParseErrConsumedExpectedButGot[rune](ctx, false, true, nil)
 
 	assert.ErrorIs(t, pe, ErrParseErr)
 	assert.ErrorIs(t, pec, ErrParseErrConsumed)
@@ -22,9 +22,9 @@ func TestParseErrorNoWrapsTypesIs(t *testing.T) {
 }
 
 func TestParseErrorConsumedWrapsTypesIs(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, "")
-	pe := ParseErrExpectedButGot[string](ctx, false, true, nil)
-	pec := ParseErrConsumedExpectedButGot[string](ctx, false, true, pe)
+	ctx := NewRuneContextFromStr(testStringOrigin, "")
+	pe := ParseErrExpectedButGot[rune](ctx, false, true, nil)
+	pec := ParseErrConsumedExpectedButGot[rune](ctx, false, true, pe)
 
 	assert.ErrorIs(t, pe, ErrParseErr)
 	assert.ErrorIs(t, pec, ErrParseErrConsumed)

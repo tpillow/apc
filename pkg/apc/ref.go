@@ -15,7 +15,7 @@ package apc
 //
 //	// At runtime, in some initialization function:
 //	value = OneOf("", MapToAny(Exact("hello")), hashValue)
-func Ref[CT any, T any](parserPtr *Parser[CT, T]) Parser[CT, T] {
+func Ref[CT comparable, T any](parserPtr *Parser[CT, T]) Parser[CT, T] {
 	return func(ctx Context[CT]) (T, error) {
 		parser := *parserPtr
 		if parser == nil {

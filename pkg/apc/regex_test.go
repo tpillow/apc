@@ -7,7 +7,7 @@ import (
 )
 
 func TestRegexParser(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, "###_##")
+	ctx := NewRuneContextFromStr(testStringOrigin, "###_##")
 	p := Regex("", "#+")
 
 	node, err := p(ctx)
@@ -19,5 +19,5 @@ func TestRegexParser(t *testing.T) {
 
 	r, err := ctx.Peek(0, 1)
 	assert.NoError(t, err)
-	assert.Equal(t, "_", r)
+	assert.Equal(t, []rune{'_'}, r)
 }

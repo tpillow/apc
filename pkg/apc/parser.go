@@ -16,7 +16,7 @@ var DefaultParseConfig = ParseConfig{
 // Any other error type may be returned, and is treated like ParseErrorConsumed.
 //
 // Any terminal parser (such as Exact or Regex) should call ctx.RunSkipParsers first.
-type Parser[CT any, T any] func(ctx Context[CT]) (T, error)
+type Parser[CT comparable, T any] func(ctx Context[CT]) (T, error)
 
 // ParseConfig contains settings that can be passed to the Parse function.
 type ParseConfig struct {
@@ -25,7 +25,7 @@ type ParseConfig struct {
 }
 
 // Executes the provided parser using the given context, first applying the parseConfig.
-func Parse[CT any, T any](ctx Context[CT], parser Parser[CT, T], parseConfig ParseConfig) (T, error) {
+func Parse[CT comparable, T any](ctx Context[CT], parser Parser[CT, T], parseConfig ParseConfig) (T, error) {
 	node, err := parser(ctx)
 	if err != nil {
 		return zeroVal[T](), err

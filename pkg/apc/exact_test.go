@@ -7,7 +7,7 @@ import (
 )
 
 func TestExactParser(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, "hiho")
+	ctx := NewRuneContextFromStr(testStringOrigin, "hiho")
 	p := ExactStr("hi")
 
 	node, err := p(ctx)
@@ -19,5 +19,5 @@ func TestExactParser(t *testing.T) {
 
 	r, err := ctx.Peek(0, 1)
 	assert.NoError(t, err)
-	assert.Equal(t, "h", r)
+	assert.Equal(t, []rune{'h'}, r)
 }

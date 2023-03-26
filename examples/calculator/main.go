@@ -28,7 +28,7 @@ var (
 	opMulParser = apc.Bind(apc.ExactStr(string(OpMul)), OpMul)
 	opDivParser = apc.Bind(apc.ExactStr(string(OpDiv)), OpDiv)
 
-	factorParser    apc.Parser[string, Executable]
+	factorParser    apc.Parser[rune, Executable]
 	factorParserRef = apc.Ref(&factorParser)
 
 	termParser = apc.Map(
@@ -90,10 +90,10 @@ func initParser() {
 }
 
 func executeInput(input string) {
-	ctx := apc.NewStringContext("<user_input>", input)
+	ctx := apc.NewRuneContextFromStr("<user_input>", input)
 	ctx.AddSkipParser(apc.MapToAny(apc.WhitespaceParser))
 
-	node, err := apc.Parse[string](ctx, maybeExprParser, apc.DefaultParseConfig)
+	node, err := apc.Parse[rune](ctx, maybeExprParser, apc.DefaultParseConfig)
 	if err != nil {
 		fmt.Printf("Error parsing input: %v\n", err)
 		return

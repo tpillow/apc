@@ -7,7 +7,7 @@ import (
 )
 
 func TestSkipParser(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, " \t\nhi\n\n\t  hi_")
+	ctx := NewRuneContextFromStr(testStringOrigin, " \t\nhi\n\n\t  hi_")
 	p := Skip(MapToAny(WhitespaceParser), ExactStr("hi"))
 
 	node, err := p(ctx)
@@ -20,11 +20,11 @@ func TestSkipParser(t *testing.T) {
 
 	r, err := ctx.Peek(0, 1)
 	assert.NoError(t, err)
-	assert.Equal(t, "_", r)
+	assert.Equal(t, []rune{'_'}, r)
 }
 
 func TestUnskipParser(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, " hi hi_")
+	ctx := NewRuneContextFromStr(testStringOrigin, " hi hi_")
 	wsp := MapToAny(WhitespaceParser)
 	ctx.AddSkipParser(wsp)
 	p := Unskip(wsp, ExactStr("hi"))
@@ -47,5 +47,5 @@ func TestUnskipParser(t *testing.T) {
 
 	r, err := ctx.Peek(0, 1)
 	assert.NoError(t, err)
-	assert.Equal(t, "_", r)
+	assert.Equal(t, []rune{'_'}, r)
 }

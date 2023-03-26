@@ -2,14 +2,43 @@ package apc
 
 import "errors"
 
+// Returns a parser that parses the exact CT value.
+// Returns the result as as CT.
+func Exact[CT comparable](value []CT) Parser[CT, []CT] {
+	return func(ctx Context[CT]) ([]CT, error) {
+		err := ctx.RunSkipParsers()
+		if err != nil {
+			return nil, err
+		}
+
+		val, err := ctx.Peek(0, len(value))
+		if err != nil && !errors.Is(err, ErrEOF) {
+			return nil, err
+		}
+		if len(val) != len(value) {
+			return nil, ParseErrExpectedButGot(ctx, value, val, nil)
+		}
+		for i, r := range value {
+			if val[i] != r {
+				return nil, ParseErrExpectedButGot(ctx, value, val, nil)
+			}
+		}
+		_, err = ctx.Consume(len(val))
+		if err != nil && !errors.Is(err, ErrEOF) {
+			return nil, err
+		}
+		return val, nil
+	}
+}
+
 // Returns a parser that parses the exact string value.
 // Returns the result as as string.
-func ExactStr(value string) Parser[string, string] {
+func ExactStr(value string) Parser[rune, string] {
 	if len(value) <= 0 {
 		panic("value for Exact must have a length > 0")
 	}
 
-	return func(ctx Context[string]) (string, error) {
+	return func(ctx Context[rune]) (string, error) {
 		err := ctx.RunSkipParsers()
 		if err != nil {
 			return "", err
@@ -19,13 +48,14 @@ func ExactStr(value string) Parser[string, string] {
 		if err != nil && !errors.Is(err, ErrEOF) {
 			return "", err
 		}
-		if val == value {
-			_, err := ctx.Consume(len(val))
+		valStr := string(val)
+		if valStr == value {
+			_, err := ctx.Consume(len(valStr))
 			if err != nil && !errors.Is(err, ErrEOF) {
 				return "", err
 			}
-			return val, nil
+			return valStr, nil
 		}
-		return "", ParseErrExpectedButGot(ctx, value, val, nil)
+		return "", ParseErrExpectedButGot(ctx, value, valStr, nil)
 	}
 }

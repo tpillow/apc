@@ -8,20 +8,20 @@ func zeroVal[T any]() T {
 	return val
 }
 
-// StrContextPeekingRuneReader implements io.RuneReader using the given
+// RuneContextPeekingRuneReader implements io.RuneReader using the given
 // Context by peeking one rune at a time, starting at offset 0.
-type StrContextPeekingRuneReader struct {
-	Context Context[string]
+type RuneContextPeekingRuneReader struct {
+	Context Context[rune]
 	offset  int
 }
 
 // Peeks the next rune in the Context, and advances the reader offset.
-func (r *StrContextPeekingRuneReader) ReadRune() (rune, int, error) {
+func (r *RuneContextPeekingRuneReader) ReadRune() (rune, int, error) {
 	val, err := r.Context.Peek(r.offset, 1)
 	if err != nil {
 		return 0, 0, err
 	}
 	r.offset += 1
-	rn, size := utf8.DecodeRuneInString(val)
+	rn, size := utf8.DecodeRuneInString(string(val))
 	return rn, size, nil
 }

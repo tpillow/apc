@@ -10,7 +10,7 @@ import (
 // Note that the regex is always normalized to contain '^' as the starting
 // symbol, to always match the left-most character in the input stream.
 // Returns the result as as string.
-func Regex(name string, pattern string) Parser[string, string] {
+func Regex(name string, pattern string) Parser[rune, string] {
 	if len(pattern) < 1 {
 		panic("regex pattern length must be >= 1")
 	}
@@ -19,13 +19,13 @@ func Regex(name string, pattern string) Parser[string, string] {
 	}
 	regex := regexp.MustCompile(pattern)
 
-	return func(ctx Context[string]) (string, error) {
+	return func(ctx Context[rune]) (string, error) {
 		err := ctx.RunSkipParsers()
 		if err != nil {
 			return "", err
 		}
 
-		reader := &StrContextPeekingRuneReader{Context: ctx}
+		reader := &RuneContextPeekingRuneReader{Context: ctx}
 		loc := regex.FindReaderIndex(reader)
 		if loc == nil {
 			return "", ParseErrExpectedButGotNext(ctx, name, nil)
@@ -38,6 +38,6 @@ func Regex(name string, pattern string) Parser[string, string] {
 		if err != nil && !errors.Is(err, ErrEOF) {
 			return "", err
 		}
-		return matchVal, nil
+		return string(matchVal), nil
 	}
 }

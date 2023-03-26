@@ -9,15 +9,15 @@ import (
 const testStringOrigin = "<origin>"
 
 func TestStringContextEmptyInput(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, "")
+	ctx := NewRuneContextFromStr(testStringOrigin, "")
 	assert.Equal(t, Origin{
 		Name:    testStringOrigin,
 		LineNum: 1,
 		ColNum:  1,
 	}, ctx.GetCurOrigin())
 
-	assert := func(val string, err error) {
-		assert.Equal(t, "", val)
+	assert := func(val []rune, err error) {
+		assert.Equal(t, "", string(val))
 		assert.ErrorIs(t, err, ErrEOF)
 	}
 
@@ -33,15 +33,15 @@ func TestStringContextEmptyInput(t *testing.T) {
 }
 
 func TestStringContextBasic(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, "ab\ncd")
+	ctx := NewRuneContextFromStr(testStringOrigin, "ab\ncd")
 
-	assert := func(val string, exp string, line int, col int, err error, expErr bool) {
+	assert := func(val []rune, exp string, line int, col int, err error, expErr bool) {
 		if expErr {
 			assert.ErrorIs(t, err, ErrEOF)
 		} else {
 			assert.NoError(t, err)
 		}
-		assert.Equal(t, exp, val)
+		assert.Equal(t, exp, string(val))
 		assert.Equal(t, Origin{
 			Name:    testStringOrigin,
 			LineNum: line,

@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	valueParser    apc.Parser[string, any]
+	valueParser    apc.Parser[rune, any]
 	valueParserRef = apc.Ref(&valueParser)
 
 	pairParser = apc.Map(
@@ -43,17 +43,17 @@ func main() {
 	valueParser = apc.OneOf("value",
 		apc.MapToAny(apc.FloatParser),
 		apc.MapToAny(apc.BoolParser),
-		apc.MapToAny(apc.Bind[string, string, any](apc.ExactStr("null"), nil)),
+		apc.MapToAny(apc.Bind[rune, string, any](apc.ExactStr("null"), nil)),
 		apc.MapToAny(apc.DoubleQuotedStringParser),
 		apc.MapToAny(objParser),
 		apc.MapToAny(arrayParser))
 
 	input := ` { "name" : "Tom" , "age" : 55 , "weight":23.35,"hobbies" : [ "sports" , "stuff" , -55, +3.4, [], {} ] } `
-	ctx := apc.NewStringContext("<string>", input)
+	ctx := apc.NewRuneContextFromStr("<string>", input)
 	ctx.AddSkipParser(apc.MapToAny(apc.WhitespaceParser))
 
 	fmt.Printf("Input: %v\n", input)
-	node, err := apc.Parse[string](ctx, valueParser, apc.DefaultParseConfig)
+	node, err := apc.Parse[rune](ctx, valueParser, apc.DefaultParseConfig)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 	}
