@@ -20,7 +20,7 @@ APC does not yet support backtracking/lookahead > 1. My primary goal is to first
 
 ### `Parser[CT, T]`
 
-A parser is defined as a function with the following signature: `type Parser[CT comparable, T any] func(ctx Context[CT]) (T, error)`. In other words, a function that takes a `Context[CT]` (where `CT` is the type of input stream token) for peeking/consuming an input stream, returning a tuple `(T, error)` where `T` is the return type of a successful parse. If parsing is successful, `error` should be `nil`. Otherwise, a parser may return one of 3 types of errors that must be handled:
+A parser is defined as a function with the following signature: `type Parser[CT any, T any] func(ctx Context[CT]) (T, error)`. In other words, a function that takes a `Context[CT]` (where `CT` is the type of input stream token) for peeking/consuming an input stream, returning a tuple `(T, error)` where `T` is the return type of a successful parse. If parsing is successful, `error` should be `nil`. Otherwise, a parser may return one of 3 types of errors that must be handled:
 
 1. `ParseError` - parsing failed, but input was NOT consumed. This means other parsers later in the line will be tried.
 2. `ParseErrorConsumed` - parsing failed, and some input WAS consumed. This will cause an immediate fail of parsing entirely, as no lookahead is implemented yet.

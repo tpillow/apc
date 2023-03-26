@@ -4,7 +4,7 @@ package apc
 // Returns each parser result in order as a slice.
 //
 // The number of parsers provided must be at least 2.
-func Seq[CT comparable, T any](name string, parsers ...Parser[CT, T]) Parser[CT, []T] {
+func Seq[CT any, T any](name string, parsers ...Parser[CT, T]) Parser[CT, []T] {
 	if len(parsers) < 2 {
 		panic("must provide at least 2 parsers to Seq")
 	}
@@ -29,7 +29,7 @@ func Seq[CT comparable, T any](name string, parsers ...Parser[CT, T]) Parser[CT,
 }
 
 // Internal helper function used with Seq# parsers.
-func seqSetResultHelper[CT comparable, T any](first bool, ctx Context[CT], name string, parser Parser[CT, T], resultField *T) error {
+func seqSetResultHelper[CT any, T any](first bool, ctx Context[CT], name string, parser Parser[CT, T], resultField *T) error {
 	node, err := parser(ctx)
 	if err != nil {
 		if IsMustReturnParseErr(err) {
@@ -53,7 +53,7 @@ type Seq2Node[T1, T2 any] struct {
 // Returns a parser that parses all provided parsers in order.
 // This is the same as Seq, but is optimized for N parsers of different types.
 // Returns each parser result in the corresponding typed result field.
-func Seq2[CT comparable, T1, T2 any](name string, parser1 Parser[CT, T1], parser2 Parser[CT, T2]) Parser[CT, *Seq2Node[T1, T2]] {
+func Seq2[CT any, T1, T2 any](name string, parser1 Parser[CT, T1], parser2 Parser[CT, T2]) Parser[CT, *Seq2Node[T1, T2]] {
 	return func(ctx Context[CT]) (*Seq2Node[T1, T2], error) {
 		result := &Seq2Node[T1, T2]{}
 
@@ -78,7 +78,7 @@ type Seq3Node[T1, T2, T3 any] struct {
 // Returns a parser that parses all provided parsers in order.
 // This is the same as Seq, but is optimized for N parsers of different types.
 // Returns each parser result in the corresponding typed result field.
-func Seq3[CT comparable, T1, T2, T3 any](name string, parser1 Parser[CT, T1], parser2 Parser[CT, T2],
+func Seq3[CT any, T1, T2, T3 any](name string, parser1 Parser[CT, T1], parser2 Parser[CT, T2],
 	parser3 Parser[CT, T3]) Parser[CT, *Seq3Node[T1, T2, T3]] {
 
 	return func(ctx Context[CT]) (*Seq3Node[T1, T2, T3], error) {
@@ -109,7 +109,7 @@ type Seq4Node[T1, T2, T3, T4 any] struct {
 // Returns a parser that parses all provided parsers in order.
 // This is the same as Seq, but is optimized for N parsers of different types.
 // Returns each parser result in the corresponding typed result field.
-func Seq4[CT comparable, T1, T2, T3, T4 any](name string, parser1 Parser[CT, T1], parser2 Parser[CT, T2],
+func Seq4[CT any, T1, T2, T3, T4 any](name string, parser1 Parser[CT, T1], parser2 Parser[CT, T2],
 	parser3 Parser[CT, T3], parser4 Parser[CT, T4]) Parser[CT, *Seq4Node[T1, T2, T3, T4]] {
 
 	return func(ctx Context[CT]) (*Seq4Node[T1, T2, T3, T4], error) {
@@ -144,7 +144,7 @@ type Seq5Node[T1, T2, T3, T4, T5 any] struct {
 // Returns a parser that parses all provided parsers in order.
 // This is the same as Seq, but is optimized for N parsers of different types.
 // Returns each parser result in the corresponding typed result field.
-func Seq5[CT comparable, T1, T2, T3, T4, T5 any](name string, parser1 Parser[CT, T1], parser2 Parser[CT, T2],
+func Seq5[CT any, T1, T2, T3, T4, T5 any](name string, parser1 Parser[CT, T1], parser2 Parser[CT, T2],
 	parser3 Parser[CT, T3], parser4 Parser[CT, T4], parser5 Parser[CT, T5]) Parser[CT, *Seq5Node[T1, T2, T3, T4, T5]] {
 
 	return func(ctx Context[CT]) (*Seq5Node[T1, T2, T3, T4, T5], error) {

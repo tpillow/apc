@@ -6,7 +6,7 @@ package apc
 //
 // Also allows for parsers to be added/removed that will skip matched
 // input.
-type Context[CT comparable] interface {
+type Context[CT any] interface {
 	// Returns a string of num runes beginning at offset without consuming
 	// the runes.
 	// The offset is a non-negative value relative to the next unconsumed

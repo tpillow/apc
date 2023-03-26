@@ -10,7 +10,7 @@ import (
 
 // ReaderContext is a Context that operates off of CT as the
 // input stream.
-type ReaderContext[CT comparable] struct {
+type ReaderContext[CT any] struct {
 	// Input stream, where index 0 is the next unconsumed CT.
 	reader ReaderWithOrigin[CT]
 	// Buffer used to store read, but unconsumed, CTs.
@@ -30,7 +30,7 @@ type ReaderContext[CT comparable] struct {
 }
 
 // Returns a *ReaderContext[CT] with the given origin name and CT input stream.
-func NewReaderContext[CT comparable](reader ReaderWithOrigin[CT]) *ReaderContext[CT] {
+func NewReaderContext[CT any](reader ReaderWithOrigin[CT]) *ReaderContext[CT] {
 	return &ReaderContext[CT]{
 		reader:                  reader,
 		buffer:                  make([]CT, 0),

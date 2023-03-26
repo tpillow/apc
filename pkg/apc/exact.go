@@ -2,9 +2,13 @@ package apc
 
 import "errors"
 
+type Equatable[T any] interface {
+	Equal(other T) bool
+}
+
 // Returns a parser that parses the exact CT value.
 // Returns the result as as CT.
-func Exact[CT comparable](value []CT) Parser[CT, []CT] {
+func Exact[CT Equatable[CT]](value []CT) Parser[CT, []CT] {
 	return func(ctx Context[CT]) ([]CT, error) {
 		err := ctx.RunSkipParsers()
 		if err != nil {
@@ -19,7 +23,7 @@ func Exact[CT comparable](value []CT) Parser[CT, []CT] {
 			return nil, ParseErrExpectedButGot(ctx, value, val, nil)
 		}
 		for i, r := range value {
-			if val[i] != r {
+			if val[i].Equal(r) {
 				return nil, ParseErrExpectedButGot(ctx, value, val, nil)
 			}
 		}
