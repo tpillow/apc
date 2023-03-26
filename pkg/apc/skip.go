@@ -2,8 +2,8 @@ package apc
 
 // Returns a parser that temporarily adds the skipParser to the Context
 // while parsing with parser.
-func Skip[T any](skipParser Parser[any], parser Parser[T]) Parser[T] {
-	return func(ctx Context) (T, error) {
+func Skip[CT, T any](skipParser Parser[CT, any], parser Parser[CT, T]) Parser[CT, T] {
+	return func(ctx Context[CT]) (T, error) {
 		ctx.AddSkipParser(skipParser)
 		defer ctx.RemoveSkipParser(skipParser)
 
@@ -14,8 +14,8 @@ func Skip[T any](skipParser Parser[any], parser Parser[T]) Parser[T] {
 
 // Returns a parser that temporarily removes the skipParser from the Context
 // while parsing with parser.
-func Unskip[T any](skipParser Parser[any], parser Parser[T]) Parser[T] {
-	return func(ctx Context) (T, error) {
+func Unskip[CT, T any](skipParser Parser[CT, any], parser Parser[CT, T]) Parser[CT, T] {
+	return func(ctx Context[CT]) (T, error) {
 		ctx.RemoveSkipParser(skipParser)
 		defer ctx.AddSkipParser(skipParser)
 

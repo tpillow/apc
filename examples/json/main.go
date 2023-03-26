@@ -8,11 +8,11 @@ import (
 )
 
 var (
-	valueParser    apc.Parser[any]
+	valueParser    apc.Parser[string, any]
 	valueParserRef = apc.Ref(&valueParser)
 
 	pairParser = apc.Map(
-		apc.Seq3("pair", apc.DoubleQuotedStringParser, apc.Exact(":"), valueParserRef),
+		apc.Seq3("pair", apc.DoubleQuotedStringParser, apc.ExactStr(":"), valueParserRef),
 		func(node *apc.Seq3Node[string, string, any]) PairNode {
 			return PairNode{
 				Key:   node.Result1,
@@ -20,18 +20,18 @@ var (
 			}
 		})
 
-	valueListParser = apc.ZeroOrMoreSeparated("value list", valueParserRef, apc.Exact(","))
-	pairListParser  = apc.ZeroOrMoreSeparated("pair list", pairParser, apc.Exact(","))
+	valueListParser = apc.ZeroOrMoreSeparated("value list", valueParserRef, apc.ExactStr(","))
+	pairListParser  = apc.ZeroOrMoreSeparated("pair list", pairParser, apc.ExactStr(","))
 
 	objParser = apc.Map(
-		apc.Seq3("object", apc.Exact("{"), pairListParser, apc.Exact("}")),
+		apc.Seq3("object", apc.ExactStr("{"), pairListParser, apc.ExactStr("}")),
 		func(node *apc.Seq3Node[string, []PairNode, string]) any {
 			return ObjNode{
 				Pairs: node.Result2,
 			}
 		})
 	arrayParser = apc.Map(
-		apc.Seq3("array", apc.Exact("["), valueListParser, apc.Exact("]")),
+		apc.Seq3("array", apc.ExactStr("["), valueListParser, apc.ExactStr("]")),
 		func(node *apc.Seq3Node[string, []any, string]) ArrayNode {
 			return ArrayNode{
 				Nodes: node.Result2,
@@ -43,7 +43,7 @@ func main() {
 	valueParser = apc.OneOf("value",
 		apc.MapToAny(apc.FloatParser),
 		apc.MapToAny(apc.BoolParser),
-		apc.MapToAny(apc.Bind[string, any](apc.Exact("null"), nil)),
+		apc.MapToAny(apc.Bind[string, string, any](apc.ExactStr("null"), nil)),
 		apc.MapToAny(apc.DoubleQuotedStringParser),
 		apc.MapToAny(objParser),
 		apc.MapToAny(arrayParser))
@@ -53,7 +53,7 @@ func main() {
 	ctx.AddSkipParser(apc.MapToAny(apc.WhitespaceParser))
 
 	fmt.Printf("Input: %v\n", input)
-	node, err := apc.Parse(ctx, valueParser, apc.DefaultParseConfig)
+	node, err := apc.Parse[string](ctx, valueParser, apc.DefaultParseConfig)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 	}

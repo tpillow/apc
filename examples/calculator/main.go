@@ -23,12 +23,12 @@ const (
 )
 
 var (
-	opAddParser = apc.Bind(apc.Exact(string(OpAdd)), OpAdd)
-	opSubParser = apc.Bind(apc.Exact(string(OpSub)), OpSub)
-	opMulParser = apc.Bind(apc.Exact(string(OpMul)), OpMul)
-	opDivParser = apc.Bind(apc.Exact(string(OpDiv)), OpDiv)
+	opAddParser = apc.Bind(apc.ExactStr(string(OpAdd)), OpAdd)
+	opSubParser = apc.Bind(apc.ExactStr(string(OpSub)), OpSub)
+	opMulParser = apc.Bind(apc.ExactStr(string(OpMul)), OpMul)
+	opDivParser = apc.Bind(apc.ExactStr(string(OpDiv)), OpDiv)
 
-	factorParser    apc.Parser[Executable]
+	factorParser    apc.Parser[string, Executable]
 	factorParserRef = apc.Ref(&factorParser)
 
 	termParser = apc.Map(
@@ -81,9 +81,9 @@ func initParser() {
 			}),
 		apc.Map(
 			apc.Seq3("",
-				apc.Exact("("),
+				apc.ExactStr("("),
 				exprParser,
-				apc.Exact(")")),
+				apc.ExactStr(")")),
 			func(node *apc.Seq3Node[string, Executable, string]) Executable {
 				return node.Result2
 			}))
@@ -93,7 +93,7 @@ func executeInput(input string) {
 	ctx := apc.NewStringContext("<user_input>", input)
 	ctx.AddSkipParser(apc.MapToAny(apc.WhitespaceParser))
 
-	node, err := apc.Parse(ctx, maybeExprParser, apc.DefaultParseConfig)
+	node, err := apc.Parse[string](ctx, maybeExprParser, apc.DefaultParseConfig)
 	if err != nil {
 		fmt.Printf("Error parsing input: %v\n", err)
 		return

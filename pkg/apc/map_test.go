@@ -29,7 +29,7 @@ func TestMapParser(t *testing.T) {
 
 func TestBindParser(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, "hi_")
-	p := Bind(Exact("hi"), 55)
+	p := Bind(ExactStr("hi"), 55)
 
 	node, err := p(ctx)
 	assert.NoError(t, err)

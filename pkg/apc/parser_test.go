@@ -8,12 +8,12 @@ import (
 
 func TestParseFuncOptionMustParseToEOF(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, "hihiho")
-	p := Exact("hi")
+	p := ExactStr("hi")
 
-	node, err := Parse(ctx, p, ParseConfig{MustParseToEOF: false})
+	node, err := Parse[string](ctx, p, ParseConfig{MustParseToEOF: false})
 	assert.NoError(t, err)
 	assert.Equal(t, "hi", node)
 
-	_, err = Parse(ctx, p, ParseConfig{MustParseToEOF: true})
+	_, err = Parse[string](ctx, p, ParseConfig{MustParseToEOF: true})
 	assert.ErrorIs(t, err, ErrParseErr)
 }

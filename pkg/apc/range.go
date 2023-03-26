@@ -9,7 +9,7 @@ import (
 //
 // The min must be >= 0, and max must be > 0. Unless max == -1, in which case
 // no maximum is set.
-func Range[T any](name string, min int, max int, parser Parser[T]) Parser[[]T] {
+func Range[CT, T any](name string, min int, max int, parser Parser[CT, T]) Parser[CT, []T] {
 	if min < 0 {
 		panic("min must be >= 0")
 	}
@@ -17,7 +17,7 @@ func Range[T any](name string, min int, max int, parser Parser[T]) Parser[[]T] {
 		panic("max must be either -1 (no limit) or > 0")
 	}
 
-	return func(ctx Context) ([]T, error) {
+	return func(ctx Context[CT]) ([]T, error) {
 		nodes := make([]T, 0)
 
 		node, err := parser(ctx)
@@ -44,18 +44,18 @@ func Range[T any](name string, min int, max int, parser Parser[T]) Parser[[]T] {
 }
 
 // Same as Range(name, 0, -1, parser).
-func ZeroOrMore[T any](name string, parser Parser[T]) Parser[[]T] {
+func ZeroOrMore[CT, T any](name string, parser Parser[CT, T]) Parser[CT, []T] {
 	return Range(name, 0, -1, parser)
 }
 
 // Same as Range(name, 1, -1, parser).
-func OneOrMore[T any](name string, parser Parser[T]) Parser[[]T] {
+func OneOrMore[CT, T any](name string, parser Parser[CT, T]) Parser[CT, []T] {
 	return Range(name, 1, -1, parser)
 }
 
 // Same as Range(name, 0, 1, parser), but with the resulting slice mapped
 // to a single value, or default T if 0 matches occurred.
-func Maybe[T any](name string, parser Parser[T]) Parser[T] {
+func Maybe[CT, T any](name string, parser Parser[CT, T]) Parser[CT, T] {
 	return Map(Range(name, 0, 1, parser), func(node []T) T {
 		if node == nil || len(node) <= 0 {
 			return zeroVal[T]()
@@ -69,7 +69,8 @@ func Maybe[T any](name string, parser Parser[T]) Parser[T] {
 
 // Same as OneOrMore(name, parser), but ensures that each subsequent match is separated by
 // a successful parse by sepParser. The results of sepParser are not returned.
-func OneOrMoreSeparated[T, U any](name string, parser Parser[T], sepParser Parser[U]) Parser[[]T] {
+func OneOrMoreSeparated[CT, T, U any](name string, parser Parser[CT, T],
+	sepParser Parser[CT, U]) Parser[CT, []T] {
 	sepParse := Map(
 		Seq2(name, sepParser, parser),
 		func(node *Seq2Node[U, T]) T {
@@ -86,7 +87,8 @@ func OneOrMoreSeparated[T, U any](name string, parser Parser[T], sepParser Parse
 
 // Same as ZeroOrMore(name, parser), but ensures that each subsequent match is separated by
 // a successful parse by sepParser. The results of sepParser are not returned.
-func ZeroOrMoreSeparated[T, U any](name string, parser Parser[T], sepParser Parser[U]) Parser[[]T] {
+func ZeroOrMoreSeparated[CT, T, U any](name string, parser Parser[CT, T],
+	sepParser Parser[CT, U]) Parser[CT, []T] {
 	return Map(
 		Maybe(name, OneOrMoreSeparated(name, parser, sepParser)),
 		func(node []T) []T {

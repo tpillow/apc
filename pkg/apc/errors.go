@@ -49,7 +49,7 @@ type ParseError struct {
 }
 
 // Returns a ParseError with an error message in the format of "expected but got".
-func ParseErrExpectedButGot(ctx Context, expected interface{}, got interface{}, wrapErr error) *ParseError {
+func ParseErrExpectedButGot[CT any](ctx Context[CT], expected interface{}, got interface{}, wrapErr error) *ParseError {
 	return &ParseError{
 		Err:     wrapErr,
 		Message: fmt.Sprintf("expected %v but got %v", expected, got),
@@ -59,11 +59,8 @@ func ParseErrExpectedButGot(ctx Context, expected interface{}, got interface{}, 
 
 // Returns a ParseError with an error message in the format of "expected but got" where
 // got is the next N input runes (truncated).
-func ParseErrExpectedButGotNext(ctx Context, expected interface{}, wrapErr error) *ParseError {
-	got, _ := ctx.Peek(0, 16) // Note: no error handle here
-	if len(got) >= 16 {
-		got = fmt.Sprintf("%v ...more...", got)
-	}
+func ParseErrExpectedButGotNext[CT any](ctx Context[CT], expected interface{}, wrapErr error) *ParseError {
+	got, _ := ctx.Peek(0, 1) // Note: no error handle here
 	return ParseErrExpectedButGot(ctx, expected, got, wrapErr)
 }
 
@@ -99,7 +96,7 @@ type ParseErrorConsumed struct {
 	Origin Origin
 }
 
-func ParseErrConsumedExpectedButGot(ctx Context, expected interface{}, got interface{}, wrapErr error) *ParseErrorConsumed {
+func ParseErrConsumedExpectedButGot[CT any](ctx Context[CT], expected interface{}, got interface{}, wrapErr error) *ParseErrorConsumed {
 	return &ParseErrorConsumed{
 		Err:     wrapErr,
 		Message: fmt.Sprintf("expected %v but got %v", expected, got),
@@ -109,11 +106,8 @@ func ParseErrConsumedExpectedButGot(ctx Context, expected interface{}, got inter
 
 // Returns a ParseError with an error message in the format of "expected but got" where
 // got is the next N input runes (truncated).
-func ParseErrConsumedExpectedButGotNext(ctx Context, expected interface{}, wrapErr error) *ParseErrorConsumed {
-	got, _ := ctx.Peek(0, 16) // Note: no error handle here
-	if len(got) >= 16 {
-		got = fmt.Sprintf("%v ...more...", got)
-	}
+func ParseErrConsumedExpectedButGotNext[CT any](ctx Context[CT], expected interface{}, wrapErr error) *ParseErrorConsumed {
+	got, _ := ctx.Peek(0, 1) // Note: no error handle here
 	return ParseErrConsumedExpectedButGot(ctx, expected, got, wrapErr)
 }
 

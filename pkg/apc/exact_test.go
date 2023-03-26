@@ -8,7 +8,7 @@ import (
 
 func TestExactParser(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, "hiho")
-	p := Exact("hi")
+	p := ExactStr("hi")
 
 	node, err := p(ctx)
 	assert.NoError(t, err)

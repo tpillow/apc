@@ -10,7 +10,7 @@ import (
 //
 // Also allows for parsers to be added/removed that will skip matched
 // input.
-type Context interface {
+type Context[T any] interface {
 	// Returns a string of num runes beginning at offset without consuming
 	// the runes.
 	// The offset is a non-negative value relative to the next unconsumed
@@ -19,14 +19,14 @@ type Context interface {
 	// If the end of input is reached, an EOFError is returned along
 	// with any peeked runes returned as a string (which may be less
 	// than num runes in length if end of input has been reached).
-	Peek(offset int, num int) (string, error)
+	Peek(offset int, num int) (T, error)
 	// Advances the input stream by num runes, returning the consumed
 	// runes as a string.
 	//
 	// If the end of input is reached, an EOFError is returned along
 	// with any consumed runes returned as a string (which may be less
 	// than num runes in length if end of input has been reached).
-	Consume(num int) (string, error)
+	Consume(num int) (T, error)
 	// Returns an Origin representing the next unconsumed rune in the
 	// input stream.
 	GetCurOrigin() Origin
@@ -34,11 +34,11 @@ type Context interface {
 	// Adds the parser to the list of parsers that attempt to run when
 	// RunSkipParsers is called. If the parser matches, its result will
 	// be discarded. Duplicate parsers cannot be added.
-	AddSkipParser(parser Parser[any])
+	AddSkipParser(parser Parser[T, any])
 	// Removes the parser from the list of parsers that attempt to run
 	// when RunSkipParsers is called. If the parser has not been added,
 	// the function panics.
-	RemoveSkipParser(parser Parser[any])
+	RemoveSkipParser(parser Parser[T, any])
 	// Attempts to run any added skip parsers as long as one of the parsers
 	// successfully matches. The results of any matched parsers is discarded.
 	// Should only return nil or non-ParseError errors.
@@ -53,7 +53,7 @@ type StringContext struct {
 	// Current origin of the input stream.
 	curOrigin Origin
 	// List of parsers to attempt to run, discarding the result.
-	skipParsers []Parser[any]
+	skipParsers []Parser[string, any]
 	// Whether or not RunSkipParsers is currently running.
 	skipping bool
 	// If true, RunSkipParsers will be a no-op. The assumption is that
@@ -71,7 +71,7 @@ func NewStringContextFromRunes(originName string, data []rune) *StringContext {
 			LineNum: 1,
 			ColNum:  1,
 		},
-		skipParsers:             make([]Parser[any], 0),
+		skipParsers:             make([]Parser[string, any], 0),
 		skipping:                false,
 		skippedSinceLastConsume: false,
 	}
@@ -124,7 +124,7 @@ func (ctx *StringContext) GetCurOrigin() Origin {
 	return ctx.curOrigin
 }
 
-func (ctx *StringContext) AddSkipParser(parser Parser[any]) {
+func (ctx *StringContext) AddSkipParser(parser Parser[string, any]) {
 	for _, p := range ctx.skipParsers {
 		if &p == &parser {
 			panic("cannot add duplicate skip parser")
@@ -133,9 +133,9 @@ func (ctx *StringContext) AddSkipParser(parser Parser[any]) {
 	ctx.skipParsers = append(ctx.skipParsers, parser)
 }
 
-func (ctx *StringContext) RemoveSkipParser(parser Parser[any]) {
+func (ctx *StringContext) RemoveSkipParser(parser Parser[string, any]) {
 	i := -1
-	var p Parser[any]
+	var p Parser[string, any]
 	for i, p = range ctx.skipParsers {
 		if &p == &parser {
 			break

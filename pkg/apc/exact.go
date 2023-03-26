@@ -4,12 +4,12 @@ import "errors"
 
 // Returns a parser that parses the exact string value.
 // Returns the result as as string.
-func Exact(value string) Parser[string] {
+func ExactStr(value string) Parser[string, string] {
 	if len(value) <= 0 {
 		panic("value for Exact must have a length > 0")
 	}
 
-	return func(ctx Context) (string, error) {
+	return func(ctx Context[string]) (string, error) {
 		err := ctx.RunSkipParsers()
 		if err != nil {
 			return "", err
