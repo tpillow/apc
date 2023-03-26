@@ -13,7 +13,7 @@ type Token struct {
 }
 
 func (t Token) String() string {
-	return fmt.Sprintf("token %v (%v)", t.Type, t.Value)
+	return fmt.Sprintf("token %v ('%v')", t.Type, t.Value)
 }
 
 func ExactTokenType(tokenType TokenType) Parser[Token, Token] {
@@ -50,7 +50,7 @@ func ExactTokenValue(tokenType TokenType, value any) Parser[Token, Token] {
 		}
 		val := vals[0]
 		if val.Type != tokenType || val.Value != value {
-			return Token{}, ParseErrExpectedButGot(ctx, tokenType, val, nil)
+			return Token{}, ParseErrExpectedButGot(ctx, fmt.Sprintf("token %v ('%v')", tokenType, value), val, nil)
 		}
 		_, err = ctx.Consume(1)
 		if err != nil && !errors.Is(err, ErrEOF) {
