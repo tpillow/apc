@@ -8,12 +8,12 @@ type ReaderWithOrigin[T any] interface {
 	Read() (T, Origin, error)
 }
 
-type ParseReader[CT any, T any] struct {
+type ParseReader[CT, T any] struct {
 	ctx    Context[CT]
 	parser Parser[CT, T]
 }
 
-func NewParseReader[CT any, T any](ctx Context[CT], parser Parser[CT, T]) *ParseReader[CT, T] {
+func NewParseReader[CT, T any](ctx Context[CT], parser Parser[CT, T]) *ParseReader[CT, T] {
 	return &ParseReader[CT, T]{
 		ctx:    ctx,
 		parser: parser,
@@ -62,12 +62,12 @@ func (r *RuneReaderWithOrigin) Read() (rune, Origin, error) {
 	return rn, origin, nil
 }
 
-type Lexer[CT any, T any] struct {
+type Lexer[CT, T any] struct {
 	ctx    Context[CT]
 	parser Parser[CT, T]
 }
 
-func NewLexer[CT any, T any](ctx Context[CT], parser Parser[CT, T]) *Lexer[CT, T] {
+func NewLexer[CT, T any](ctx Context[CT], parser Parser[CT, T]) *Lexer[CT, T] {
 	return &Lexer[CT, T]{
 		ctx:    ctx,
 		parser: parser,

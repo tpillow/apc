@@ -2,7 +2,7 @@ package apc
 
 // Returns a parser that attempts to parse, in order, the provided parsers.
 // Returns the result of the first successful parser.
-func OneOf[CT any, T any](name string, parsers ...Parser[CT, T]) Parser[CT, T] {
+func OneOf[CT, T any](name string, parsers ...Parser[CT, T]) Parser[CT, T] {
 	if len(parsers) < 2 {
 		panic("must provide at least 2 parsers to OneOf")
 	}
