@@ -7,7 +7,7 @@ import (
 )
 
 func TestExactParser(t *testing.T) {
-	ctx := NewRuneContextFromStr(testStringOrigin, "hiho")
+	ctx := NewStringContext(testStringOrigin, "hiho")
 	p := ExactStr("hi")
 
 	node, err := p(ctx)

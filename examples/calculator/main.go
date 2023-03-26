@@ -90,7 +90,7 @@ func initParser() {
 }
 
 func executeInput(input string) {
-	ctx := apc.NewRuneContextFromStr("<user_input>", input)
+	ctx := apc.NewStringContext("<user_input>", input)
 	ctx.AddSkipParser(apc.MapToAny(apc.WhitespaceParser))
 
 	node, err := apc.Parse[rune](ctx, maybeExprParser, apc.DefaultParseConfig)

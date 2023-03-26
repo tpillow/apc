@@ -8,6 +8,7 @@ APC does not yet support backtracking/lookahead > 1. My primary goal is to first
 
 - Better error messages / traces.
 - Lookahead support.
+- Update doc comments that are now incorrect.
 - Doc generation (doc comments already added).
 
 ## Example Executables

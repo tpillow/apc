@@ -7,7 +7,7 @@ import (
 )
 
 func TestParseErrorNoWrapsTypesIs(t *testing.T) {
-	ctx := NewRuneContextFromStr(testStringOrigin, "")
+	ctx := NewStringContext(testStringOrigin, "")
 	pe := ParseErrExpectedButGot[rune](ctx, false, true, nil)
 	pec := ParseErrConsumedExpectedButGot[rune](ctx, false, true, nil)
 
@@ -22,7 +22,7 @@ func TestParseErrorNoWrapsTypesIs(t *testing.T) {
 }
 
 func TestParseErrorConsumedWrapsTypesIs(t *testing.T) {
-	ctx := NewRuneContextFromStr(testStringOrigin, "")
+	ctx := NewStringContext(testStringOrigin, "")
 	pe := ParseErrExpectedButGot[rune](ctx, false, true, nil)
 	pec := ParseErrConsumedExpectedButGot[rune](ctx, false, true, pe)
 

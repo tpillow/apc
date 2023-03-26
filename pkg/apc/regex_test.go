@@ -7,7 +7,7 @@ import (
 )
 
 func TestRegexParser(t *testing.T) {
-	ctx := NewRuneContextFromStr(testStringOrigin, "###_##")
+	ctx := NewStringContext(testStringOrigin, "###_##")
 	p := Regex("", "#+")
 
 	node, err := p(ctx)

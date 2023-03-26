@@ -8,7 +8,7 @@ import (
 )
 
 func TestMapParser(t *testing.T) {
-	ctx := NewRuneContextFromStr(testStringOrigin, "342_")
+	ctx := NewStringContext(testStringOrigin, "342_")
 	p := Map(Regex("", "\\d+"), func(node string) int64 {
 		val, err := strconv.ParseInt(node, 10, 64)
 		assert.NoError(t, err)
@@ -28,7 +28,7 @@ func TestMapParser(t *testing.T) {
 }
 
 func TestBindParser(t *testing.T) {
-	ctx := NewRuneContextFromStr(testStringOrigin, "hi_")
+	ctx := NewStringContext(testStringOrigin, "hi_")
 	p := Bind(ExactStr("hi"), 55)
 
 	node, err := p(ctx)

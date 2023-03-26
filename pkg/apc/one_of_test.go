@@ -7,7 +7,7 @@ import (
 )
 
 func TestOneOfParser(t *testing.T) {
-	ctx := NewRuneContextFromStr(testStringOrigin, "###hi##")
+	ctx := NewStringContext(testStringOrigin, "###hi##")
 	p1 := Regex("", "#+")
 	p2 := ExactStr("hi")
 	p := OneOf("", p1, p2)

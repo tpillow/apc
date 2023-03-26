@@ -9,11 +9,11 @@ import (
 func TestRangeParser(t *testing.T) {
 	p := Range("", 2, 3, ExactStr("hi"))
 
-	ctx := NewRuneContextFromStr(testStringOrigin, "hi")
+	ctx := NewStringContext(testStringOrigin, "hi")
 	_, err := p(ctx)
 	assert.ErrorIs(t, err, ErrParseErrConsumed)
 
-	ctx = NewRuneContextFromStr(testStringOrigin, "hihihihi")
+	ctx = NewStringContext(testStringOrigin, "hihihihi")
 	node, err := p(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, []string{"hi", "hi", "hi"}, node)
@@ -21,23 +21,23 @@ func TestRangeParser(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, []rune{'h'}, r)
 
-	ctx = NewRuneContextFromStr(testStringOrigin, "hihi")
+	ctx = NewStringContext(testStringOrigin, "hihi")
 	node, err = p(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, []string{"hi", "hi"}, node)
 
-	ctx = NewRuneContextFromStr(testStringOrigin, "hihihi")
+	ctx = NewStringContext(testStringOrigin, "hihihi")
 	node, err = p(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, []string{"hi", "hi", "hi"}, node)
 
-	ctx = NewRuneContextFromStr(testStringOrigin, "__")
+	ctx = NewStringContext(testStringOrigin, "__")
 	_, err = p(ctx)
 	assert.ErrorIs(t, err, ErrParseErr)
 }
 
 func TestMaybeParser(t *testing.T) {
-	ctx := NewRuneContextFromStr(testStringOrigin, "hibye")
+	ctx := NewStringContext(testStringOrigin, "hibye")
 	intVal := 55
 	p := Maybe("", Bind(MapToAny(ExactStr("hi")), &intVal))
 
@@ -55,7 +55,7 @@ func TestMaybeParser(t *testing.T) {
 }
 
 func TestOneOrMoreParserWithSeq2(t *testing.T) {
-	ctx := NewRuneContextFromStr(testStringOrigin, "#$#$")
+	ctx := NewStringContext(testStringOrigin, "#$#$")
 	p := OneOrMore("", Seq("", ExactStr("#"), ExactStr("$")))
 
 	node, err := p(ctx)
@@ -65,13 +65,13 @@ func TestOneOrMoreParserWithSeq2(t *testing.T) {
 		{"#", "$"},
 	}, node)
 
-	ctx = NewRuneContextFromStr(testStringOrigin, "#$#$#")
+	ctx = NewStringContext(testStringOrigin, "#$#$#")
 	_, err = p(ctx)
 	assert.ErrorIs(t, err, ErrParseErrConsumed)
 }
 
 func TestOneOrMoreSeparatedParser(t *testing.T) {
-	ctx := NewRuneContextFromStr(testStringOrigin, "55,66")
+	ctx := NewStringContext(testStringOrigin, "55,66")
 	p := OneOrMoreSeparated("", IntParser, ExactStr(","))
 
 	node, err := p(ctx)
@@ -81,7 +81,7 @@ func TestOneOrMoreSeparatedParser(t *testing.T) {
 	_, err = ctx.Peek(0, 1)
 	assert.ErrorIs(t, err, ErrEOF)
 
-	ctx = NewRuneContextFromStr(testStringOrigin, "55,66,")
+	ctx = NewStringContext(testStringOrigin, "55,66,")
 	_, err = p(ctx)
 	assert.ErrorIs(t, err, ErrParseErrConsumed)
 }

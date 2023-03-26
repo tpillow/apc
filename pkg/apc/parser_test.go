@@ -7,7 +7,7 @@ import (
 )
 
 func TestParseFuncOptionMustParseToEOF(t *testing.T) {
-	ctx := NewRuneContextFromStr(testStringOrigin, "hihiho")
+	ctx := NewStringContext(testStringOrigin, "hihiho")
 	p := ExactStr("hi")
 
 	node, err := Parse[rune](ctx, p, ParseConfig{MustParseToEOF: false})

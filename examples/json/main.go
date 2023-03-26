@@ -49,7 +49,7 @@ func main() {
 		apc.MapToAny(arrayParser))
 
 	input := ` { "name" : "Tom" , "age" : 55 , "weight":23.35,"hobbies" : [ "sports" , "stuff" , -55, +3.4, [], {} ] } `
-	ctx := apc.NewRuneContextFromStr("<string>", input)
+	ctx := apc.NewStringContext("<string>", input)
 	ctx.AddSkipParser(apc.MapToAny(apc.WhitespaceParser))
 
 	fmt.Printf("Input: %v\n", input)
