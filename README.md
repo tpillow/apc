@@ -18,9 +18,9 @@ APC does not yet support backtracking/lookahead > 1. My primary goal is to first
 
 ## The Basics
 
-### `Parser[T]`
+### `Parser[CT, T]`
 
-A parser is defined as a function with the following signature: `type Parser[T any] func(ctx Context) (T, error)`. In other words, a function that takes a `Context` for peeking/consuming an input stream, returning a tuple `(T, error)` where `T` is the return type of a successful parse. If parsing is successful, `error` should be `nil`. Otherwise, a parser may return one of 3 types of errors that must be handled:
+A parser is defined as a function with the following signature: `type Parser[CT comparable, T any] func(ctx Context[CT]) (T, error)`. In other words, a function that takes a `Context[CT]` (where `CT` is the type of input stream token) for peeking/consuming an input stream, returning a tuple `(T, error)` where `T` is the return type of a successful parse. If parsing is successful, `error` should be `nil`. Otherwise, a parser may return one of 3 types of errors that must be handled:
 
 1. `ParseError` - parsing failed, but input was NOT consumed. This means other parsers later in the line will be tried.
 2. `ParseErrorConsumed` - parsing failed, and some input WAS consumed. This will cause an immediate fail of parsing entirely, as no lookahead is implemented yet.
@@ -36,32 +36,32 @@ TODO
 
 ### The `Ref` Parser
 
-Creates a `Parser[T]` from a `*Parser[T]`. This is useful for avoiding circular dependencies. For example, the following is invalid due to a circular reference:
+Creates a `Parser[CT, T]` from a `*Parser[CT, T]`. This is useful for avoiding circular dependencies. For example, the following is invalid due to a circular reference:
 
 ```go
 // `value` refers to `hashValue`.
-var value = OneOf[any]("", MapToAny(Exact("hello")), MapToAny(hashValue))
+var value = OneOf[rune, any]("", MapToAny(Exact("hello")), MapToAny(hashValue))
 // `hashValue` refers to `value`.
-var hashValue = Seq[any]("", MapToAny(Exact("#")), value)
+var hashValue = Seq[rune, any]("", MapToAny(Exact("#")), value)
 ```
 
 However this can be remedied by using `Ref`:
 
 ```go
 // `value` is just a variable declaration with no assignment.
-var value Parser[any]
+var value Parser[rune, any]
 // `valueRef` is a parser referring to `value`, which is not yet assigned.
-var valueRef = Ref[any](&value)
+var valueRef = Ref[rune, any](&value)
 // `hashValue` refers to `valueRef` - NOT `value`.
-var hashValue = Seq[any]("", MapToAny(Exact("#")), valueRef)
+var hashValue = Seq[rune, any]("", MapToAny(Exact("#")), valueRef)
 
 func init() {
     // At runtime, `value` can then be defined and refer to `hashValue`:
-    value = OneOf[any]("", MapToAny(Exact("hello")), MapToAny(hashValue))
+    value = OneOf[rune, any]("", MapToAny(Exact("hello")), MapToAny(hashValue))
 }
 ```
 
-Note that in the above example `MapToAny(hashValue)` is necessary because a `Seq[any]` returns `[]any` (not `any`).
+Note that in the above example `MapToAny(hashValue)` is necessary because a `Seq[CT, any]` returns `[]any` (not `any`).
 
 ### Origin
 

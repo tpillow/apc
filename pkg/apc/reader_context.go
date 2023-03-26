@@ -6,14 +6,17 @@ import (
 	"strings"
 )
 
-// RuneContext is a Context that operates off of []rune as the
+// ReaderContext is a Context that operates off of CT as the
 // input stream.
 type ReaderContext[CT comparable] struct {
-	// Input stream, where index 0 is the next unconsumed rune.
-	reader        ReaderWithOrigin[CT]
-	buffer        []CT
+	// Input stream, where index 0 is the next unconsumed CT.
+	reader ReaderWithOrigin[CT]
+	// Buffer used to store read, but unconsumed, CTs.
+	buffer []CT
+	// A buffer that matches Origin to each corresponding element in buffer.
 	bufferOrigins []Origin
-	lastOrigin    Origin
+	// The last Origin read from the reader.
+	lastOrigin Origin
 	// List of parsers to attempt to run, discarding the result.
 	skipParsers []Parser[CT, any]
 	// Whether or not RunSkipParsers is currently running.
@@ -24,7 +27,7 @@ type ReaderContext[CT comparable] struct {
 	skippedSinceLastConsume bool
 }
 
-// Returns a *StringContext with the given origin name and []rune input stream.
+// Returns a *ReaderContext[CT] with the given origin name and CT input stream.
 func NewReaderContext[CT comparable](reader ReaderWithOrigin[CT]) *ReaderContext[CT] {
 	return &ReaderContext[CT]{
 		reader:                  reader,
@@ -37,14 +40,18 @@ func NewReaderContext[CT comparable](reader ReaderWithOrigin[CT]) *ReaderContext
 	}
 }
 
+// Returns a *ReaderContext[rune] from an io.RuneReader.
 func NewRuneReaderContext(originName string, reader io.RuneReader) *ReaderContext[rune] {
 	return NewReaderContext[rune](NewRuneReaderWithOrigin(originName, reader))
 }
 
+// Returns a *ReaderContext[rune] from a string.
 func NewStringContext(originName string, data string) *ReaderContext[rune] {
 	return NewRuneReaderContext(originName, strings.NewReader(data))
 }
 
+// Tries to ensure that num values are in the ctx.buffer. If ErrEOF is reached,
+// a nil error is returned here. If another error is reached, that error is returned.
 func (ctx *ReaderContext[CT]) maybeEnsureBufferLoaded(num int) error {
 	if len(ctx.buffer) >= num {
 		return nil

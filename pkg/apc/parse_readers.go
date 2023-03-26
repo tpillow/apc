@@ -61,3 +61,23 @@ func (r *RuneReaderWithOrigin) Read() (rune, Origin, error) {
 
 	return rn, origin, nil
 }
+
+type Lexer[CT comparable, T any] struct {
+	ctx    Context[CT]
+	parser Parser[CT, T]
+}
+
+func NewLexer[CT comparable, T any](ctx Context[CT], parser Parser[CT, T]) *Lexer[CT, T] {
+	return &Lexer[CT, T]{
+		ctx:    ctx,
+		parser: parser,
+	}
+}
+
+func (r *Lexer[CT, T]) Read() (T, Origin, error) {
+	val, err := r.parser(r.ctx)
+	if err != nil {
+		return zeroVal[T](), r.ctx.GetCurOrigin(), err
+	}
+	return val, r.ctx.GetCurOrigin(), nil
+}
