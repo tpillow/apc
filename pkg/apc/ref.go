@@ -17,10 +17,9 @@ package apc
 //	value = OneOf("", MapToAny(Exact("hello")), hashValue)
 func Ref[CT, T any](parserPtr *Parser[CT, T]) Parser[CT, T] {
 	return func(ctx Context[CT]) (T, error) {
-		parser := *parserPtr
-		if parser == nil {
+		if parserPtr == nil {
 			panic("cannot have a Ref to a nil parser")
 		}
-		return parser(ctx)
+		return (*parserPtr)(ctx)
 	}
 }

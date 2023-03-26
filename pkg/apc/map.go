@@ -3,6 +3,9 @@ package apc
 // MapFunc is a function that maps some type T to some type U.
 type MapFunc[T, U any] func(node T) U
 
+// MapFuncWithOrigin is a function that maps some type T to some type U.
+type MapFuncWithOrigin[T, U any] func(node T, origin Origin) U
+
 // Returns a parser that maps a Parser[T] into a Parser[U] by running the
 // result of the parser through mapFunc.
 func Map[CT, T, U any](parser Parser[CT, T], mapFunc MapFunc[T, U]) Parser[CT, U] {
