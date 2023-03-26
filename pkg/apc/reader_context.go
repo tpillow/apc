@@ -1,8 +1,10 @@
 package apc
 
 import (
+	"bufio"
 	"errors"
 	"io"
+	"os"
 	"strings"
 )
 
@@ -48,6 +50,11 @@ func NewRuneReaderContext(originName string, reader io.RuneReader) *ReaderContex
 // Returns a *ReaderContext[rune] from a string.
 func NewStringContext(originName string, data string) *ReaderContext[rune] {
 	return NewRuneReaderContext(originName, strings.NewReader(data))
+}
+
+// Returns a *ReaderContext[rune] from a file.
+func NewFileContext(file *os.File) *ReaderContext[rune] {
+	return NewRuneReaderContext(file.Name(), bufio.NewReader(file))
 }
 
 // Tries to ensure that num values are in the ctx.buffer. If ErrEOF is reached,
