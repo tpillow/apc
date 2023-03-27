@@ -2,7 +2,9 @@
 
 APC (Another Parser Combinator) is a minimalist parser combinator library written in Go. APC utilizes Go generics as much as possible, to reduce the amount of type casting that must happen, as some other libraries rely on.
 
-APC does not yet support backtracking/lookahead > 1. My primary goal is to first get a stable combinator library setup before implementing lookahead support.
+APC is flexible enough to parse an input stream directly, or optionally the input can first be passed through an APC parser acting as a lexer. The tokens produced by this lexer can then be used as an input stream to token-based parsers.
+
+APC does not yet support backtracking/lookahead. My primary goal is to first get a stable combinator library setup before implementing lookahead support.
 
 ## Future Plans
 
