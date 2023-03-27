@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strings"
 
@@ -20,6 +21,7 @@ const (
 	OpSub Operator = "-"
 	OpMul Operator = "*"
 	OpDiv Operator = "/"
+	OpExp Operator = "^"
 )
 
 var (
@@ -27,17 +29,37 @@ var (
 	opSubParser = apc.Bind(apc.ExactStr(string(OpSub)), OpSub)
 	opMulParser = apc.Bind(apc.ExactStr(string(OpMul)), OpMul)
 	opDivParser = apc.Bind(apc.ExactStr(string(OpDiv)), OpDiv)
+	opExpParser = apc.Bind(apc.ExactStr(string(OpExp)), OpExp)
 
 	factorParser    apc.Parser[rune, Executable]
 	factorParserRef = apc.Ref(&factorParser)
 
-	termParser = apc.Map(
-		apc.Seq2("term",
+	exponentTermParser = apc.Map(
+		apc.Seq2("exponent term",
 			factorParserRef,
 			apc.ZeroOrMore("",
 				apc.Seq2("",
-					apc.OneOf("", opMulParser, opDivParser),
+					opExpParser,
 					factorParserRef))),
+		func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]], _ apc.Origin) Executable {
+			left := node.Result1
+			for _, seqRes := range node.Result2 {
+				left = BinOpNode{
+					Operator: seqRes.Result1,
+					Left:     left,
+					Right:    seqRes.Result2,
+				}
+			}
+			return left
+		})
+
+	termParser = apc.Map(
+		apc.Seq2("term",
+			exponentTermParser,
+			apc.ZeroOrMore("",
+				apc.Seq2("",
+					apc.OneOf("", opMulParser, opDivParser),
+					exponentTermParser))),
 		func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]], _ apc.Origin) Executable {
 			left := node.Result1
 			for _, seqRes := range node.Result2 {
@@ -110,7 +132,7 @@ func main() {
 	initParser()
 	inputPrompt := "Input expression: "
 
-	input := "1 + 2 * (4 - 3)"
+	input := "1 + 2 * 3 ^ (5 - 3)"
 	fmt.Print("Welcome to the APC calculator. Type 'q' to quit.\n")
 	fmt.Printf("Here, I'll do one first:\n\n%v%v\n", inputPrompt, input)
 	executeInput(input)
@@ -157,6 +179,8 @@ func (n BinOpNode) Execute() float64 {
 		return n.Left.Execute() * n.Right.Execute()
 	case OpDiv:
 		return n.Left.Execute() / n.Right.Execute()
+	case OpExp:
+		return math.Pow(n.Left.Execute(), n.Right.Execute())
 	}
 	panic("unknown operator")
 }
