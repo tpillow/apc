@@ -1,6 +1,6 @@
 // Package apc provides a minimalist parser combinator library.
 //
-// Backtracking once input is consumed is not currently supported.
+// Backtracking/lookahead is not currently supported.
 package apc
 
 // A sane default for ParseConfig.
@@ -8,7 +8,7 @@ var DefaultParseConfig = ParseConfig{
 	MustParseToEOF: true,
 }
 
-// Parser[T] represents a parser that takes a Context and returns a result of type T or an error.
+// Parser[CT, T] represents a parser that takes a Context[CT] and returns a result of type T or an error.
 //
 // Should return a nil error if the result was parsed and consumed.
 // Should return a ParseError error if parsing failed, and no input was consumed.

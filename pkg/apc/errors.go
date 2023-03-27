@@ -11,6 +11,7 @@ var (
 	ErrParseErrConsumed = &ParseErrorConsumed{}
 )
 
+// Returns true if err is anything but nil or a ParseError.
 func IsMustReturnParseErr(err error) bool {
 	if err == nil {
 		return false

@@ -4,15 +4,22 @@ import (
 	"io"
 )
 
+// A reader that provides an Origin per read element of type T.
 type ReaderWithOrigin[T any] interface {
+	// Returns the next element in a stream of elements of type T,
+	// along with the Origin associated with the element.
+	// If an error occurs or if no element is available, an error is returned.
 	Read() (T, Origin, error)
 }
 
+// Implements ReaderWithOrigin[T] by calling the provided parser with the provided
+// ctx each time Read is called.
 type ParseReader[CT, T any] struct {
 	ctx    Context[CT]
 	parser Parser[CT, T]
 }
 
+// Returns a *ParseReader[CT, T] with the provided ctx and parser.
 func NewParseReader[CT, T any](ctx Context[CT], parser Parser[CT, T]) *ParseReader[CT, T] {
 	return &ParseReader[CT, T]{
 		ctx:    ctx,
@@ -20,17 +27,21 @@ func NewParseReader[CT, T any](ctx Context[CT], parser Parser[CT, T]) *ParseRead
 	}
 }
 
+// Calls the parser with the corresponding ctx, returning the result and Origin of the result.
+// If an error occurs or if no element is available, an error is returned.
 func (r *ParseReader[CT, T]) Read() (T, Origin, error) {
 	origin := r.ctx.GetCurOrigin()
 	val, err := r.parser(r.ctx)
 	return val, origin, err
 }
 
+// Implements ReaderWithOrigin[rune] by calling reader.ReadRune.
 type RuneReaderWithOrigin struct {
 	reader    io.RuneReader
 	curOrigin Origin
 }
 
+// Returns a *RuneReaderWithOrigin with the provided origin name and reader.
 func NewRuneReaderWithOrigin(originName string, reader io.RuneReader) *RuneReaderWithOrigin {
 	return &RuneReaderWithOrigin{
 		reader: reader,
@@ -42,6 +53,8 @@ func NewRuneReaderWithOrigin(originName string, reader io.RuneReader) *RuneReade
 	}
 }
 
+// Calls reader.ReadRune, returning the resulting rune and Origin of the rune.
+// If an error occurs or if no rune is available, an error is returned.
 func (r *RuneReaderWithOrigin) Read() (rune, Origin, error) {
 	rn, _, err := r.reader.ReadRune()
 	if err != nil {
@@ -60,24 +73,4 @@ func (r *RuneReaderWithOrigin) Read() (rune, Origin, error) {
 	}
 
 	return rn, origin, nil
-}
-
-type Lexer[CT, T any] struct {
-	ctx    Context[CT]
-	parser Parser[CT, T]
-}
-
-func NewLexer[CT, T any](ctx Context[CT], parser Parser[CT, T]) *Lexer[CT, T] {
-	return &Lexer[CT, T]{
-		ctx:    ctx,
-		parser: parser,
-	}
-}
-
-func (r *Lexer[CT, T]) Read() (T, Origin, error) {
-	val, err := r.parser(r.ctx)
-	if err != nil {
-		return zeroVal[T](), r.ctx.GetCurOrigin(), err
-	}
-	return val, r.ctx.GetCurOrigin(), nil
 }

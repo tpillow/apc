@@ -80,7 +80,7 @@ func main() {
 
 	input := ` { "name" : "Tom" , "age" : 55 , "weight":23.35,"hobbies" : [ "sports" , "stuff" , -55, +3.4, [], {} ] } `
 	ctx := apc.NewStringContext("<string>", input)
-	lexer := apc.NewLexer[rune](ctx, lexParser)
+	lexer := apc.NewParseReader[rune](ctx, lexParser)
 	lexerCtx := apc.NewReaderContext[apc.Token[any]](lexer)
 
 	fmt.Printf("Input: %v\n", input)

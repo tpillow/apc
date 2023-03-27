@@ -8,18 +8,18 @@ import (
 	"strings"
 )
 
-// ReaderContext is a Context that operates off of CT as the
-// input stream.
+// ReaderContext[CT] implements Context[CT] by operating with a ReaderWithOrigin[CT].
 type ReaderContext[CT any] struct {
-	// Input stream, where index 0 is the next unconsumed CT.
+	// The reader to use.
 	reader ReaderWithOrigin[CT]
-	// Buffer used to store read, but unconsumed, CTs.
+	// Buffer used to store read, but unconsumed, elements from reader.
 	buffer []CT
-	// A buffer that matches Origin to each corresponding element in buffer.
+	// Buffer used to store read, but unconsumed, element Origins from reader.
+	// The elements in this slice must always correspond to the elements in buffer.
 	bufferOrigins []Origin
 	// The last Origin read from the reader.
 	lastOrigin Origin
-	// List of parsers to attempt to run, discarding the result.
+	// List of parsers to attempt to run, discarding their results if successful.
 	skipParsers []Parser[CT, any]
 	// Whether or not RunSkipParsers is currently running.
 	skipping bool
@@ -29,7 +29,7 @@ type ReaderContext[CT any] struct {
 	skippedSinceLastConsume bool
 }
 
-// Returns a *ReaderContext[CT] with the given origin name and CT input stream.
+// Returns a *ReaderContext[CT] with the given reader.
 func NewReaderContext[CT any](reader ReaderWithOrigin[CT]) *ReaderContext[CT] {
 	return &ReaderContext[CT]{
 		reader:                  reader,
@@ -79,6 +79,14 @@ func (ctx *ReaderContext[CT]) maybeEnsureBufferLoaded(num int) error {
 	return err
 }
 
+// Returns a []CT of num elements beginning at offset without consuming
+// the elements.
+// The offset is a non-negative value relative to the next unconsumed
+// element in the input stream.
+//
+// If the end of input is reached, an EOFError is returned along
+// with any peeked elements (which may be less than num elements in length
+// if end of input has been reached).
 func (ctx *ReaderContext[CT]) Peek(offset int, num int) ([]CT, error) {
 	err := ctx.maybeEnsureBufferLoaded(offset + num)
 	if err != nil {
@@ -90,6 +98,12 @@ func (ctx *ReaderContext[CT]) Peek(offset int, num int) ([]CT, error) {
 	return ctx.buffer[offset : offset+num], nil
 }
 
+// Advances the input stream by num elements, returning the consumed
+// elements.
+//
+// If the end of input is reached, an EOFError is returned along
+// with any consumed elements (which may be less than num elements in length
+// if end of input has been reached).
 func (ctx *ReaderContext[CT]) Consume(num int) ([]CT, error) {
 	ctx.skippedSinceLastConsume = false
 
@@ -109,6 +123,8 @@ func (ctx *ReaderContext[CT]) Consume(num int) ([]CT, error) {
 	return ret, nil
 }
 
+// Returns an Origin representing the next unconsumed element in the
+// input stream.
 func (ctx *ReaderContext[CT]) GetCurOrigin() Origin {
 	ctx.maybeEnsureBufferLoaded(1)
 	if len(ctx.bufferOrigins) <= 0 {
@@ -117,6 +133,9 @@ func (ctx *ReaderContext[CT]) GetCurOrigin() Origin {
 	return ctx.bufferOrigins[0]
 }
 
+// Adds the parser to the list of parsers that attempt to run when
+// RunSkipParsers is called. If the parser matches, its result will
+// be discarded. Duplicate parsers cannot be added.
 func (ctx *ReaderContext[CT]) AddSkipParser(parser Parser[CT, any]) {
 	for _, p := range ctx.skipParsers {
 		if &p == &parser {
@@ -126,6 +145,9 @@ func (ctx *ReaderContext[CT]) AddSkipParser(parser Parser[CT, any]) {
 	ctx.skipParsers = append(ctx.skipParsers, parser)
 }
 
+// Removes the parser from the list of parsers that attempt to run
+// when RunSkipParsers is called. If the parser has not been added,
+// the function panics.
 func (ctx *ReaderContext[CT]) RemoveSkipParser(parser Parser[CT, any]) {
 	i := -1
 	var p Parser[CT, any]
@@ -140,6 +162,9 @@ func (ctx *ReaderContext[CT]) RemoveSkipParser(parser Parser[CT, any]) {
 	ctx.skipParsers = append(ctx.skipParsers[:i], ctx.skipParsers[i+1:]...)
 }
 
+// Attempts to run any added skip parsers as long as one of the parsers
+// successfully matches. The results of any matched parsers is discarded.
+// Should only return nil or non-ParseError errors.
 func (ctx *ReaderContext[CT]) RunSkipParsers() error {
 	if ctx.skipping || ctx.skippedSinceLastConsume {
 		return nil

@@ -6,10 +6,11 @@ import (
 	"regexp"
 )
 
-// Returns a parser that parses based on a regex pattern.
+// Returns a parser that succeeds if peeking elements from the Context[rune]
+// matches the provided regex pattern, returning the match as the result.
+//
 // Note that the regex is always normalized to contain '^' as the starting
 // symbol, to always match the left-most character in the input stream.
-// Returns the result as as string.
 func Regex(name string, pattern string) Parser[rune, string] {
 	if len(pattern) < 1 {
 		panic("regex pattern length must be >= 1")

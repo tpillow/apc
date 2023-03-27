@@ -2,9 +2,13 @@ package apc
 
 import "errors"
 
-// Returns a parser that parses the exact CT value.
-// Returns the result as as CT.
+// Returns a parser that succeeds if peeking elements from the Context
+// equals value, returning value as the result.
 func ExactSlice[CT any](value []CT) Parser[CT, []CT] {
+	if len(value) <= 0 {
+		panic("value for ExactSlice must have a length > 0")
+	}
+
 	return func(ctx Context[CT]) ([]CT, error) {
 		err := ctx.RunSkipParsers()
 		if err != nil {
@@ -31,8 +35,8 @@ func ExactSlice[CT any](value []CT) Parser[CT, []CT] {
 	}
 }
 
-// Returns a parser that parses the exact CT value.
-// Returns the result as as CT.
+// Returns a parser that succeeds if peeking 1 element from the Context
+// equals value, returning value as the result.
 func ExactOne[CT any](value CT) Parser[CT, CT] {
 	return func(ctx Context[CT]) (CT, error) {
 		err := ctx.RunSkipParsers()
@@ -55,31 +59,9 @@ func ExactOne[CT any](value CT) Parser[CT, CT] {
 	}
 }
 
-// Returns a parser that parses the exact string value.
-// Returns the result as as string.
+// Equivalent to ExactSlice but for a Context[rune]. Implicitly converts value to []rune.
 func ExactStr(value string) Parser[rune, string] {
-	if len(value) <= 0 {
-		panic("value for Exact must have a length > 0")
-	}
-
-	return func(ctx Context[rune]) (string, error) {
-		err := ctx.RunSkipParsers()
-		if err != nil {
-			return "", err
-		}
-
-		val, err := ctx.Peek(0, len(value))
-		if err != nil && !errors.Is(err, ErrEOF) {
-			return "", err
-		}
-		valStr := string(val)
-		if valStr == value {
-			_, err := ctx.Consume(len(valStr))
-			if err != nil && !errors.Is(err, ErrEOF) {
-				return "", err
-			}
-			return valStr, nil
-		}
-		return "", ParseErrExpectedButGot(ctx, value, valStr, nil)
-	}
+	return Map(ExactSlice([]rune(value)), func(node []rune, _ Origin) string {
+		return string(node)
+	})
 }
