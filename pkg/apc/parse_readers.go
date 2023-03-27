@@ -74,3 +74,47 @@ func (r *RuneReaderWithOrigin) Read() (rune, Origin, error) {
 
 	return rn, origin, nil
 }
+
+// Implements ReaderWithOrigin[byte] by calling reader.Read.
+type ByteReaderWithOrigin struct {
+	reader    io.Reader
+	curOrigin Origin
+}
+
+// Returns a *ByteReaderWithOrigin with the provided origin name and reader.
+func NewByteReaderWithOrigin(originName string, reader io.Reader) *ByteReaderWithOrigin {
+	return &ByteReaderWithOrigin{
+		reader: reader,
+		curOrigin: Origin{
+			Name:    originName,
+			LineNum: 1,
+			ColNum:  1,
+		},
+	}
+}
+
+// Calls reader.Read with a buffer of length 1, returning the resulting byte and Origin
+// of the byte. If an error occurs or if no byte is available, an error is returned.
+func (r *ByteReaderWithOrigin) Read() (byte, Origin, error) {
+	buf := make([]byte, 1)
+	bytesRead, err := r.reader.Read(buf)
+	if err != nil {
+		if err == io.EOF {
+			return 0, r.curOrigin, ErrEOF
+		}
+		return 0, r.curOrigin, err
+	}
+	if bytesRead <= 0 {
+		panic("bytes read from ByteReaderWithOrigin should never be <= 0 if no error occurred")
+	}
+
+	origin := r.curOrigin
+	if buf[0] == byte('\n') {
+		r.curOrigin.LineNum += 1
+		r.curOrigin.ColNum = 1
+	} else {
+		r.curOrigin.ColNum += 1
+	}
+
+	return buf[0], origin, nil
+}

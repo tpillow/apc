@@ -47,6 +47,11 @@ func NewRuneReaderContext(originName string, reader io.RuneReader) *ReaderContex
 	return NewReaderContext[rune](NewRuneReaderWithOrigin(originName, reader))
 }
 
+// Returns a *ReaderContext[byte] from an io.Reader.
+func NewByteReaderContext(originName string, reader io.Reader) *ReaderContext[byte] {
+	return NewReaderContext[byte](NewByteReaderWithOrigin(originName, reader))
+}
+
 // Returns a *ReaderContext[rune] from a string.
 func NewStringContext(originName string, data string) *ReaderContext[rune] {
 	return NewRuneReaderContext(originName, strings.NewReader(data))
@@ -55,6 +60,11 @@ func NewStringContext(originName string, data string) *ReaderContext[rune] {
 // Returns a *ReaderContext[rune] from a file.
 func NewFileContext(file *os.File) *ReaderContext[rune] {
 	return NewRuneReaderContext(file.Name(), bufio.NewReader(file))
+}
+
+// Returns a *ReaderContext[byte] from a file.
+func NewBinaryFileContext(file *os.File) *ReaderContext[byte] {
+	return NewByteReaderContext(file.Name(), file)
 }
 
 // Tries to ensure that num values are in the ctx.buffer. If ErrEOF is reached,
