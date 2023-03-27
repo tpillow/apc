@@ -23,6 +23,13 @@ func Bind[CT, T, U any](parser Parser[CT, T], node U) Parser[CT, U] {
 	})
 }
 
+// Returns a parser that maps Parser[T] to always return node as the result.
+func BindToAny[CT, T any](parser Parser[CT, T], node any) Parser[CT, any] {
+	return Map(parser, func(_ T, _ Origin) any {
+		return node
+	})
+}
+
 // Returns a parser that maps Parser[T] to return its result casted to type U.
 func CastTo[CT, T, U any](parser Parser[CT, T]) Parser[CT, U] {
 	return Map(parser, func(node T, _ Origin) U {

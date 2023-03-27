@@ -2,13 +2,9 @@ package apc
 
 import "errors"
 
-type Equatable[T any] interface {
-	Equal(other T) bool
-}
-
 // Returns a parser that parses the exact CT value.
 // Returns the result as as CT.
-func Exact[CT Equatable[CT]](value []CT) Parser[CT, []CT] {
+func ExactSlice[CT any](value []CT) Parser[CT, []CT] {
 	return func(ctx Context[CT]) ([]CT, error) {
 		err := ctx.RunSkipParsers()
 		if err != nil {
@@ -23,7 +19,7 @@ func Exact[CT Equatable[CT]](value []CT) Parser[CT, []CT] {
 			return nil, ParseErrExpectedButGot(ctx, value, val, nil)
 		}
 		for i, r := range value {
-			if val[i].Equal(r) {
+			if any(val[i]) != any(r) {
 				return nil, ParseErrExpectedButGot(ctx, value, val, nil)
 			}
 		}
@@ -32,6 +28,30 @@ func Exact[CT Equatable[CT]](value []CT) Parser[CT, []CT] {
 			return nil, err
 		}
 		return val, nil
+	}
+}
+
+// Returns a parser that parses the exact CT value.
+// Returns the result as as CT.
+func ExactOne[CT any](value CT) Parser[CT, CT] {
+	return func(ctx Context[CT]) (CT, error) {
+		err := ctx.RunSkipParsers()
+		if err != nil {
+			return zeroVal[CT](), err
+		}
+
+		val, err := ctx.Peek(0, 1)
+		if err != nil && !errors.Is(err, ErrEOF) {
+			return zeroVal[CT](), err
+		}
+		if any(val[0]) != any(value) {
+			return zeroVal[CT](), ParseErrExpectedButGot(ctx, value, val[0], nil)
+		}
+		_, err = ctx.Consume(1)
+		if err != nil && !errors.Is(err, ErrEOF) {
+			return zeroVal[CT](), err
+		}
+		return val[0], nil
 	}
 }
 

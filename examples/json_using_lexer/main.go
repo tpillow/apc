@@ -71,10 +71,10 @@ var (
 
 func main() {
 	valueParser = apc.OneOf("value",
-		apc.CastToAny(apc.CastTokenToAny(apc.ExactTokenType[any](TokenTypeNum))),
-		apc.CastToAny(apc.CastTokenToAny(apc.ExactTokenType[any](TokenTypeBool))),
-		apc.CastToAny(apc.CastTokenToAny(apc.ExactTokenType[any](TokenTypeNull))),
-		apc.CastToAny(apc.CastTokenToAny(apc.ExactTokenType[any](TokenTypeStr))),
+		apc.CastToAny(apc.MapTokenToValue(apc.ExactTokenType[any](TokenTypeNum))),
+		apc.CastToAny(apc.MapTokenToValue(apc.ExactTokenType[any](TokenTypeBool))),
+		apc.CastToAny(apc.MapTokenToValue(apc.ExactTokenType[any](TokenTypeNull))),
+		apc.CastToAny(apc.MapTokenToValue(apc.ExactTokenType[any](TokenTypeStr))),
 		apc.CastToAny(objParser),
 		apc.CastToAny(arrayParser))
 
