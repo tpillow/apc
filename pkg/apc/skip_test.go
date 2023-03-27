@@ -8,7 +8,7 @@ import (
 
 func TestSkipParser(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, " \t\nhi\n\n\t  hi_")
-	p := Skip(MapToAny(WhitespaceParser), ExactStr("hi"))
+	p := Skip(CastToAny(WhitespaceParser), ExactStr("hi"))
 
 	node, err := p(ctx)
 	assert.NoError(t, err)
@@ -25,7 +25,7 @@ func TestSkipParser(t *testing.T) {
 
 func TestUnskipParser(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, " hi hi_")
-	wsp := MapToAny(WhitespaceParser)
+	wsp := CastToAny(WhitespaceParser)
 	ctx.AddSkipParser(wsp)
 	p := Unskip(wsp, ExactStr("hi"))
 

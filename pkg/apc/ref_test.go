@@ -10,8 +10,8 @@ func TestRefParser(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, "#hello##hello")
 	var value Parser[rune, any]
 	var valueRef = Ref(&value)
-	var hashValue = Seq("", MapToAny(ExactStr("#")), valueRef)
-	value = OneOf("", MapToAny(ExactStr("hello")), MapToAny(hashValue))
+	var hashValue = Seq("", CastToAny(ExactStr("#")), valueRef)
+	value = OneOf("", CastToAny(ExactStr("hello")), CastToAny(hashValue))
 
 	node, err := valueRef(ctx)
 	assert.NoError(t, err)

@@ -38,7 +38,7 @@ var (
 				apc.Seq2("",
 					apc.OneOf("", opMulParser, opDivParser),
 					factorParserRef))),
-		func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]]) Executable {
+		func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]], _ apc.Origin) Executable {
 			left := node.Result1
 			for _, seqRes := range node.Result2 {
 				left = BinOpNode{
@@ -57,7 +57,7 @@ var (
 				apc.Seq2("",
 					apc.OneOf("", opAddParser, opSubParser),
 					termParser))),
-		func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]]) Executable {
+		func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]], _ apc.Origin) Executable {
 			left := node.Result1
 			for _, seqRes := range node.Result2 {
 				left = BinOpNode{
@@ -76,7 +76,7 @@ func initParser() {
 	factorParser = apc.OneOf("factor",
 		apc.Map(
 			apc.FloatParser,
-			func(node float64) Executable {
+			func(node float64, _ apc.Origin) Executable {
 				return ValueNode{Value: node}
 			}),
 		apc.Map(
@@ -84,14 +84,14 @@ func initParser() {
 				apc.ExactStr("("),
 				exprParser,
 				apc.ExactStr(")")),
-			func(node *apc.Seq3Node[string, Executable, string]) Executable {
+			func(node *apc.Seq3Node[string, Executable, string], _ apc.Origin) Executable {
 				return node.Result2
 			}))
 }
 
 func executeInput(input string) {
 	ctx := apc.NewStringContext("<user_input>", input)
-	ctx.AddSkipParser(apc.MapToAny(apc.WhitespaceParser))
+	ctx.AddSkipParser(apc.CastToAny(apc.WhitespaceParser))
 
 	node, err := apc.Parse[rune](ctx, maybeExprParser, apc.DefaultParseConfig)
 	if err != nil {

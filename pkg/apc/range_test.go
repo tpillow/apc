@@ -39,7 +39,7 @@ func TestRangeParser(t *testing.T) {
 func TestMaybeParser(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, "hibye")
 	intVal := 55
-	p := Maybe("", Bind(MapToAny(ExactStr("hi")), &intVal))
+	p := Maybe("", Bind(CastToAny(ExactStr("hi")), &intVal))
 
 	node, err := p(ctx)
 	assert.NoError(t, err)

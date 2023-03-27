@@ -8,7 +8,7 @@ import (
 
 func TestSeqParser(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, "55,66#")
-	p := Seq("", MapToAny(IntParser), MapToAny(ExactStr(",")))
+	p := Seq("", CastToAny(IntParser), CastToAny(ExactStr(",")))
 
 	node, err := p(ctx)
 	assert.NoError(t, err)
