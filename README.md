@@ -40,9 +40,9 @@ Creates a `Parser[CT, T]` from a `*Parser[CT, T]`. This is useful for avoiding c
 
 ```go
 // `value` refers to `hashValue`.
-var value = OneOf[rune, any]("", MapToAny(Exact("hello")), MapToAny(hashValue))
+var value = OneOf[rune, any]("", MapToAny(ExactStr("hello")), MapToAny(hashValue))
 // `hashValue` refers to `value`.
-var hashValue = Seq[rune, any]("", MapToAny(Exact("#")), value)
+var hashValue = Seq[rune, any]("", MapToAny(ExactStr("#")), value)
 ```
 
 However this can be remedied by using `Ref`:
@@ -53,11 +53,11 @@ var value Parser[rune, any]
 // `valueRef` is a parser referring to `value`, which is not yet assigned.
 var valueRef = Ref[rune, any](&value)
 // `hashValue` refers to `valueRef` - NOT `value`.
-var hashValue = Seq[rune, any]("", MapToAny(Exact("#")), valueRef)
+var hashValue = Seq[rune, any]("", MapToAny(ExactStr("#")), valueRef)
 
 func init() {
     // At runtime, `value` can then be defined and refer to `hashValue`:
-    value = OneOf[rune, any]("", MapToAny(Exact("hello")), MapToAny(hashValue))
+    value = OneOf[rune, any]("", MapToAny(ExactStr("hello")), MapToAny(hashValue))
 }
 ```
 
