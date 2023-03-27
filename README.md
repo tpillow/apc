@@ -14,6 +14,7 @@ APC does not yet support backtracking/lookahead > 1. My primary goal is to first
 ## Example Executables
 
 - [JSON Parser](examples/json/main.go) that parses the JSON format into Go nodes.
+- [JSON Parser using Lexer](examples/json_using_lexer/main.go) is the same as JSON Parser above, but it first lexes the input into tokens. This JSON parser then parses tokens instead of the raw input stream. This approach allows for better error messages.
 - [Calculator](examples/calculator/main.go) that parses simple mathematical expression. With PEMDAS :)
 
 ## The Basics
