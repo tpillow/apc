@@ -17,8 +17,7 @@ type ReaderContext[CT any] struct {
 	// Buffer used to store read, but unconsumed, element Origins from reader.
 	// The elements in this slice must always correspond to the elements in buffer.
 	bufferOrigins []Origin
-	// The last Origin read from the reader.
-	lastOrigin Origin
+	lastOrigin    Origin
 	// List of parsers to attempt to run, discarding their results if successful.
 	skipParsers []Parser[CT, any]
 	// Whether or not RunSkipParsers is currently running.
@@ -27,6 +26,7 @@ type ReaderContext[CT any] struct {
 	// when RunSkipParsers is run, it does not need to be run again until
 	// a Consume call.
 	skippedSinceLastConsume bool
+	lookStack               []int
 }
 
 // Returns a *ReaderContext[CT] with the given reader.
@@ -39,6 +39,7 @@ func NewReaderContext[CT any](reader ReaderWithOrigin[CT]) *ReaderContext[CT] {
 		skipParsers:             make([]Parser[CT, any], 0),
 		skipping:                false,
 		skippedSinceLastConsume: false,
+		lookStack:               make([]int, 0),
 	}
 }
 
@@ -98,14 +99,20 @@ func (ctx *ReaderContext[CT]) maybeEnsureBufferLoaded(num int) error {
 // with any peeked elements (which may be less than num elements in length
 // if end of input has been reached).
 func (ctx *ReaderContext[CT]) Peek(offset int, num int) ([]CT, error) {
-	err := ctx.maybeEnsureBufferLoaded(offset + num)
+	lookOffset := 0
+	if len(ctx.lookStack) > 0 {
+		lookOffset = ctx.lookStack[len(ctx.lookStack)-1]
+	}
+
+	err := ctx.maybeEnsureBufferLoaded(lookOffset + offset + num)
 	if err != nil {
 		return nil, err
 	}
-	if len(ctx.buffer) < offset+num {
-		return ctx.buffer, ErrEOF
+	buf := ctx.buffer[lookOffset:]
+	if len(buf) < offset+num {
+		return buf, ErrEOF
 	}
-	return ctx.buffer[offset : offset+num], nil
+	return buf[offset : offset+num], nil
 }
 
 // Advances the input stream by num elements, returning the consumed
@@ -116,31 +123,48 @@ func (ctx *ReaderContext[CT]) Peek(offset int, num int) ([]CT, error) {
 // if end of input has been reached).
 func (ctx *ReaderContext[CT]) Consume(num int) ([]CT, error) {
 	ctx.skippedSinceLastConsume = false
+	lookOffset := 0
+	if len(ctx.lookStack) > 0 {
+		lookOffset = ctx.lookStack[len(ctx.lookStack)-1]
+	}
 
-	err := ctx.maybeEnsureBufferLoaded(num)
+	err := ctx.maybeEnsureBufferLoaded(lookOffset + num)
 	if err != nil {
 		return nil, err
 	}
-	if len(ctx.buffer) < num {
-		ret := ctx.buffer[:]
-		ctx.buffer = ctx.buffer[:0]
-		ctx.bufferOrigins = ctx.bufferOrigins[:0]
-		return ret, ErrEOF
+	buf := ctx.buffer[lookOffset:]
+	if len(buf) < num {
+		if len(ctx.lookStack) > 0 {
+			ctx.lookStack[len(ctx.lookStack)-1] += len(buf)
+		} else {
+			ctx.buffer = ctx.buffer[:0]
+			ctx.bufferOrigins = ctx.bufferOrigins[:0]
+		}
+		return buf, ErrEOF
 	}
-	ret := ctx.buffer[:num]
-	ctx.buffer = ctx.buffer[num:]
-	ctx.bufferOrigins = ctx.bufferOrigins[num:]
-	return ret, nil
+	buf = buf[:num]
+	if len(ctx.lookStack) > 0 {
+		ctx.lookStack[len(ctx.lookStack)-1] += num
+	} else {
+		ctx.buffer = ctx.buffer[num:]
+		ctx.bufferOrigins = ctx.bufferOrigins[num:]
+	}
+	return buf, nil
 }
 
 // Returns an Origin representing the next unconsumed element in the
 // input stream.
 func (ctx *ReaderContext[CT]) GetCurOrigin() Origin {
-	ctx.maybeEnsureBufferLoaded(1)
-	if len(ctx.bufferOrigins) <= 0 {
+	lookOffset := 0
+	if len(ctx.lookStack) > 0 {
+		lookOffset = ctx.lookStack[len(ctx.lookStack)-1]
+	}
+
+	ctx.maybeEnsureBufferLoaded(lookOffset + 1)
+	if len(ctx.bufferOrigins) == 0 {
 		return ctx.lastOrigin
 	}
-	return ctx.bufferOrigins[0]
+	return ctx.bufferOrigins[lookOffset]
 }
 
 // Adds the parser to the list of parsers that attempt to run when
@@ -199,5 +223,35 @@ func (ctx *ReaderContext[CT]) RunSkipParsers() error {
 
 	ctx.skippedSinceLastConsume = true
 	ctx.skipping = false
+	return nil
+}
+
+func (ctx *ReaderContext[CT]) NewLook() {
+	if len(ctx.lookStack) == 0 {
+		ctx.lookStack = append(ctx.lookStack, 0)
+	} else {
+		ctx.lookStack = append(ctx.lookStack, ctx.lookStack[len(ctx.lookStack)-1])
+	}
+}
+
+func (ctx *ReaderContext[CT]) RevertLook() {
+	if len(ctx.lookStack) == 0 {
+		panic("cannot RevertLook() without a NewLook() on the stack")
+	}
+	ctx.lookStack = ctx.lookStack[:len(ctx.lookStack)-1]
+}
+
+func (ctx *ReaderContext[CT]) CommitLook() error {
+	if len(ctx.lookStack) == 0 {
+		panic("cannot CommitLook() without a NewLook() on the stack")
+	}
+	toConsume := ctx.lookStack[len(ctx.lookStack)-1]
+	ctx.lookStack = ctx.lookStack[:len(ctx.lookStack)-1]
+	if len(ctx.lookStack) == 0 {
+		_, err := ctx.Consume(toConsume)
+		return err
+	} else {
+		ctx.lookStack[len(ctx.lookStack)-1] += toConsume - ctx.lookStack[len(ctx.lookStack)-1]
+	}
 	return nil
 }

@@ -39,3 +39,9 @@ type Context[CT any] interface {
 	// Should only return nil or non-ParseError errors.
 	RunSkipParsers() error
 }
+
+type LookContext interface {
+	NewLook()
+	RevertLook()
+	CommitLook() error
+}
