@@ -20,3 +20,10 @@ func OneOf[CT, T any](name string, parsers ...Parser[CT, T]) Parser[CT, T] {
 		return zeroVal[T](), ParseErrExpectedButGotNext(ctx, name, nil)
 	}
 }
+
+func LookOneOf[CT, T any](name string, parsers ...Parser[CT, T]) Parser[CT, T] {
+	for i := 0; i < len(parsers); i++ {
+		parsers[i] = Look(parsers[i])
+	}
+	return OneOf(name, parsers...)
+}

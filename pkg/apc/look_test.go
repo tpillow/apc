@@ -7,20 +7,28 @@ import (
 )
 
 func TestLook(t *testing.T) {
-	ctx := NewStringContext(testStringOrigin, "(hi)(bye)((hi))(((bye)))")
+	ctx := NewStringContext(testStringOrigin, "abcabdabeabcabfabd")
 
-	var oneParser Parser[rune, string]
-	parser := Map(
-		Seq3("",
-			ExactStr("("),
-			Ref(&oneParser),
-			ExactStr(")")),
-		func(node *Seq3Node[string, string, string], origin Origin) string {
-			return node.Result2
-		})
-	oneParser = OneOf("", ExactStr("hi"), ExactStr("bye"), parser)
+	parser := LookOneOf("",
+		Map(Seq3("", ExactStr("a"), ExactStr("b"), ExactStr("c")),
+			func(node *Seq3Node[string, string, string], _ Origin) string {
+				return "c"
+			}),
+		Map(Seq3("", ExactStr("a"), ExactStr("b"), ExactStr("d")),
+			func(node *Seq3Node[string, string, string], _ Origin) string {
+				return "d"
+			}),
+		LookOneOf("",
+			Map(Seq3("", ExactStr("a"), ExactStr("b"), ExactStr("e")),
+				func(node *Seq3Node[string, string, string], _ Origin) string {
+					return "e"
+				}),
+			Map(Seq3("", ExactStr("a"), ExactStr("b"), ExactStr("f")),
+				func(node *Seq3Node[string, string, string], _ Origin) string {
+					return "f"
+				})))
 
-	expectedResults := []string{"hi", "bye", "hi", "bye"}
+	expectedResults := []string{"c", "d", "e", "c", "f", "d"}
 	for _, expected := range expectedResults {
 		node, err := parser(ctx)
 		assert.Equal(t, 0, len(ctx.lookStack))
