@@ -40,7 +40,7 @@ var (
 )
 
 func main() {
-	valueParser = apc.OneOf("value",
+	valueParser = apc.Any("value",
 		apc.CastToAny(apc.FloatParser),
 		apc.CastToAny(apc.BoolParser),
 		apc.CastToAny(apc.Bind[rune, string, any](apc.ExactStr("null"), nil)),

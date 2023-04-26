@@ -9,7 +9,7 @@ import (
 func TestLook(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, "abcabdabeabcabfabd")
 
-	parser := LookOneOf("",
+	parser := LookAny("",
 		Map(Seq3("", ExactStr("a"), ExactStr("b"), ExactStr("c")),
 			func(node *Seq3Node[string, string, string], _ Origin) string {
 				return "c"
@@ -18,7 +18,7 @@ func TestLook(t *testing.T) {
 			func(node *Seq3Node[string, string, string], _ Origin) string {
 				return "d"
 			}),
-		LookOneOf("",
+		LookAny("",
 			Map(Seq3("", ExactStr("a"), ExactStr("b"), ExactStr("e")),
 				func(node *Seq3Node[string, string, string], _ Origin) string {
 					return "e"

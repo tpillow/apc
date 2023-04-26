@@ -11,7 +11,7 @@ func TestRefParser(t *testing.T) {
 	var value Parser[rune, any]
 	var valueRef = Ref(&value)
 	var hashValue = Seq("", CastToAny(ExactStr("#")), valueRef)
-	value = OneOf("", CastToAny(ExactStr("hello")), CastToAny(hashValue))
+	value = Any("", CastToAny(ExactStr("hello")), CastToAny(hashValue))
 
 	node, err := valueRef(ctx)
 	assert.NoError(t, err)

@@ -23,7 +23,7 @@ const (
 var (
 	lexParser = apc.Skip(
 		apc.CastToAny(apc.WhitespaceParser),
-		apc.OneOf("token",
+		apc.Any("token",
 			apc.BindToToken(apc.Bind[rune, string, any](apc.ExactStr(string(TokenTypeNull)), nil), TokenTypeNull),
 			apc.CastTokenToAny(apc.BindToToken(apc.BoolParser, TokenTypeBool)),
 			apc.CastTokenToAny(apc.BindToToken(apc.ExactStr(string(TokenTypeColon)), TokenTypeColon)),
@@ -70,7 +70,7 @@ var (
 )
 
 func main() {
-	valueParser = apc.OneOf("value",
+	valueParser = apc.Any("value",
 		apc.CastToAny(apc.MapTokenToValue(apc.ExactTokenType[any](TokenTypeNum))),
 		apc.CastToAny(apc.MapTokenToValue(apc.ExactTokenType[any](TokenTypeBool))),
 		apc.CastToAny(apc.MapTokenToValue(apc.ExactTokenType[any](TokenTypeNull))),

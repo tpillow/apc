@@ -2,9 +2,9 @@ package apc
 
 // Returns a parser that attempts to parse, in order, the provided parsers.
 // Returns the result of the first successful parser.
-func OneOf[CT, T any](name string, parsers ...Parser[CT, T]) Parser[CT, T] {
+func Any[CT, T any](name string, parsers ...Parser[CT, T]) Parser[CT, T] {
 	if len(parsers) < 2 {
-		panic("must provide at least 2 parsers to OneOf")
+		panic("must provide at least 2 parsers to Any")
 	}
 
 	return func(ctx Context[CT]) (T, error) {
@@ -21,9 +21,9 @@ func OneOf[CT, T any](name string, parsers ...Parser[CT, T]) Parser[CT, T] {
 	}
 }
 
-func LookOneOf[CT, T any](name string, parsers ...Parser[CT, T]) Parser[CT, T] {
+func LookAny[CT, T any](name string, parsers ...Parser[CT, T]) Parser[CT, T] {
 	for i := 0; i < len(parsers); i++ {
 		parsers[i] = Look(parsers[i])
 	}
-	return OneOf(name, parsers...)
+	return Any(name, parsers...)
 }

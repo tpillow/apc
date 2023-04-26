@@ -28,7 +28,7 @@ var IdentifierParser = Regex("identifier", "[a-zA-Z_][a-zA-Z_0-9]*")
 
 // Parses "true" and "false" literals into a boolean and returns
 // the boolean result.
-var BoolParser = OneOf("boolean",
+var BoolParser = Any("boolean",
 	Bind(ExactStr("true"), true), Bind(ExactStr("false"), false))
 
 // Parses floating point numbers and returns a float64 result.

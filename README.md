@@ -43,7 +43,7 @@ Creates a `Parser[CT, T]` from a `*Parser[CT, T]`. This is useful for avoiding c
 
 ```go
 // `value` refers to `hashValue`.
-var value = OneOf[rune, any]("", MapToAny(ExactStr("hello")), MapToAny(hashValue))
+var value = Any[rune, any]("", MapToAny(ExactStr("hello")), MapToAny(hashValue))
 // `hashValue` refers to `value`.
 var hashValue = Seq[rune, any]("", MapToAny(ExactStr("#")), value)
 ```
@@ -60,7 +60,7 @@ var hashValue = Seq[rune, any]("", MapToAny(ExactStr("#")), valueRef)
 
 func init() {
     // At runtime, `value` can then be defined and refer to `hashValue`:
-    value = OneOf[rune, any]("", MapToAny(ExactStr("hello")), MapToAny(hashValue))
+    value = Any[rune, any]("", MapToAny(ExactStr("hello")), MapToAny(hashValue))
 }
 ```
 

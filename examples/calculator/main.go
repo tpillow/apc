@@ -58,7 +58,7 @@ var (
 			exponentTermParser,
 			apc.ZeroOrMore("",
 				apc.Seq2("",
-					apc.OneOf("", opMulParser, opDivParser),
+					apc.Any("", opMulParser, opDivParser),
 					exponentTermParser))),
 		func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]], _ apc.Origin) Executable {
 			left := node.Result1
@@ -77,7 +77,7 @@ var (
 			termParser,
 			apc.ZeroOrMore("",
 				apc.Seq2("",
-					apc.OneOf("", opAddParser, opSubParser),
+					apc.Any("", opAddParser, opSubParser),
 					termParser))),
 		func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]], _ apc.Origin) Executable {
 			left := node.Result1
@@ -95,7 +95,7 @@ var (
 )
 
 func initParser() {
-	factorParser = apc.OneOf("factor",
+	factorParser = apc.Any("factor",
 		apc.Map(
 			apc.FloatParser,
 			func(node float64, _ apc.Origin) Executable {

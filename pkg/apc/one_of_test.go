@@ -6,11 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestOneOfParser(t *testing.T) {
+func TestAnyParser(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, "###hi##")
 	p1 := Regex("", "#+")
 	p2 := ExactStr("hi")
-	p := OneOf("", p1, p2)
+	p := Any("", p1, p2)
 
 	node, err := p(ctx)
 	assert.NoError(t, err)
