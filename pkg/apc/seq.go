@@ -169,3 +169,143 @@ func Seq5[CT, T1, T2, T3, T4, T5 any](name string, parser1 Parser[CT, T1], parse
 		return result, nil
 	}
 }
+
+// Seq6Node holds 6 generically-typed results.
+type Seq6Node[T1, T2, T3, T4, T5, T6 any] struct {
+	Result1 T1
+	Result2 T2
+	Result3 T3
+	Result4 T4
+	Result5 T5
+	Result6 T6
+}
+
+// Returns a parser that parses all provided parsers in order.
+// This is the same as Seq, but is optimized for N parsers of different types.
+// Returns each parser result in the corresponding typed result field.
+func Seq6[CT, T1, T2, T3, T4, T5, T6 any](name string, parser1 Parser[CT, T1], parser2 Parser[CT, T2],
+	parser3 Parser[CT, T3], parser4 Parser[CT, T4], parser5 Parser[CT, T5], parser6 Parser[CT, T6]) Parser[CT, *Seq6Node[T1, T2, T3, T4, T5, T6]] {
+
+	return func(ctx Context[CT]) (*Seq6Node[T1, T2, T3, T4, T5, T6], error) {
+		result := &Seq6Node[T1, T2, T3, T4, T5, T6]{}
+
+		if err := seqSetResultHelper(true, ctx, name, parser1, &result.Result1); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser2, &result.Result2); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser3, &result.Result3); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser4, &result.Result4); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser5, &result.Result5); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser6, &result.Result6); err != nil {
+			return nil, err
+		}
+
+		return result, nil
+	}
+}
+
+// Seq7Node holds 7 generically-typed results.
+type Seq7Node[T1, T2, T3, T4, T5, T6, T7 any] struct {
+	Result1 T1
+	Result2 T2
+	Result3 T3
+	Result4 T4
+	Result5 T5
+	Result6 T6
+	Result7 T7
+}
+
+// Returns a parser that parses all provided parsers in order.
+// This is the same as Seq, but is optimized for N parsers of different types.
+// Returns each parser result in the corresponding typed result field.
+func Seq7[CT, T1, T2, T3, T4, T5, T6, T7 any](name string, parser1 Parser[CT, T1], parser2 Parser[CT, T2],
+	parser3 Parser[CT, T3], parser4 Parser[CT, T4], parser5 Parser[CT, T5], parser6 Parser[CT, T6],
+	parser7 Parser[CT, T7]) Parser[CT, *Seq7Node[T1, T2, T3, T4, T5, T6, T7]] {
+
+	return func(ctx Context[CT]) (*Seq7Node[T1, T2, T3, T4, T5, T6, T7], error) {
+		result := &Seq7Node[T1, T2, T3, T4, T5, T6, T7]{}
+
+		if err := seqSetResultHelper(true, ctx, name, parser1, &result.Result1); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser2, &result.Result2); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser3, &result.Result3); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser4, &result.Result4); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser5, &result.Result5); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser6, &result.Result6); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser7, &result.Result7); err != nil {
+			return nil, err
+		}
+
+		return result, nil
+	}
+}
+
+// Seq8Node holds 8 generically-typed results.
+type Seq8Node[T1, T2, T3, T4, T5, T6, T7, T8 any] struct {
+	Result1 T1
+	Result2 T2
+	Result3 T3
+	Result4 T4
+	Result5 T5
+	Result6 T6
+	Result7 T7
+	Result8 T8
+}
+
+// Returns a parser that parses all provided parsers in order.
+// This is the same as Seq, but is optimized for N parsers of different types.
+// Returns each parser result in the corresponding typed result field.
+func Seq8[CT, T1, T2, T3, T4, T5, T6, T7, T8 any](name string, parser1 Parser[CT, T1], parser2 Parser[CT, T2],
+	parser3 Parser[CT, T3], parser4 Parser[CT, T4], parser5 Parser[CT, T5], parser6 Parser[CT, T6],
+	parser7 Parser[CT, T7], parser8 Parser[CT, T8]) Parser[CT, *Seq8Node[T1, T2, T3, T4, T5, T6, T7, T8]] {
+
+	return func(ctx Context[CT]) (*Seq8Node[T1, T2, T3, T4, T5, T6, T7, T8], error) {
+		result := &Seq8Node[T1, T2, T3, T4, T5, T6, T7, T8]{}
+
+		if err := seqSetResultHelper(true, ctx, name, parser1, &result.Result1); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser2, &result.Result2); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser3, &result.Result3); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser4, &result.Result4); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser5, &result.Result5); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser6, &result.Result6); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser7, &result.Result7); err != nil {
+			return nil, err
+		}
+		if err := seqSetResultHelper(false, ctx, name, parser8, &result.Result8); err != nil {
+			return nil, err
+		}
+
+		return result, nil
+	}
+}
