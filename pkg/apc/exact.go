@@ -37,7 +37,7 @@ func ExactSlice[CT any](value []CT) Parser[CT, []CT] {
 
 // Returns a parser that succeeds if peeking 1 element from the Context
 // equals value, returning value as the result.
-func ExactOne[CT any](value CT) Parser[CT, CT] {
+func Exact[CT any](value CT) Parser[CT, CT] {
 	return func(ctx Context[CT]) (CT, error) {
 		err := ctx.RunSkipParsers()
 		if err != nil {
