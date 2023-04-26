@@ -1,6 +1,4 @@
 // Package apc provides a minimalist parser combinator library.
-//
-// Backtracking/lookahead is not currently supported.
 package apc
 
 // A sane default for ParseConfig.
