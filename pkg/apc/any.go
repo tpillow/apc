@@ -20,10 +20,3 @@ func Any[CT, T any](name string, parsers ...Parser[CT, T]) Parser[CT, T] {
 		return zeroVal[T](), ParseErrExpectedButGotNext(ctx, name, nil)
 	}
 }
-
-func LookAny[CT, T any](name string, parsers ...Parser[CT, T]) Parser[CT, T] {
-	for i := 0; i < len(parsers); i++ {
-		parsers[i] = Look(parsers[i])
-	}
-	return Any(name, parsers...)
-}
