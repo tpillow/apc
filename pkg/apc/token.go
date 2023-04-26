@@ -21,12 +21,6 @@ func (t Token) String() string {
 	return fmt.Sprintf("token of type %v ('%v')", t.Type, t.Value)
 }
 
-// Returns true if the Token is "nil" (the default token).
-// This is true if the token's Type is "".
-func (t Token) IsNil() bool {
-	return t.Type == NilTokenType
-}
-
 // Returns a parser that succeeds if the next peeked token from the Context[Token]
 // has a Type that is tokenType.
 func ExactTokenType(tokenType TokenType) Parser[Token, Token] {
@@ -53,7 +47,7 @@ func ExactTokenType(tokenType TokenType) Parser[Token, Token] {
 
 // Returns a parser that succeeds if the next peeked token from the Context[Token]
 // has a Type that is tokenType and a Value that is value.
-func ExactTokenValue[T any](tokenType TokenType, value T) Parser[Token, Token] {
+func ExactTokenValue(tokenType TokenType, value any) Parser[Token, Token] {
 	return func(ctx Context[Token]) (Token, error) {
 		err := ctx.RunSkipParsers()
 		if err != nil {
@@ -64,7 +58,7 @@ func ExactTokenValue[T any](tokenType TokenType, value T) Parser[Token, Token] {
 			return Token{}, err
 		}
 		val := vals[0]
-		if val.Type != tokenType || any(val.Value) != any(value) {
+		if val.Type != tokenType || val.Value != value {
 			return Token{}, ParseErrExpectedButGot(ctx, fmt.Sprintf("token of type %v ('%v')", tokenType, value), val, nil)
 		}
 		_, err = ctx.Consume(1)
