@@ -1,5 +1,8 @@
 package apc
 
+// Value of an invalid Look.
+const InvalidLook int = -1
+
 // Context[CT] holds the current state of some input parsing stream
 // of type CT, and provides methods to peek the input stream, consume it,
 // get the current Origin of the input stream, etc.
@@ -38,20 +41,12 @@ type Context[CT any] interface {
 	// successfully matches. The results of any matched parsers is discarded.
 	// Should only return nil or non-ParseError errors.
 	RunSkipParsers() error
-	// Push the given name to the name stack as the name of all subsequent parsers.
-	PushName(name string)
-	// Pop a name from the name stack.
-	PopName()
-	// Returns the top name from the name stack, or "<unknown>" if the stack is empty.
-	PeekName() string
-}
-
-// LookContext is a Context[CT] that can provide backtracking support.
-type LookContext interface {
-	// Pushes a Look frame onto the look stack.
-	NewLook()
-	// Pops a Look frame from the look stack, reverting any consumptions.
-	RevertLook()
-	// Pops a Look frame from the look stack, committing any consumptions.
-	CommitLook() error
+	// Sets the name of all subsequent parsers.
+	SetCurName(name string)
+	// Gets the current name of parsers.
+	GetCurName() string
+	// Sets the look value.
+	SetLook(val int)
+	// Gets the look value.
+	GetLook() int
 }

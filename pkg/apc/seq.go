@@ -18,9 +18,9 @@ func Seq[CT, T any](parsers ...Parser[CT, T]) Parser[CT, []T] {
 					return nil, err
 				}
 				if i == 0 {
-					return nil, ParseErrExpectedButGotNext(ctx, ctx.PeekName(), err)
+					return nil, ParseErrExpectedButGotNext(ctx, ctx.GetCurName(), err)
 				}
-				return nil, ParseErrConsumedExpectedButGotNext(ctx, ctx.PeekName(), err)
+				return nil, ParseErrConsumedExpectedButGotNext(ctx, ctx.GetCurName(), err)
 			}
 			nodes = append(nodes, node)
 		}
@@ -36,9 +36,9 @@ func seqSetResultHelper[CT, T any](first bool, ctx Context[CT], parser Parser[CT
 			return err
 		}
 		if first {
-			return ParseErrExpectedButGotNext(ctx, ctx.PeekName(), err)
+			return ParseErrExpectedButGotNext(ctx, ctx.GetCurName(), err)
 		}
-		return ParseErrConsumedExpectedButGotNext(ctx, ctx.PeekName(), err)
+		return ParseErrConsumedExpectedButGotNext(ctx, ctx.GetCurName(), err)
 	}
 	*resultField = node
 	return nil

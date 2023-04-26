@@ -26,10 +26,10 @@ type ReaderContext[CT any] struct {
 	// when RunSkipParsers is run, it does not need to be run again until
 	// a Consume call.
 	skippedSinceLastConsume bool
-	// Holds a stack of offsets in the buffer to support backtracking.
-	lookStack []int
-	// Holds a stack of names for what is currently being parsed.
-	nameStack []string
+	// Current parser name.
+	curName string
+	// Current look value.
+	lookVal int
 }
 
 // Returns a *ReaderContext[CT] with the given reader.
@@ -42,8 +42,8 @@ func NewReaderContext[CT any](reader ReaderWithOrigin[CT]) *ReaderContext[CT] {
 		skipParsers:             make([]Parser[CT, any], 0),
 		skipping:                false,
 		skippedSinceLastConsume: false,
-		lookStack:               make([]int, 0),
-		nameStack:               make([]string, 0),
+		curName:                 "<unknown>",
+		lookVal:                 InvalidLook,
 	}
 }
 
@@ -104,8 +104,8 @@ func (ctx *ReaderContext[CT]) maybeEnsureBufferLoaded(num int) error {
 // if end of input has been reached).
 func (ctx *ReaderContext[CT]) Peek(offset int, num int) ([]CT, error) {
 	lookOffset := 0
-	if len(ctx.lookStack) > 0 {
-		lookOffset = ctx.lookStack[len(ctx.lookStack)-1]
+	if ctx.lookVal != InvalidLook {
+		lookOffset = ctx.lookVal
 	}
 
 	err := ctx.maybeEnsureBufferLoaded(lookOffset + offset + num)
@@ -128,8 +128,8 @@ func (ctx *ReaderContext[CT]) Peek(offset int, num int) ([]CT, error) {
 func (ctx *ReaderContext[CT]) Consume(num int) ([]CT, error) {
 	ctx.skippedSinceLastConsume = false
 	lookOffset := 0
-	if len(ctx.lookStack) > 0 {
-		lookOffset = ctx.lookStack[len(ctx.lookStack)-1]
+	if ctx.lookVal != InvalidLook {
+		lookOffset = ctx.lookVal
 	}
 
 	err := ctx.maybeEnsureBufferLoaded(lookOffset + num)
@@ -138,8 +138,8 @@ func (ctx *ReaderContext[CT]) Consume(num int) ([]CT, error) {
 	}
 	buf := ctx.buffer[lookOffset:]
 	if len(buf) < num {
-		if len(ctx.lookStack) > 0 {
-			ctx.lookStack[len(ctx.lookStack)-1] += len(buf)
+		if ctx.lookVal != InvalidLook {
+			ctx.lookVal += len(buf)
 		} else {
 			ctx.buffer = ctx.buffer[:0]
 			ctx.bufferOrigins = ctx.bufferOrigins[:0]
@@ -147,8 +147,8 @@ func (ctx *ReaderContext[CT]) Consume(num int) ([]CT, error) {
 		return buf, ErrEOF
 	}
 	buf = buf[:num]
-	if len(ctx.lookStack) > 0 {
-		ctx.lookStack[len(ctx.lookStack)-1] += num
+	if ctx.lookVal != InvalidLook {
+		ctx.lookVal += num
 	} else {
 		ctx.buffer = ctx.buffer[num:]
 		ctx.bufferOrigins = ctx.bufferOrigins[num:]
@@ -160,8 +160,8 @@ func (ctx *ReaderContext[CT]) Consume(num int) ([]CT, error) {
 // input stream.
 func (ctx *ReaderContext[CT]) GetCurOrigin() Origin {
 	lookOffset := 0
-	if len(ctx.lookStack) > 0 {
-		lookOffset = ctx.lookStack[len(ctx.lookStack)-1]
+	if ctx.lookVal != InvalidLook {
+		lookOffset = ctx.lookVal
 	}
 
 	ctx.maybeEnsureBufferLoaded(lookOffset + 1)
@@ -230,56 +230,22 @@ func (ctx *ReaderContext[CT]) RunSkipParsers() error {
 	return nil
 }
 
-// Pushes a Look frame onto the look stack.
-func (ctx *ReaderContext[CT]) NewLook() {
-	if len(ctx.lookStack) == 0 {
-		ctx.lookStack = append(ctx.lookStack, 0)
-	} else {
-		ctx.lookStack = append(ctx.lookStack, ctx.lookStack[len(ctx.lookStack)-1])
-	}
+// Sets the look value.
+func (ctx *ReaderContext[CT]) SetLook(val int) {
+	ctx.lookVal = val
 }
 
-// Pops a Look frame from the look stack, reverting any consumptions.
-func (ctx *ReaderContext[CT]) RevertLook() {
-	if len(ctx.lookStack) == 0 {
-		panic("cannot RevertLook() without a NewLook() on the stack")
-	}
-	ctx.lookStack = ctx.lookStack[:len(ctx.lookStack)-1]
+// Gets the look value.
+func (ctx *ReaderContext[CT]) GetLook() int {
+	return ctx.lookVal
 }
 
-// Pops a Look frame from the look stack, committing any consumptions.
-func (ctx *ReaderContext[CT]) CommitLook() error {
-	if len(ctx.lookStack) == 0 {
-		panic("cannot CommitLook() without a NewLook() on the stack")
-	}
-	toConsume := ctx.lookStack[len(ctx.lookStack)-1]
-	ctx.lookStack = ctx.lookStack[:len(ctx.lookStack)-1]
-	if len(ctx.lookStack) == 0 {
-		_, err := ctx.Consume(toConsume)
-		return err
-	} else {
-		ctx.lookStack[len(ctx.lookStack)-1] = toConsume
-	}
-	return nil
+// Sets the name of all subsequent parsers.
+func (ctx *ReaderContext[CT]) SetCurName(name string) {
+	ctx.curName = name
 }
 
-// Push the given name to the name stack as the name of all subsequent parsers.
-func (ctx *ReaderContext[CT]) PushName(name string) {
-	ctx.nameStack = append(ctx.nameStack, name)
-}
-
-// Pop a name from the name stack.
-func (ctx *ReaderContext[CT]) PopName() {
-	if len(ctx.nameStack) == 0 {
-		panic("Cannot PopName with nothing on the name stack")
-	}
-	ctx.nameStack = ctx.nameStack[:len(ctx.nameStack)-1]
-}
-
-// Returns the top name from the name stack, or "<unknown>" if the stack is empty.
-func (ctx *ReaderContext[CT]) PeekName() string {
-	if len(ctx.nameStack) == 0 {
-		return "<unknown>"
-	}
-	return ctx.nameStack[len(ctx.nameStack)-1]
+// Gets the current name of parsers.
+func (ctx *ReaderContext[CT]) GetCurName() string {
+	return ctx.curName
 }

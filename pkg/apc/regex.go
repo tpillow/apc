@@ -29,7 +29,7 @@ func Regex(pattern string) Parser[rune, string] {
 		reader := &RuneContextPeekingRuneReader{Context: ctx}
 		loc := regex.FindReaderIndex(reader)
 		if loc == nil {
-			return "", ParseErrExpectedButGotNext(ctx, ctx.PeekName(), nil)
+			return "", ParseErrExpectedButGotNext(ctx, ctx.GetCurName(), nil)
 		}
 		if loc[0] != 0 {
 			panic("regex should always be normalized to match at start of line")
