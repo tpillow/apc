@@ -258,7 +258,7 @@ func (ctx *ReaderContext[CT]) CommitLook() error {
 		_, err := ctx.Consume(toConsume)
 		return err
 	} else {
-		ctx.lookStack[len(ctx.lookStack)-1] += toConsume - ctx.lookStack[len(ctx.lookStack)-1]
+		ctx.lookStack[len(ctx.lookStack)-1] = toConsume
 	}
 	return nil
 }
