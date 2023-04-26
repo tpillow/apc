@@ -23,7 +23,7 @@ const (
 var (
 	lexParser = apc.Skip(
 		apc.CastToAny(apc.WhitespaceParser),
-		apc.Any("token",
+		apc.Any(
 			apc.BindToToken(apc.Bind[rune, string, any](apc.ExactStr(string(TokenTypeNull)), nil), TokenTypeNull),
 			apc.BindToToken(apc.BoolParser, TokenTypeBool),
 			apc.BindToToken(apc.ExactStr(string(TokenTypeColon)), TokenTypeColon),
@@ -42,7 +42,7 @@ var (
 	valueParserRef = apc.Ref(&valueParser)
 
 	pairParser = apc.Map(
-		apc.Seq3("pair", apc.ExactTokenType(TokenTypeStr), apc.ExactTokenType(TokenTypeColon), valueParserRef),
+		apc.Seq3(apc.ExactTokenType(TokenTypeStr), apc.ExactTokenType(TokenTypeColon), valueParserRef),
 		func(node *apc.Seq3Node[apc.Token, apc.Token, any], _ apc.Origin) PairNode {
 			return PairNode{
 				Key:   node.Result1.Value.(string),
@@ -50,18 +50,18 @@ var (
 			}
 		})
 
-	valueListParser = apc.ZeroOrMoreSeparated("value list", valueParserRef, apc.ExactTokenType(TokenTypeComma))
-	pairListParser  = apc.ZeroOrMoreSeparated("pair list", pairParser, apc.ExactTokenType(TokenTypeComma))
+	valueListParser = apc.ZeroOrMoreSeparated(valueParserRef, apc.ExactTokenType(TokenTypeComma))
+	pairListParser  = apc.ZeroOrMoreSeparated(pairParser, apc.ExactTokenType(TokenTypeComma))
 
 	objParser = apc.Map(
-		apc.Seq3("object", apc.ExactTokenType(TokenTypeOpenBrace), pairListParser, apc.ExactTokenType(TokenTypeCloseBrace)),
+		apc.Seq3(apc.ExactTokenType(TokenTypeOpenBrace), pairListParser, apc.ExactTokenType(TokenTypeCloseBrace)),
 		func(node *apc.Seq3Node[apc.Token, []PairNode, apc.Token], _ apc.Origin) any {
 			return ObjNode{
 				Pairs: node.Result2,
 			}
 		})
 	arrayParser = apc.Map(
-		apc.Seq3("array", apc.ExactTokenType(TokenTypeOpenBracket), valueListParser, apc.ExactTokenType(TokenTypeCloseBracket)),
+		apc.Seq3(apc.ExactTokenType(TokenTypeOpenBracket), valueListParser, apc.ExactTokenType(TokenTypeCloseBracket)),
 		func(node *apc.Seq3Node[apc.Token, []any, apc.Token], _ apc.Origin) ArrayNode {
 			return ArrayNode{
 				Nodes: node.Result2,
@@ -70,7 +70,7 @@ var (
 )
 
 func main() {
-	valueParser = apc.Any("value",
+	valueParser = apc.Any(
 		apc.MapTokenToValue[apc.Token, any](apc.ExactTokenType(TokenTypeNum)),
 		apc.MapTokenToValue[apc.Token, any](apc.ExactTokenType(TokenTypeBool)),
 		apc.MapTokenToValue[apc.Token, any](apc.ExactTokenType(TokenTypeNull)),

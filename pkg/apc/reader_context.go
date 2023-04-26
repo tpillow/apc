@@ -27,6 +27,7 @@ type ReaderContext[CT any] struct {
 	// a Consume call.
 	skippedSinceLastConsume bool
 	lookStack               []int
+	nameStack               []string
 }
 
 // Returns a *ReaderContext[CT] with the given reader.
@@ -40,6 +41,7 @@ func NewReaderContext[CT any](reader ReaderWithOrigin[CT]) *ReaderContext[CT] {
 		skipping:                false,
 		skippedSinceLastConsume: false,
 		lookStack:               make([]int, 0),
+		nameStack:               make([]string, 0),
 	}
 }
 
@@ -254,4 +256,22 @@ func (ctx *ReaderContext[CT]) CommitLook() error {
 		ctx.lookStack[len(ctx.lookStack)-1] += toConsume - ctx.lookStack[len(ctx.lookStack)-1]
 	}
 	return nil
+}
+
+func (ctx *ReaderContext[CT]) PushName(name string) {
+	ctx.nameStack = append(ctx.nameStack, name)
+}
+
+func (ctx *ReaderContext[CT]) PopName() {
+	if len(ctx.nameStack) == 0 {
+		panic("Cannot PopName with nothing on the name stack")
+	}
+	ctx.nameStack = ctx.nameStack[1:]
+}
+
+func (ctx *ReaderContext[CT]) PeekName() string {
+	if len(ctx.nameStack) == 0 {
+		return "<unknown>"
+	}
+	return ctx.nameStack[len(ctx.nameStack)-1]
 }

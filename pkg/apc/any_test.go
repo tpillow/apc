@@ -8,9 +8,9 @@ import (
 
 func TestAnyParser(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, "###hi##")
-	p1 := Regex("", "#+")
+	p1 := Regex("#+")
 	p2 := ExactStr("hi")
-	p := Any("", p1, p2)
+	p := Any(p1, p2)
 
 	node, err := p(ctx)
 	assert.NoError(t, err)

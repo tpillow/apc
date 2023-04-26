@@ -9,7 +9,7 @@ import (
 
 func TestMapParser(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, "342_")
-	p := Map(Regex("", "\\d+"), func(node string, _ Origin) int64 {
+	p := Map(Regex("\\d+"), func(node string, _ Origin) int64 {
 		val, err := strconv.ParseInt(node, 10, 64)
 		assert.NoError(t, err)
 		return val

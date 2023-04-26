@@ -7,7 +7,7 @@ import (
 )
 
 func TestRangeParser(t *testing.T) {
-	p := Range("", 2, 3, ExactStr("hi"))
+	p := Range(2, 3, ExactStr("hi"))
 
 	ctx := NewStringContext(testStringOrigin, "hi")
 	_, err := p(ctx)
@@ -39,7 +39,7 @@ func TestRangeParser(t *testing.T) {
 func TestMaybeParser(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, "hibye")
 	intVal := 55
-	p := Maybe("", Bind(CastToAny(ExactStr("hi")), &intVal))
+	p := Maybe(Bind(CastToAny(ExactStr("hi")), &intVal))
 
 	node, err := p(ctx)
 	assert.NoError(t, err)
@@ -56,7 +56,7 @@ func TestMaybeParser(t *testing.T) {
 
 func TestOneOrMoreParserWithSeq2(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, "#$#$")
-	p := OneOrMore("", Seq("", ExactStr("#"), ExactStr("$")))
+	p := OneOrMore(Seq(ExactStr("#"), ExactStr("$")))
 
 	node, err := p(ctx)
 	assert.NoError(t, err)
@@ -72,7 +72,7 @@ func TestOneOrMoreParserWithSeq2(t *testing.T) {
 
 func TestOneOrMoreSeparatedParser(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, "55,66")
-	p := OneOrMoreSeparated("", IntParser, ExactStr(","))
+	p := OneOrMoreSeparated(IntParser, ExactStr(","))
 
 	node, err := p(ctx)
 	assert.NoError(t, err)

@@ -38,6 +38,9 @@ type Context[CT any] interface {
 	// successfully matches. The results of any matched parsers is discarded.
 	// Should only return nil or non-ParseError errors.
 	RunSkipParsers() error
+	PushName(name string)
+	PopName()
+	PeekName() string
 }
 
 type LookContext interface {

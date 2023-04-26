@@ -8,7 +8,7 @@ import (
 
 func TestRegexParser(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, "###_##")
-	p := Regex("", "#+")
+	p := Regex("#+")
 
 	node, err := p(ctx)
 	assert.NoError(t, err)

@@ -11,7 +11,7 @@ import (
 //
 // Note that the regex is always normalized to contain '^' as the starting
 // symbol, to always match the left-most character in the input stream.
-func Regex(name string, pattern string) Parser[rune, string] {
+func Regex(pattern string) Parser[rune, string] {
 	if len(pattern) < 1 {
 		panic("regex pattern length must be >= 1")
 	}
@@ -29,7 +29,7 @@ func Regex(name string, pattern string) Parser[rune, string] {
 		reader := &RuneContextPeekingRuneReader{Context: ctx}
 		loc := regex.FindReaderIndex(reader)
 		if loc == nil {
-			return "", ParseErrExpectedButGotNext(ctx, name, nil)
+			return "", ParseErrExpectedButGotNext(ctx, ctx.PeekName(), nil)
 		}
 		if loc[0] != 0 {
 			panic("regex should always be normalized to match at start of line")

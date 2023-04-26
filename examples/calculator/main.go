@@ -35,10 +35,10 @@ var (
 	factorParserRef = apc.Ref(&factorParser)
 
 	exponentTermParser = apc.Map(
-		apc.Seq2("exponent term",
+		apc.Seq2(
 			factorParserRef,
-			apc.ZeroOrMore("",
-				apc.Seq2("",
+			apc.ZeroOrMore(
+				apc.Seq2(
 					opExpParser,
 					factorParserRef))),
 		func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]], _ apc.Origin) Executable {
@@ -54,11 +54,11 @@ var (
 		})
 
 	termParser = apc.Map(
-		apc.Seq2("term",
+		apc.Seq2(
 			exponentTermParser,
-			apc.ZeroOrMore("",
-				apc.Seq2("",
-					apc.Any("", opMulParser, opDivParser),
+			apc.ZeroOrMore(
+				apc.Seq2(
+					apc.Any(opMulParser, opDivParser),
 					exponentTermParser))),
 		func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]], _ apc.Origin) Executable {
 			left := node.Result1
@@ -73,11 +73,11 @@ var (
 		})
 
 	exprParser = apc.Map(
-		apc.Seq2("expr",
+		apc.Seq2(
 			termParser,
-			apc.ZeroOrMore("",
-				apc.Seq2("",
-					apc.Any("", opAddParser, opSubParser),
+			apc.ZeroOrMore(
+				apc.Seq2(
+					apc.Any(opAddParser, opSubParser),
 					termParser))),
 		func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]], _ apc.Origin) Executable {
 			left := node.Result1
@@ -91,18 +91,18 @@ var (
 			return left
 		})
 
-	maybeExprParser = apc.Maybe("expr", exprParser)
+	maybeExprParser = apc.Maybe(exprParser)
 )
 
 func initParser() {
-	factorParser = apc.Any("factor",
+	factorParser = apc.Any(
 		apc.Map(
 			apc.FloatParser,
 			func(node float64, _ apc.Origin) Executable {
 				return ValueNode{Value: node}
 			}),
 		apc.Map(
-			apc.Seq3("",
+			apc.Seq3(
 				apc.ExactStr("("),
 				exprParser,
 				apc.ExactStr(")")),

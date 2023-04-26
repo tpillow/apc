@@ -9,21 +9,21 @@ import (
 func TestLook(t *testing.T) {
 	ctx := NewStringContext(testStringOrigin, "abcabdabeabcabfabd")
 
-	parser := Any("",
-		Look(Map(Seq3("", ExactStr("a"), ExactStr("b"), ExactStr("c")),
+	parser := Any(
+		Look(Map(Seq3(ExactStr("a"), ExactStr("b"), ExactStr("c")),
 			func(node *Seq3Node[string, string, string], _ Origin) string {
 				return "c"
 			})),
-		Look(Map(Seq3("", ExactStr("a"), ExactStr("b"), ExactStr("d")),
+		Look(Map(Seq3(ExactStr("a"), ExactStr("b"), ExactStr("d")),
 			func(node *Seq3Node[string, string, string], _ Origin) string {
 				return "d"
 			})),
-		Any("",
-			Look(Map(Seq3("", ExactStr("a"), ExactStr("b"), ExactStr("e")),
+		Any(
+			Look(Map(Seq3(ExactStr("a"), ExactStr("b"), ExactStr("e")),
 				func(node *Seq3Node[string, string, string], _ Origin) string {
 					return "e"
 				})),
-			Look(Map(Seq3("", ExactStr("a"), ExactStr("b"), ExactStr("f")),
+			Look(Map(Seq3(ExactStr("a"), ExactStr("b"), ExactStr("f")),
 				func(node *Seq3Node[string, string, string], _ Origin) string {
 					return "f"
 				}))))

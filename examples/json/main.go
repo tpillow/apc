@@ -12,7 +12,7 @@ var (
 	valueParserRef = apc.Ref(&valueParser)
 
 	pairParser = apc.Map(
-		apc.Seq3("pair", apc.DoubleQuotedStringParser, apc.ExactStr(":"), valueParserRef),
+		apc.Seq3(apc.DoubleQuotedStringParser, apc.ExactStr(":"), valueParserRef),
 		func(node *apc.Seq3Node[string, string, any], _ apc.Origin) PairNode {
 			return PairNode{
 				Key:   node.Result1,
@@ -20,18 +20,18 @@ var (
 			}
 		})
 
-	valueListParser = apc.ZeroOrMoreSeparated("value list", valueParserRef, apc.ExactStr(","))
-	pairListParser  = apc.ZeroOrMoreSeparated("pair list", pairParser, apc.ExactStr(","))
+	valueListParser = apc.ZeroOrMoreSeparated(valueParserRef, apc.ExactStr(","))
+	pairListParser  = apc.ZeroOrMoreSeparated(pairParser, apc.ExactStr(","))
 
 	objParser = apc.Map(
-		apc.Seq3("object", apc.ExactStr("{"), pairListParser, apc.ExactStr("}")),
+		apc.Seq3(apc.ExactStr("{"), pairListParser, apc.ExactStr("}")),
 		func(node *apc.Seq3Node[string, []PairNode, string], _ apc.Origin) any {
 			return ObjNode{
 				Pairs: node.Result2,
 			}
 		})
 	arrayParser = apc.Map(
-		apc.Seq3("array", apc.ExactStr("["), valueListParser, apc.ExactStr("]")),
+		apc.Seq3(apc.ExactStr("["), valueListParser, apc.ExactStr("]")),
 		func(node *apc.Seq3Node[string, []any, string], _ apc.Origin) ArrayNode {
 			return ArrayNode{
 				Nodes: node.Result2,
@@ -40,7 +40,7 @@ var (
 )
 
 func main() {
-	valueParser = apc.Any("value",
+	valueParser = apc.Any(
 		apc.CastToAny(apc.FloatParser),
 		apc.CastToAny(apc.BoolParser),
 		apc.CastToAny(apc.Bind[rune, string, any](apc.ExactStr("null"), nil)),
