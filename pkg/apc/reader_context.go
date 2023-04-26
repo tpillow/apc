@@ -266,7 +266,7 @@ func (ctx *ReaderContext[CT]) PopName() {
 	if len(ctx.nameStack) == 0 {
 		panic("Cannot PopName with nothing on the name stack")
 	}
-	ctx.nameStack = ctx.nameStack[1:]
+	ctx.nameStack = ctx.nameStack[:len(ctx.nameStack)-1]
 }
 
 func (ctx *ReaderContext[CT]) PeekName() string {
