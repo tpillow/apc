@@ -26,8 +26,10 @@ type ReaderContext[CT any] struct {
 	// when RunSkipParsers is run, it does not need to be run again until
 	// a Consume call.
 	skippedSinceLastConsume bool
-	lookStack               []int
-	nameStack               []string
+	// Holds a stack of offsets in the buffer to support backtracking.
+	lookStack []int
+	// Holds a stack of names for what is currently being parsed.
+	nameStack []string
 }
 
 // Returns a *ReaderContext[CT] with the given reader.
@@ -228,6 +230,7 @@ func (ctx *ReaderContext[CT]) RunSkipParsers() error {
 	return nil
 }
 
+// Pushes a Look frame onto the look stack.
 func (ctx *ReaderContext[CT]) NewLook() {
 	if len(ctx.lookStack) == 0 {
 		ctx.lookStack = append(ctx.lookStack, 0)
@@ -236,6 +239,7 @@ func (ctx *ReaderContext[CT]) NewLook() {
 	}
 }
 
+// Pops a Look frame from the look stack, reverting any consumptions.
 func (ctx *ReaderContext[CT]) RevertLook() {
 	if len(ctx.lookStack) == 0 {
 		panic("cannot RevertLook() without a NewLook() on the stack")
@@ -243,6 +247,7 @@ func (ctx *ReaderContext[CT]) RevertLook() {
 	ctx.lookStack = ctx.lookStack[:len(ctx.lookStack)-1]
 }
 
+// Pops a Look frame from the look stack, committing any consumptions.
 func (ctx *ReaderContext[CT]) CommitLook() error {
 	if len(ctx.lookStack) == 0 {
 		panic("cannot CommitLook() without a NewLook() on the stack")
@@ -258,10 +263,12 @@ func (ctx *ReaderContext[CT]) CommitLook() error {
 	return nil
 }
 
+// Push the given name to the name stack as the name of all subsequent parsers.
 func (ctx *ReaderContext[CT]) PushName(name string) {
 	ctx.nameStack = append(ctx.nameStack, name)
 }
 
+// Pop a name from the name stack.
 func (ctx *ReaderContext[CT]) PopName() {
 	if len(ctx.nameStack) == 0 {
 		panic("Cannot PopName with nothing on the name stack")
@@ -269,6 +276,7 @@ func (ctx *ReaderContext[CT]) PopName() {
 	ctx.nameStack = ctx.nameStack[:len(ctx.nameStack)-1]
 }
 
+// Returns the top name from the name stack, or "<unknown>" if the stack is empty.
 func (ctx *ReaderContext[CT]) PeekName() string {
 	if len(ctx.nameStack) == 0 {
 		return "<unknown>"

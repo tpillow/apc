@@ -1,5 +1,10 @@
 package apc
 
+// Provides backtracking support for the provided parser.
+// If an error occurs, any consumptions made are reverted to the state
+// of the context when this Look parser is called.
+// If no error occurs, any consumptions made are committed to the current
+// Look frame.
 func Look[CT, T any](parser Parser[CT, T]) Parser[CT, T] {
 	return func(ctx Context[CT]) (T, error) {
 		lookCtx, ok := ctx.(LookContext)
