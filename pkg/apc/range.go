@@ -33,7 +33,7 @@ func Range[CT, T any](min int, max int, parser Parser[CT, T]) Parser[CT, []T] {
 		}
 
 		if len(nodes) < min {
-			msg := fmt.Sprintf("at least %v of %v", min, ctx.GetCurName())
+			msg := fmt.Sprintf("at least %v of %v", min, ctx.GetCurParserName())
 			if len(nodes) == 0 {
 				return nil, ParseErrExpectedButGot(ctx, msg, len(nodes), err)
 			}

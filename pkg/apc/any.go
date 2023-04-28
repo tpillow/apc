@@ -17,6 +17,6 @@ func Any[CT, T any](parsers ...Parser[CT, T]) Parser[CT, T] {
 				return zeroVal[T](), err
 			}
 		}
-		return zeroVal[T](), ParseErrExpectedButGotNext(ctx, ctx.GetCurName(), nil)
+		return zeroVal[T](), ParseErrExpectedButGotNext(ctx, ctx.GetCurParserName(), nil)
 	}
 }

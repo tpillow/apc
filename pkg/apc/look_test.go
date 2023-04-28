@@ -31,7 +31,7 @@ func TestLook(t *testing.T) {
 	expectedResults := []string{"c", "d", "e", "c", "f", "d"}
 	for _, expected := range expectedResults {
 		node, err := parser(ctx)
-		assert.Equal(t, InvalidLook, ctx.lookVal)
+		assert.Equal(t, InvalidLookOffset, ctx.lookOffset)
 		assert.NoError(t, err)
 		assert.Equal(t, expected, node)
 	}

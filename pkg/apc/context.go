@@ -1,7 +1,7 @@
 package apc
 
-// Value of an invalid Look.
-const InvalidLook int = -1
+// Value of an invalid look offset.
+const InvalidLookOffset int = -1
 
 // Context[CT] holds the current state of some input parsing stream
 // of type CT, and provides methods to peek the input stream, consume it,
@@ -42,11 +42,11 @@ type Context[CT any] interface {
 	// Should only return nil or non-ParseError errors.
 	RunSkipParsers() error
 	// Sets the name of all subsequent parsers.
-	SetCurName(name string)
+	SetCurParserName(name string)
 	// Gets the current name of parsers.
-	GetCurName() string
-	// Sets the look value.
-	SetLook(val int)
-	// Gets the look value.
-	GetLook() int
+	GetCurParserName() string
+	// Sets the look offset value.
+	SetLookOffset(val int)
+	// Gets the look offset value.
+	GetLookOffset() int
 }

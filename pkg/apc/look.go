@@ -7,15 +7,15 @@ package apc
 // Look frame.
 func Look[CT, T any](parser Parser[CT, T]) Parser[CT, T] {
 	return func(ctx Context[CT]) (T, error) {
-		lastLook := ctx.GetLook()
-		if lastLook == InvalidLook {
-			ctx.SetLook(0)
+		lastLook := ctx.GetLookOffset()
+		if lastLook == InvalidLookOffset {
+			ctx.SetLookOffset(0)
 		}
 
 		node, err := parser(ctx)
 		if err != nil {
 			org := ctx.GetCurOrigin()
-			ctx.SetLook(lastLook)
+			ctx.SetLookOffset(lastLook)
 			return zeroVal[T](), &ParseError{
 				Err:     err,
 				Message: "",
@@ -23,15 +23,15 @@ func Look[CT, T any](parser Parser[CT, T]) Parser[CT, T] {
 			}
 		}
 
-		newLook := ctx.GetLook()
-		if lastLook == InvalidLook {
-			ctx.SetLook(InvalidLook)
+		newLook := ctx.GetLookOffset()
+		if lastLook == InvalidLookOffset {
+			ctx.SetLookOffset(InvalidLookOffset)
 			_, err := ctx.Consume(newLook)
 			if err != nil {
 				return zeroVal[T](), err
 			}
 		} else {
-			ctx.SetLook(newLook)
+			ctx.SetLookOffset(newLook)
 		}
 
 		if err != nil {

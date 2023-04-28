@@ -27,9 +27,9 @@ type ReaderContext[CT any] struct {
 	// a Consume call.
 	skippedSinceLastConsume bool
 	// Current parser name.
-	curName string
-	// Current look value.
-	lookVal int
+	curParserName string
+	// Current look offset value.
+	lookOffset int
 }
 
 // Returns a *ReaderContext[CT] with the given reader.
@@ -42,8 +42,8 @@ func NewReaderContext[CT any](reader ReaderWithOrigin[CT]) *ReaderContext[CT] {
 		skipParsers:             make([]Parser[CT, any], 0),
 		skipping:                false,
 		skippedSinceLastConsume: false,
-		curName:                 "<unknown>",
-		lookVal:                 InvalidLook,
+		curParserName:           "<unknown>",
+		lookOffset:              InvalidLookOffset,
 	}
 }
 
@@ -104,8 +104,8 @@ func (ctx *ReaderContext[CT]) maybeEnsureBufferLoaded(num int) error {
 // if end of input has been reached).
 func (ctx *ReaderContext[CT]) Peek(offset int, num int) ([]CT, error) {
 	lookOffset := 0
-	if ctx.lookVal != InvalidLook {
-		lookOffset = ctx.lookVal
+	if ctx.lookOffset != InvalidLookOffset {
+		lookOffset = ctx.lookOffset
 	}
 
 	err := ctx.maybeEnsureBufferLoaded(lookOffset + offset + num)
@@ -128,8 +128,8 @@ func (ctx *ReaderContext[CT]) Peek(offset int, num int) ([]CT, error) {
 func (ctx *ReaderContext[CT]) Consume(num int) ([]CT, error) {
 	ctx.skippedSinceLastConsume = false
 	lookOffset := 0
-	if ctx.lookVal != InvalidLook {
-		lookOffset = ctx.lookVal
+	if ctx.lookOffset != InvalidLookOffset {
+		lookOffset = ctx.lookOffset
 	}
 
 	err := ctx.maybeEnsureBufferLoaded(lookOffset + num)
@@ -138,8 +138,8 @@ func (ctx *ReaderContext[CT]) Consume(num int) ([]CT, error) {
 	}
 	buf := ctx.buffer[lookOffset:]
 	if len(buf) < num {
-		if ctx.lookVal != InvalidLook {
-			ctx.lookVal += len(buf)
+		if ctx.lookOffset != InvalidLookOffset {
+			ctx.lookOffset += len(buf)
 		} else {
 			ctx.buffer = ctx.buffer[:0]
 			ctx.bufferOrigins = ctx.bufferOrigins[:0]
@@ -147,8 +147,8 @@ func (ctx *ReaderContext[CT]) Consume(num int) ([]CT, error) {
 		return buf, ErrEOF
 	}
 	buf = buf[:num]
-	if ctx.lookVal != InvalidLook {
-		ctx.lookVal += num
+	if ctx.lookOffset != InvalidLookOffset {
+		ctx.lookOffset += num
 	} else {
 		ctx.buffer = ctx.buffer[num:]
 		ctx.bufferOrigins = ctx.bufferOrigins[num:]
@@ -160,8 +160,8 @@ func (ctx *ReaderContext[CT]) Consume(num int) ([]CT, error) {
 // input stream.
 func (ctx *ReaderContext[CT]) GetCurOrigin() Origin {
 	lookOffset := 0
-	if ctx.lookVal != InvalidLook {
-		lookOffset = ctx.lookVal
+	if ctx.lookOffset != InvalidLookOffset {
+		lookOffset = ctx.lookOffset
 	}
 
 	ctx.maybeEnsureBufferLoaded(lookOffset + 1)
@@ -231,21 +231,21 @@ func (ctx *ReaderContext[CT]) RunSkipParsers() error {
 }
 
 // Sets the look value.
-func (ctx *ReaderContext[CT]) SetLook(val int) {
-	ctx.lookVal = val
+func (ctx *ReaderContext[CT]) SetLookOffset(val int) {
+	ctx.lookOffset = val
 }
 
 // Gets the look value.
-func (ctx *ReaderContext[CT]) GetLook() int {
-	return ctx.lookVal
+func (ctx *ReaderContext[CT]) GetLookOffset() int {
+	return ctx.lookOffset
 }
 
 // Sets the name of all subsequent parsers.
-func (ctx *ReaderContext[CT]) SetCurName(name string) {
-	ctx.curName = name
+func (ctx *ReaderContext[CT]) SetCurParserName(name string) {
+	ctx.curParserName = name
 }
 
 // Gets the current name of parsers.
-func (ctx *ReaderContext[CT]) GetCurName() string {
-	return ctx.curName
+func (ctx *ReaderContext[CT]) GetCurParserName() string {
+	return ctx.curParserName
 }
