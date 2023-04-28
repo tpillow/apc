@@ -16,6 +16,14 @@ func Look[CT, T any](parser Parser[CT, T]) Parser[CT, T] {
 		if err != nil {
 			org := ctx.GetCurOrigin()
 			ctx.SetLookOffset(lastLook)
+			if pec, ok := err.(*ParseErrorConsumed); ok {
+				// Just convert the ParseErrorConsumed to a ParseError.
+				return zeroVal[T](), &ParseError{
+					Err:     pec.Err,
+					Message: pec.Message,
+					Origin:  pec.Origin,
+				}
+			}
 			return zeroVal[T](), &ParseError{
 				Err:     err,
 				Message: "",
@@ -34,9 +42,6 @@ func Look[CT, T any](parser Parser[CT, T]) Parser[CT, T] {
 			ctx.SetLookOffset(newLook)
 		}
 
-		if err != nil {
-			return zeroVal[T](), err
-		}
-		return node, nil
+		return node, err
 	}
 }
