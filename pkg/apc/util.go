@@ -29,12 +29,13 @@ func (r *RuneContextPeekingRuneReader) ReadRune() (rune, int, error) {
 	return rn, size, nil
 }
 
+// Turns a generic interface{} into a string that is sufficient to report in an error message.
+// Converts any []int32 to a string.
+// Converts any "" or "[]" value to "<nothing>".
 func interfaceToErrString(val interface{}) string {
 	// TODO: a better way???
 	ret := fmt.Sprintf("%v", val)
 	if cval, ok := val.([]int32); ok {
-		ret = string(cval)
-	} else if cval, ok := val.([]rune); ok {
 		ret = string(cval)
 	}
 	if ret == "" || ret == "[]" {

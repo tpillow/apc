@@ -8,9 +8,11 @@ import (
 // Represents the type of a Token.
 type TokenType string
 
+// TokenType representing a nil token.
 const NilTokenType TokenType = ""
 
 // Contains a TokenType and some Value.
+// If TokenType is NilTokenType, this Token should be assumed to be nil.
 type Token struct {
 	Type  TokenType
 	Value any
