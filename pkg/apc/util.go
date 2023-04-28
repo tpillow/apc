@@ -37,7 +37,7 @@ func interfaceToErrString(val interface{}) string {
 	} else if cval, ok := val.([]rune); ok {
 		ret = string(cval)
 	}
-	if ret == "[]" {
+	if ret == "" || ret == "[]" {
 		return "<nothing>"
 	}
 	return ret
