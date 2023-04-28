@@ -51,12 +51,9 @@ type ParseError struct {
 
 // Returns a ParseError with an error message in the format of "expected but got".
 func ParseErrExpectedButGot[CT any](ctx Context[CT], expected interface{}, got interface{}, wrapErr error) *ParseError {
-	if gotArr, ok := got.([]int32); ok {
-		got = string(gotArr)
-	}
 	return &ParseError{
 		Err:     wrapErr,
-		Message: fmt.Sprintf("expected %v but got %v", expected, got),
+		Message: fmt.Sprintf("expected %v but got %v", interfaceToErrString(expected), interfaceToErrString(got)),
 		Origin:  ctx.GetCurOrigin(),
 	}
 }
@@ -101,12 +98,9 @@ type ParseErrorConsumed struct {
 }
 
 func ParseErrConsumedExpectedButGot[CT any](ctx Context[CT], expected interface{}, got interface{}, wrapErr error) *ParseErrorConsumed {
-	if gotArr, ok := got.([]int32); ok {
-		got = string(gotArr)
-	}
 	return &ParseErrorConsumed{
 		Err:     wrapErr,
-		Message: fmt.Sprintf("expected %v but got %v", expected, got),
+		Message: fmt.Sprintf("expected %v but got %v", interfaceToErrString(expected), interfaceToErrString(got)),
 		Origin:  ctx.GetCurOrigin(),
 	}
 }

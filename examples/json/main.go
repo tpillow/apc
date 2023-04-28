@@ -11,42 +11,47 @@ var (
 	valueParser    apc.Parser[rune, any]
 	valueParserRef = apc.Ref(&valueParser)
 
-	pairParser = apc.Map(
-		apc.Seq3(apc.DoubleQuotedStringParser, apc.ExactStr(":"), valueParserRef),
-		func(node *apc.Seq3Node[string, string, any], _ apc.Origin) PairNode {
-			return PairNode{
-				Key:   node.Result1,
-				Value: node.Result3,
-			}
-		})
+	pairParser = apc.Named("json key-value pair",
+		apc.Map(
+			apc.Seq3(apc.DoubleQuotedStringParser, apc.ExactStr(":"), valueParserRef),
+			func(node *apc.Seq3Node[string, string, any], _ apc.Origin) PairNode {
+				return PairNode{
+					Key:   node.Result1,
+					Value: node.Result3,
+				}
+			}))
 
 	valueListParser = apc.ZeroOrMoreSeparated(valueParserRef, apc.ExactStr(","))
 	pairListParser  = apc.ZeroOrMoreSeparated(pairParser, apc.ExactStr(","))
 
-	objParser = apc.Map(
-		apc.Seq3(apc.ExactStr("{"), pairListParser, apc.ExactStr("}")),
-		func(node *apc.Seq3Node[string, []PairNode, string], _ apc.Origin) any {
-			return ObjNode{
-				Pairs: node.Result2,
-			}
-		})
-	arrayParser = apc.Map(
-		apc.Seq3(apc.ExactStr("["), valueListParser, apc.ExactStr("]")),
-		func(node *apc.Seq3Node[string, []any, string], _ apc.Origin) ArrayNode {
-			return ArrayNode{
-				Nodes: node.Result2,
-			}
-		})
+	objParser = apc.Named("JSON object",
+		apc.Map(
+			apc.Seq3(apc.ExactStr("{"), pairListParser, apc.ExactStr("}")),
+			func(node *apc.Seq3Node[string, []PairNode, string], _ apc.Origin) any {
+				return ObjNode{
+					Pairs: node.Result2,
+				}
+			}))
+
+	arrayParser = apc.Named("JSON array",
+		apc.Map(
+			apc.Seq3(apc.ExactStr("["), valueListParser, apc.ExactStr("]")),
+			func(node *apc.Seq3Node[string, []any, string], _ apc.Origin) ArrayNode {
+				return ArrayNode{
+					Nodes: node.Result2,
+				}
+			}))
 )
 
 func main() {
-	valueParser = apc.Any(
-		apc.CastToAny(apc.FloatParser),
-		apc.CastToAny(apc.BoolParser),
-		apc.CastToAny(apc.Bind[rune, string, any](apc.ExactStr("null"), nil)),
-		apc.CastToAny(apc.DoubleQuotedStringParser),
-		apc.CastToAny(objParser),
-		apc.CastToAny(arrayParser))
+	valueParser = apc.Named("JSON value",
+		apc.Any(
+			apc.CastToAny(apc.FloatParser),
+			apc.CastToAny(apc.BoolParser),
+			apc.CastToAny(apc.Bind[rune, string, any](apc.ExactStr("null"), nil)),
+			apc.CastToAny(apc.DoubleQuotedStringParser),
+			apc.CastToAny(objParser),
+			apc.CastToAny(arrayParser)))
 
 	input := ` { "name" : "Tom" , "age" : 55 , "weight":23.35,"hobbies" : [ "sports" , "stuff" , -55, +3.4, [], {} ] } `
 	ctx := apc.NewStringContext("<string>", input)

@@ -1,6 +1,9 @@
 package apc
 
-import "unicode/utf8"
+import (
+	"fmt"
+	"unicode/utf8"
+)
 
 // Obtain the zero value of type T.
 func zeroVal[T any]() T {
@@ -24,4 +27,18 @@ func (r *RuneContextPeekingRuneReader) ReadRune() (rune, int, error) {
 	r.offset += 1
 	rn, size := utf8.DecodeRuneInString(string(val))
 	return rn, size, nil
+}
+
+func interfaceToErrString(val interface{}) string {
+	// TODO: a better way???
+	ret := fmt.Sprintf("%v", val)
+	if cval, ok := val.([]int32); ok {
+		ret = string(cval)
+	} else if cval, ok := val.([]rune); ok {
+		ret = string(cval)
+	}
+	if ret == "[]" {
+		return "<nothing>"
+	}
+	return ret
 }

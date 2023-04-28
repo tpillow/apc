@@ -23,17 +23,18 @@ const (
 var (
 	lexParser = apc.Skip(
 		apc.CastToAny(apc.WhitespaceParser),
-		apc.Any(
-			apc.BindToToken(apc.Bind[rune, string, any](apc.ExactStr(string(TokenTypeNull)), nil), TokenTypeNull),
-			apc.BindToToken(apc.BoolParser, TokenTypeBool),
-			apc.BindToToken(apc.ExactStr(string(TokenTypeColon)), TokenTypeColon),
-			apc.BindToToken(apc.ExactStr(string(TokenTypeComma)), TokenTypeComma),
-			apc.BindToToken(apc.ExactStr(string(TokenTypeOpenBrace)), TokenTypeOpenBrace),
-			apc.BindToToken(apc.ExactStr(string(TokenTypeCloseBrace)), TokenTypeCloseBrace),
-			apc.BindToToken(apc.ExactStr(string(TokenTypeOpenBracket)), TokenTypeOpenBracket),
-			apc.BindToToken(apc.ExactStr(string(TokenTypeCloseBracket)), TokenTypeCloseBracket),
-			apc.BindToToken(apc.DoubleQuotedStringParser, TokenTypeStr),
-			apc.BindToToken(apc.FloatParser, TokenTypeNum)),
+		apc.Named("JSON token",
+			apc.Any(
+				apc.BindToToken(apc.Bind[rune, string, any](apc.ExactStr(string(TokenTypeNull)), nil), TokenTypeNull),
+				apc.BindToToken(apc.BoolParser, TokenTypeBool),
+				apc.BindToToken(apc.ExactStr(string(TokenTypeColon)), TokenTypeColon),
+				apc.BindToToken(apc.ExactStr(string(TokenTypeComma)), TokenTypeComma),
+				apc.BindToToken(apc.ExactStr(string(TokenTypeOpenBrace)), TokenTypeOpenBrace),
+				apc.BindToToken(apc.ExactStr(string(TokenTypeCloseBrace)), TokenTypeCloseBrace),
+				apc.BindToToken(apc.ExactStr(string(TokenTypeOpenBracket)), TokenTypeOpenBracket),
+				apc.BindToToken(apc.ExactStr(string(TokenTypeCloseBracket)), TokenTypeCloseBracket),
+				apc.BindToToken(apc.DoubleQuotedStringParser, TokenTypeStr),
+				apc.BindToToken(apc.FloatParser, TokenTypeNum))),
 	)
 )
 
@@ -53,30 +54,34 @@ var (
 	valueListParser = apc.ZeroOrMoreSeparated(valueParserRef, apc.ExactTokenType(TokenTypeComma))
 	pairListParser  = apc.ZeroOrMoreSeparated(pairParser, apc.ExactTokenType(TokenTypeComma))
 
-	objParser = apc.Map(
-		apc.Seq3(apc.ExactTokenType(TokenTypeOpenBrace), pairListParser, apc.ExactTokenType(TokenTypeCloseBrace)),
-		func(node *apc.Seq3Node[apc.Token, []PairNode, apc.Token], _ apc.Origin) any {
-			return ObjNode{
-				Pairs: node.Result2,
-			}
-		})
-	arrayParser = apc.Map(
-		apc.Seq3(apc.ExactTokenType(TokenTypeOpenBracket), valueListParser, apc.ExactTokenType(TokenTypeCloseBracket)),
-		func(node *apc.Seq3Node[apc.Token, []any, apc.Token], _ apc.Origin) ArrayNode {
-			return ArrayNode{
-				Nodes: node.Result2,
-			}
-		})
+	objParser = apc.Named("JSON object",
+		apc.Map(
+			apc.Seq3(apc.ExactTokenType(TokenTypeOpenBrace), pairListParser, apc.ExactTokenType(TokenTypeCloseBrace)),
+			func(node *apc.Seq3Node[apc.Token, []PairNode, apc.Token], _ apc.Origin) any {
+				return ObjNode{
+					Pairs: node.Result2,
+				}
+			}))
+
+	arrayParser = apc.Named("JSON array",
+		apc.Map(
+			apc.Seq3(apc.ExactTokenType(TokenTypeOpenBracket), valueListParser, apc.ExactTokenType(TokenTypeCloseBracket)),
+			func(node *apc.Seq3Node[apc.Token, []any, apc.Token], _ apc.Origin) ArrayNode {
+				return ArrayNode{
+					Nodes: node.Result2,
+				}
+			}))
 )
 
 func main() {
-	valueParser = apc.Any(
-		apc.MapTokenToValue[apc.Token, any](apc.ExactTokenType(TokenTypeNum)),
-		apc.MapTokenToValue[apc.Token, any](apc.ExactTokenType(TokenTypeBool)),
-		apc.MapTokenToValue[apc.Token, any](apc.ExactTokenType(TokenTypeNull)),
-		apc.MapTokenToValue[apc.Token, any](apc.ExactTokenType(TokenTypeStr)),
-		apc.CastToAny(objParser),
-		apc.CastToAny(arrayParser))
+	valueParser = apc.Named("JSON value",
+		apc.Any(
+			apc.MapTokenToValue[apc.Token, any](apc.ExactTokenType(TokenTypeNum)),
+			apc.MapTokenToValue[apc.Token, any](apc.ExactTokenType(TokenTypeBool)),
+			apc.MapTokenToValue[apc.Token, any](apc.ExactTokenType(TokenTypeNull)),
+			apc.MapTokenToValue[apc.Token, any](apc.ExactTokenType(TokenTypeStr)),
+			apc.CastToAny(objParser),
+			apc.CastToAny(arrayParser)))
 
 	input := ` { "name" : "Tom" , "age" : 55 , "weight":23.35,"hobbies" : [ "sports" , "stuff" , -55, +3.4, [], {} ] } `
 	ctx := apc.NewStringContext("<string>", input)
