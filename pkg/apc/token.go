@@ -39,6 +39,9 @@ func ExactTokenType(tokenType TokenType) Parser[Token, Token] {
 		if err != nil && !errors.Is(err, ErrEOF) {
 			return Token{}, err
 		}
+		if len(vals) == 0 {
+			return Token{}, ParseErrExpectedButGotNext(ctx, fmt.Sprintf("token of type %v", tokenType), nil)
+		}
 		val := vals[0]
 		if val.Type != tokenType {
 			return Token{}, ParseErrExpectedButGot(ctx, fmt.Sprintf("token of type %v", tokenType), val, nil)
@@ -62,6 +65,9 @@ func ExactTokenValue(tokenType TokenType, value any) Parser[Token, Token] {
 		vals, err := ctx.Peek(0, 1)
 		if err != nil && !errors.Is(err, ErrEOF) {
 			return Token{}, err
+		}
+		if len(vals) == 0 {
+			return Token{}, ParseErrExpectedButGotNext(ctx, fmt.Sprintf("token of type %v ('%v')", tokenType, value), nil)
 		}
 		val := vals[0]
 		if val.Type != tokenType || val.Value != value {
