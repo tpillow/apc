@@ -23,6 +23,8 @@ func Look[CT, T any](parser Parser[CT, T]) Parser[CT, T] {
 					Message: pec.Message,
 					Origin:  pec.Origin,
 				}
+			} else if pe, ok := err.(*ParseError); ok {
+				return zeroVal[T](), pe
 			}
 			return zeroVal[T](), &ParseError{
 				Err:     err,
