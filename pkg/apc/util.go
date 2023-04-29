@@ -5,6 +5,18 @@ import (
 	"unicode/utf8"
 )
 
+// Enable various debug prints
+var (
+	DebugPrintReaderContext = false
+)
+
+// Log helper
+func maybeLog(doLog bool, format string, formatArgs ...interface{}) {
+	if doLog {
+		fmt.Printf(fmt.Sprintf("[DEBUG] %v\n", format), formatArgs...)
+	}
+}
+
 // Obtain the zero value of type T.
 func zeroVal[T any]() T {
 	var val T

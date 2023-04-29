@@ -81,6 +81,7 @@ func (ctx *ReaderContext[CT]) maybeEnsureBufferLoaded(num int) error {
 	val, origin, err := ctx.reader.Read()
 	for err == nil {
 		ctx.buffer = append(ctx.buffer, val)
+		maybeLog(DebugPrintReaderContext, "ReaderContext %v appended to buffer: %v", ctx, val)
 		ctx.bufferOrigins = append(ctx.bufferOrigins, origin)
 		ctx.lastOrigin = origin
 		if len(ctx.buffer) >= num {
