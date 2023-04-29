@@ -43,7 +43,7 @@ func (r *RuneContextPeekingRuneReader) ReadRune() (rune, int, error) {
 
 // Turns a generic interface{} into a string that is sufficient to report in an error message.
 // Converts any []int32 to a string.
-// Converts any "" or "[]" value to "<nothing>".
+// Converts any "" or "[]" value to "EOF".
 func interfaceToErrString(val interface{}) string {
 	// TODO: a better way???
 	ret := fmt.Sprintf("%v", val)
@@ -51,7 +51,7 @@ func interfaceToErrString(val interface{}) string {
 		ret = string(cval)
 	}
 	if ret == "" || ret == "[]" {
-		return "<nothing>"
+		return "EOF"
 	}
 	return ret
 }
