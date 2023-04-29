@@ -74,7 +74,7 @@ func ExactTokenValue(tokenType TokenType, value any) Parser[Token, Token] {
 // Returns a parser that maps a Parser[CT, T] into a Parser[CT, Token] by returning a new
 // Token with Type tokenType and Value being the result of parser.
 func BindToToken[CT, T any](parser Parser[CT, T], tokenType TokenType) Parser[CT, Token] {
-	return Map(parser, func(node T, _ Origin) Token {
+	return Map(parser, func(node T) Token {
 		return Token{
 			Type:  tokenType,
 			Value: node,
@@ -85,7 +85,7 @@ func BindToToken[CT, T any](parser Parser[CT, T], tokenType TokenType) Parser[CT
 // Returns a parser that maps a Parser[CT, Token] into a Parser[CT, T] by returning
 // the Value of the parser result.
 func MapTokenToValue[CT, T any](parser Parser[CT, Token]) Parser[CT, T] {
-	return Map(parser, func(node Token, _ Origin) T {
+	return Map(parser, func(node Token) T {
 		return node.Value.(T)
 	})
 }

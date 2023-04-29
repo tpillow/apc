@@ -11,20 +11,20 @@ func TestLook(t *testing.T) {
 
 	parser := Any(
 		Look(Map(Seq3(ExactStr("a"), ExactStr("b"), ExactStr("c")),
-			func(node *Seq3Node[string, string, string], _ Origin) string {
+			func(node *Seq3Node[string, string, string]) string {
 				return "c"
 			})),
 		Look(Map(Seq3(ExactStr("a"), ExactStr("b"), ExactStr("d")),
-			func(node *Seq3Node[string, string, string], _ Origin) string {
+			func(node *Seq3Node[string, string, string]) string {
 				return "d"
 			})),
 		Any(
 			Look(Map(Seq3(ExactStr("a"), ExactStr("b"), ExactStr("e")),
-				func(node *Seq3Node[string, string, string], _ Origin) string {
+				func(node *Seq3Node[string, string, string]) string {
 					return "e"
 				})),
 			Look(Map(Seq3(ExactStr("a"), ExactStr("b"), ExactStr("f")),
-				func(node *Seq3Node[string, string, string], _ Origin) string {
+				func(node *Seq3Node[string, string, string]) string {
 					return "f"
 				}))))
 

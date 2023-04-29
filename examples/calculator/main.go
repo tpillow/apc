@@ -42,7 +42,7 @@ var (
 					apc.Seq2(
 						opExpParser,
 						factorParserRef))),
-			func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]], _ apc.Origin) Executable {
+			func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]]) Executable {
 				left := node.Result1
 				for _, seqRes := range node.Result2 {
 					left = BinOpNode{
@@ -62,7 +62,7 @@ var (
 					apc.Seq2(
 						apc.Any(opMulParser, opDivParser),
 						exponentTermParser))),
-			func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]], _ apc.Origin) Executable {
+			func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]]) Executable {
 				left := node.Result1
 				for _, seqRes := range node.Result2 {
 					left = BinOpNode{
@@ -82,7 +82,7 @@ var (
 					apc.Seq2(
 						apc.Any(opAddParser, opSubParser),
 						termParser))),
-			func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]], _ apc.Origin) Executable {
+			func(node *apc.Seq2Node[Executable, []*apc.Seq2Node[Operator, Executable]]) Executable {
 				left := node.Result1
 				for _, seqRes := range node.Result2 {
 					left = BinOpNode{
@@ -102,7 +102,7 @@ func initParser() {
 		apc.Any(
 			apc.Map(
 				apc.FloatParser,
-				func(node float64, _ apc.Origin) Executable {
+				func(node float64) Executable {
 					return ValueNode{Value: node}
 				}),
 			apc.Map(
@@ -110,7 +110,7 @@ func initParser() {
 					apc.ExactStr("("),
 					exprParser,
 					apc.ExactStr(")")),
-				func(node *apc.Seq3Node[string, Executable, string], _ apc.Origin) Executable {
+				func(node *apc.Seq3Node[string, Executable, string]) Executable {
 					return node.Result2
 				})))
 }

@@ -56,7 +56,7 @@ func OneOrMore[CT, T any](parser Parser[CT, T]) Parser[CT, []T] {
 // Same as Range(0, 1, parser), but with the resulting slice mapped
 // to a single value, or default T if 0 matches occurred.
 func Maybe[CT, T any](parser Parser[CT, T]) Parser[CT, T] {
-	return Map(Range(0, 1, parser), func(node []T, _ Origin) T {
+	return Map(Range(0, 1, parser), func(node []T) T {
 		if node == nil || len(node) <= 0 {
 			return zeroVal[T]()
 		}
@@ -73,13 +73,13 @@ func OneOrMoreSeparated[CT, T, U any](parser Parser[CT, T],
 	sepParser Parser[CT, U]) Parser[CT, []T] {
 	sepParse := Map(
 		Seq2(sepParser, parser),
-		func(node *Seq2Node[U, T], _ Origin) T {
+		func(node *Seq2Node[U, T]) T {
 			return node.Result2
 		})
 
 	return Map(
 		Seq2(parser, ZeroOrMore(sepParse)),
-		func(node *Seq2Node[T, []T], _ Origin) []T {
+		func(node *Seq2Node[T, []T]) []T {
 			result := []T{node.Result1}
 			return append(result, node.Result2...)
 		})
@@ -91,7 +91,7 @@ func ZeroOrMoreSeparated[CT, T, U any](parser Parser[CT, T],
 	sepParser Parser[CT, U]) Parser[CT, []T] {
 	return Map(
 		Maybe(OneOrMoreSeparated(parser, sepParser)),
-		func(node []T, _ Origin) []T {
+		func(node []T) []T {
 			if node == nil {
 				return []T{}
 			}

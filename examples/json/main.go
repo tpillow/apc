@@ -14,7 +14,7 @@ var (
 	pairParser = apc.Named("json key-value pair",
 		apc.Map(
 			apc.Seq3(apc.DoubleQuotedStringParser, apc.ExactStr(":"), valueParserRef),
-			func(node *apc.Seq3Node[string, string, any], _ apc.Origin) PairNode {
+			func(node *apc.Seq3Node[string, string, any]) PairNode {
 				return PairNode{
 					Key:   node.Result1,
 					Value: node.Result3,
@@ -27,7 +27,7 @@ var (
 	objParser = apc.Named("JSON object",
 		apc.Map(
 			apc.Seq3(apc.ExactStr("{"), pairListParser, apc.ExactStr("}")),
-			func(node *apc.Seq3Node[string, []PairNode, string], _ apc.Origin) any {
+			func(node *apc.Seq3Node[string, []PairNode, string]) any {
 				return ObjNode{
 					Pairs: node.Result2,
 				}
@@ -36,7 +36,7 @@ var (
 	arrayParser = apc.Named("JSON array",
 		apc.Map(
 			apc.Seq3(apc.ExactStr("["), valueListParser, apc.ExactStr("]")),
-			func(node *apc.Seq3Node[string, []any, string], _ apc.Origin) ArrayNode {
+			func(node *apc.Seq3Node[string, []any, string]) ArrayNode {
 				return ArrayNode{
 					Nodes: node.Result2,
 				}

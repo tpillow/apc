@@ -61,7 +61,7 @@ func Exact[CT any](value CT) Parser[CT, CT] {
 
 // Equivalent to ExactSlice but for a Context[rune]. Implicitly converts value to []rune.
 func ExactStr(value string) Parser[rune, string] {
-	return Map(ExactSlice([]rune(value)), func(node []rune, _ Origin) string {
+	return Map(ExactSlice([]rune(value)), func(node []rune) string {
 		return string(node)
 	})
 }

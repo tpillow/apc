@@ -10,7 +10,7 @@ var WhitespaceParser = Named("whitespace", Regex("\\s+"))
 // The result may contain raw/unescaped (\") and other escape markers.
 var DoubleQuotedStringParser = Named("double-quoted string", Map(
 	Regex(`"(?:[^"\\]|\\.)*"`),
-	func(node string, _ Origin) string {
+	func(node string) string {
 		return node[1 : len(node)-1]
 	}))
 
@@ -19,7 +19,7 @@ var DoubleQuotedStringParser = Named("double-quoted string", Map(
 // The result may contain raw/unescaped (\') and other escape markers.
 var SingleQuotedStringParser = Named("single-quoted string", Map(
 	Regex(`'(?:[^'\\]|\\.)*'`),
-	func(node string, _ Origin) string {
+	func(node string) string {
 		return node[1 : len(node)-1]
 	}))
 
@@ -35,7 +35,7 @@ var BoolParser = Named("boolean", Any(Bind(ExactStr("true"), true), Bind(ExactSt
 var FloatParser = Named("float",
 	Map(
 		Regex("[+\\-]?\\d+(\\.\\d+)?"),
-		func(node string, _ Origin) float64 {
+		func(node string) float64 {
 			val, err := strconv.ParseFloat(node, 64)
 			if err != nil {
 				panic(err)
@@ -48,7 +48,7 @@ var FloatParser = Named("float",
 var IntParser = Named("integer",
 	Map(
 		Regex("[+\\-]?\\d+"),
-		func(node string, _ Origin) int64 {
+		func(node string) int64 {
 			val, err := strconv.ParseInt(node, 10, 64)
 			if err != nil {
 				panic(err)
