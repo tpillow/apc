@@ -20,7 +20,11 @@ type Token struct {
 
 // Return the string version of a Token.
 func (t Token) String() string {
-	return fmt.Sprintf("token of type %v ('%v')", t.Type, t.Value)
+	valStr := ""
+	if t.Value != nil {
+		valStr = fmt.Sprintf(" ('%v')", t.Value)
+	}
+	return fmt.Sprintf("token of type %v%v", t.Type, valStr)
 }
 
 // Returns a parser that succeeds if the next peeked token from the Context[Token]
