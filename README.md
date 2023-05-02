@@ -11,6 +11,7 @@ APC supports backtracking by use of the `Look` parser.
 - Better error messages / traces.
 - Write more tests.
 - Doc generation (doc comments already added).
+- Embedded struct EBNF definition parser generator.
 
 ## Example Executables
 
@@ -36,15 +37,21 @@ TODO
 
 TODO
 
+### Naming Parsers
+
+The `Named` parser attaches a name to the parser it wraps. This name provides more debugging context and easier to understand error messages. Parsers further down in the chain will be named by the closest-up `Named` parser in the chain.
+
+Usage: `Named("<parserName>", <parser>)`.
+
 ### The `Ref` Parser
 
 Creates a `Parser[CT, T]` from a `*Parser[CT, T]`. This is useful for avoiding circular dependencies. For example, the following is invalid due to a circular reference:
 
 ```go
 // `value` refers to `hashValue`.
-var value = Any[rune, any]("", MapToAny(ExactStr("hello")), MapToAny(hashValue))
+var value = Any[rune, any](CastToAny(ExactStr("hello")), CastToAny(hashValue))
 // `hashValue` refers to `value`.
-var hashValue = Seq[rune, any]("", MapToAny(ExactStr("#")), value)
+var hashValue = Seq[rune, any](CastToAny(ExactStr("#")), value)
 ```
 
 However this can be remedied by using `Ref`:
@@ -55,17 +62,25 @@ var value Parser[rune, any]
 // `valueRef` is a parser referring to `value`, which is not yet assigned.
 var valueRef = Ref[rune, any](&value)
 // `hashValue` refers to `valueRef` - NOT `value`.
-var hashValue = Seq[rune, any]("", MapToAny(ExactStr("#")), valueRef)
+var hashValue = Seq[rune, any](CastToAny(ExactStr("#")), valueRef)
 
 func init() {
     // At runtime, `value` can then be defined and refer to `hashValue`:
-    value = Any[rune, any]("", MapToAny(ExactStr("hello")), MapToAny(hashValue))
+    value = Any[rune, any](CastToAny(ExactStr("hello")), CastToAny(hashValue))
 }
 ```
 
-Note that in the above example `MapToAny(hashValue)` is necessary because a `Seq[CT, any]` returns `[]any` (not `any`).
+Note that in the above example `CastToAny(hashValue)` is necessary because a `Seq[CT, any]` returns `[]any` (not `any`).
 
 ### The `Look` Parser
+
+TODO
+
+## Using APC as a Lexer / Tokenizer
+
+TODO
+
+### Tokens
 
 TODO
 

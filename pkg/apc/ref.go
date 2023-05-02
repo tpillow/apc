@@ -4,17 +4,17 @@ package apc
 //
 // Useful for avoiding circular variable dependencies. For example:
 //
-//	var value = Any("", MapToAny(ExactStr("hello")), MapToAny(hashValue))
-//	var hashValue = Seq("", MapToAny(ExactStr("#")), value)
+//	var value = Any(CastToAny(ExactStr("hello")), CastToAny(hashValue))
+//	var hashValue = Seq(CastToAny(ExactStr("#")), value)
 //
 // Is invalid, however this can be remedied by:
 //
 //	var value Parser[rune, any]
 //	var valueRef = Ref(&value)
-//	var hashValue = Seq("", MapToAny(ExactStr("#")), valueRef)
+//	var hashValue = Seq(CastToAny(ExactStr("#")), valueRef)
 //
 //	// At runtime, in some initialization function:
-//	value = Any("", MapToAny(ExactStr("hello")), hashValue)
+//	value = Any(CastToAny(ExactStr("hello")), hashValue)
 func Ref[CT, T any](parserPtr *Parser[CT, T]) Parser[CT, T] {
 	return func(ctx Context[CT]) (T, error) {
 		if parserPtr == nil {
