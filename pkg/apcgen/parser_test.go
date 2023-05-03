@@ -7,24 +7,16 @@ import (
 )
 
 var testOriginName = "testOrigin"
-var emptyRootNode = &RootNode{Children: []Node{}}
 
 func root1(child Node) *RootNode {
-	return &RootNode{Children: []Node{child}}
-}
-
-func agg(children []Node) *AggregateNode {
-	return &AggregateNode{Children: children}
+	return &RootNode{Child: child}
 }
 
 func TestEmptyInput(t *testing.T) {
-	node, err := parseFull(testOriginName, ``)
-	assert.NoError(t, err)
-	assert.Equal(t, emptyRootNode, node)
-
-	node, err = parseFull(testOriginName, " \t  \t ")
-	assert.NoError(t, err)
-	assert.Equal(t, emptyRootNode, node)
+	_, err := parseFull(testOriginName, ``)
+	assert.Error(t, err)
+	_, err = parseFull(testOriginName, " \t  \t ")
+	assert.Error(t, err)
 }
 
 func TestInfer(t *testing.T) {
@@ -33,7 +25,7 @@ func TestInfer(t *testing.T) {
 	assert.Equal(
 		t,
 		root1(&InferNode{
-			InputIndex: 0,
+			InputIndex: 1,
 		}),
 		node)
 }
@@ -45,9 +37,9 @@ func TestCaptureInfer(t *testing.T) {
 		t,
 		root1(&CaptureNode{
 			Child: &InferNode{
-				InputIndex: 1,
+				InputIndex: 2,
 			},
-			InputIndex: 0,
+			InputIndex: 1,
 		}),
 		node)
 }

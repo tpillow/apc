@@ -1,20 +1,13 @@
 package apcgen
 
-const (
-	BuiltinMatchString string = "string"
-	BuiltinMatchRegex  string = "regex"
-	BuiltinMatchToken  string = "token"
-)
-
-type IntRange struct {
-	Min int
-	Max int
-}
-
 type Node interface{}
 
 type RootNode struct {
-	Children []Node
+	Child Node
+}
+
+type ProvidedParserKeyNode struct {
+	Name string
 }
 
 type MatchStringNode struct {
@@ -23,15 +16,6 @@ type MatchStringNode struct {
 
 type MatchRegexNode struct {
 	Regex string
-}
-
-type MatchTokenNode struct {
-	TokenTypeName string
-}
-
-type MatchTokenValueNode struct {
-	TokenTypeName string
-	StringValue   string
 }
 
 type InferNode struct {
@@ -43,7 +27,7 @@ type CaptureNode struct {
 	InputIndex int
 }
 
-type AggregateNode struct {
+type SeqNode struct {
 	Children []Node
 }
 
