@@ -166,7 +166,7 @@ func (ctx *ReaderContext[CT]) GetCurOrigin() Origin {
 	}
 
 	ctx.maybeEnsureBufferLoaded(lookOffset + 1)
-	if len(ctx.bufferOrigins) == 0 {
+	if len(ctx.bufferOrigins) <= lookOffset {
 		return ctx.lastOrigin
 	}
 	return ctx.bufferOrigins[lookOffset]

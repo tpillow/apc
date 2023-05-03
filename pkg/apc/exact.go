@@ -48,6 +48,9 @@ func Exact[CT any](value CT) Parser[CT, CT] {
 		if err != nil && !errors.Is(err, ErrEOF) {
 			return zeroVal[CT](), err
 		}
+		if len(val) != 1 {
+			return zeroVal[CT](), ParseErrExpectedButGot(ctx, value, "EOF", nil)
+		}
 		if any(val[0]) != any(value) {
 			return zeroVal[CT](), ParseErrExpectedButGot(ctx, value, val[0], nil)
 		}

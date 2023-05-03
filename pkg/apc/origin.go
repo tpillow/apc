@@ -16,3 +16,11 @@ type Origin struct {
 func (origin Origin) String() string {
 	return fmt.Sprintf("%v:%v:%v", origin.Name, origin.LineNum, origin.ColNum)
 }
+
+// Holds a start and end Origin.
+type OriginRange struct {
+	// The starting origin.
+	Start Origin
+	// The end origin.
+	End Origin
+}

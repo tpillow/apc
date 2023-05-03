@@ -4,6 +4,32 @@ import (
 	"fmt"
 )
 
+// TODO: comment
+type MaybeValue[T any] struct {
+	isNil bool
+	value T
+}
+
+// TODO: comment
+func (val MaybeValue[T]) IsNil() bool {
+	return val.isNil
+}
+
+// TODO: comment
+func (val MaybeValue[T]) Value() T {
+	return val.value
+}
+
+// TODO: comment
+func NewNilMaybeValue[T any]() MaybeValue[T] {
+	return MaybeValue[T]{isNil: true}
+}
+
+// TODO: comment
+func NewMaybeValue[T any](value T) MaybeValue[T] {
+	return MaybeValue[T]{isNil: false, value: value}
+}
+
 // Returns a parser that runs parser at least min, but at most max, times.
 // Returns each parser result in order as a slice.
 //
@@ -55,15 +81,15 @@ func OneOrMore[CT, T any](parser Parser[CT, T]) Parser[CT, []T] {
 
 // Same as Range(0, 1, parser), but with the resulting slice mapped
 // to a single value, or default T if 0 matches occurred.
-func Maybe[CT, T any](parser Parser[CT, T]) Parser[CT, T] {
-	return Map(Range(0, 1, parser), func(node []T) T {
+func Maybe[CT, T any](parser Parser[CT, T]) Parser[CT, MaybeValue[T]] {
+	return Map(Range(0, 1, parser), func(node []T) MaybeValue[T] {
 		if node == nil || len(node) <= 0 {
-			return zeroVal[T]()
+			return NewNilMaybeValue[T]()
 		}
 		if len(node) != 1 {
 			panic("unreachable: Range(0, 1) should return at most 1 node")
 		}
-		return node[0]
+		return NewMaybeValue(node[0])
 	})
 }
 
@@ -91,10 +117,10 @@ func ZeroOrMoreSeparated[CT, T, U any](parser Parser[CT, T],
 	sepParser Parser[CT, U]) Parser[CT, []T] {
 	return Map(
 		Maybe(OneOrMoreSeparated(parser, sepParser)),
-		func(node []T) []T {
-			if node == nil {
+		func(node MaybeValue[[]T]) []T {
+			if node.IsNil() {
 				return []T{}
 			}
-			return node
+			return node.Value()
 		})
 }

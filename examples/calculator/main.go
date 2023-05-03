@@ -124,12 +124,12 @@ func executeInput(input string) {
 		fmt.Printf("Error parsing input: %v\n", err)
 		return
 	}
-	if node == nil {
+	if node.IsNil() {
 		return
 	}
 
 	fmt.Printf("Parse Node:       %v\n", node)
-	fmt.Printf("Result:           %v\n\n", node.Execute())
+	fmt.Printf("Result:           %v\n\n", node.Value().Execute())
 }
 
 func main() {
