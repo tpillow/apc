@@ -1,9 +1,9 @@
 package apcgen
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
-	"unsafe"
 
 	"github.com/tpillow/apc/pkg/apc"
 )
@@ -22,23 +22,39 @@ type grammarDefinition struct {
 	minCaptureIdxToFieldNames []keyValuePair[int, string]
 }
 
+type BuildOptions struct {
+	SkipWhitespace bool
+}
+
+var DefaultBuildOptions = BuildOptions{
+	SkipWhitespace: true,
+}
+
 func (gd *grammarDefinition) fieldNameFromCaptureIdx(idx int) string {
 	// TODO: binary search or something
+	fmt.Printf("%v relating to capture index %v known ranges were %v\n",
+		gd.resultType.Name(), idx, gd.minCaptureIdxToFieldNames)
 	for _, kvp := range gd.minCaptureIdxToFieldNames {
 		if idx <= kvp.key {
 			return kvp.value
 		}
 	}
-	panic("could not find field name in struct relating to capture index")
+	panic(fmt.Sprintf("could not find field name in struct %v relating to capture index %v known ranges were %v",
+		gd.resultType.Name(), idx, gd.minCaptureIdxToFieldNames))
 }
 
-func BuildRuneParser[RT any]() (apc.Parser[rune, RT], error) {
-	rtType := reflect.TypeOf(new(RT))
+func BuildRuneParser[RT any](opts BuildOptions) (apc.Parser[rune, *RT], error) {
+	var rtVal RT
+	rtType := reflect.TypeOf(rtVal)
 	parser, err := buildRuneParserFromType(rtType)
 	if err != nil {
 		return nil, err
 	}
-	return apc.CastTo[rune, any, RT](parser), nil
+	castParser := apc.CastTo[rune, any, *RT](parser)
+	if opts.SkipWhitespace {
+		castParser = apc.Skip(apc.CastToAny(apc.WhitespaceParser), castParser)
+	}
+	return castParser, nil
 }
 
 func buildRuneParserFromType(resultType reflect.Type) (apc.Parser[rune, any], error) {
@@ -74,12 +90,13 @@ func buildRuneParserFromRootNode(grammarDef *grammarDefinition, node *RootNode) 
 				for i, childNode := range node.Children {
 					switch node := childNode.(type) {
 					case *CaptureNode:
-						field := result.FieldByName(grammarDef.fieldNameFromCaptureIdx(node.InputIndex))
-						field.SetPointer(unsafe.Pointer(&parsedNodes[i])) // TODO: ok?
+						fieldName := grammarDef.fieldNameFromCaptureIdx(node.InputIndex)
+						field := reflect.Indirect(result).FieldByName(fieldName)
+						field.Set(reflect.ValueOf(parsedNodes[i]))
 					default:
 					}
 				}
-				return result
+				return result.Interface()
 			},
 		),
 	), nil
@@ -121,7 +138,7 @@ func buildRuneParserFromNode(grammarDef *grammarDefinition, rawNode Node) (apc.P
 		fieldName := grammarDef.fieldNameFromCaptureIdx(node.InputIndex)
 		field, ok := grammarDef.resultType.FieldByName(fieldName)
 		if !ok {
-			panic("could not find field with reflection")
+			panic(fmt.Sprintf("field %v not found in type %v", fieldName, grammarDef.resultType.Name()))
 		}
 		return buildRuneParserFromType(field.Type)
 	case *CaptureNode:
@@ -159,13 +176,11 @@ func getAllFieldsGrammarDef(resultType reflect.Type) *grammarDefinition {
 		if apcTag == "" {
 			continue
 		}
-		minCaptureIdxToFieldNames = append([]keyValuePair[int, string]{
-			{
-				key:   sb.Len(),
-				value: field.Name,
-			},
-		}, minCaptureIdxToFieldNames...)
 		sb.WriteString(apcTag)
+		minCaptureIdxToFieldNames = append(minCaptureIdxToFieldNames, keyValuePair[int, string]{
+			key:   sb.Len(),
+			value: field.Name,
+		})
 	}
 
 	return &grammarDefinition{

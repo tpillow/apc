@@ -14,13 +14,13 @@ var (
 
 	strParamListParser = apc.Named("string parameter list",
 		apc.ZeroOrMoreSeparated(
-			apc.DoubleQuotedStringParser,
+			apc.SingleQuotedStringParser,
 			apc.ExactStr(","),
 		))
 
 	matchStrParser = apc.Named("implicit match string",
 		apc.Map(
-			apc.DoubleQuotedStringParser,
+			apc.SingleQuotedStringParser,
 			func(node string) Node {
 				return &MatchStringNode{
 					Value: node,
