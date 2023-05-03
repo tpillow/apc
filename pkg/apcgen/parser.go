@@ -85,7 +85,7 @@ var (
 						apc.Exact('.'),
 						func(node rune, orgRange apc.OriginRange) (Node, error) {
 							return &InferNode{
-								InputIndex: orgRange.Start.ColNum - 1,
+								InputIndex: orgRange.Start.ColNum,
 							}, nil
 						},
 					),
@@ -124,7 +124,7 @@ var (
 				if !node.Result1.IsNil() {
 					return &CaptureNode{
 						Child:      node.Result2,
-						InputIndex: node.Result1.Value().ColNum - 1,
+						InputIndex: node.Result1.Value().ColNum,
 					}
 				}
 				return node.Result2

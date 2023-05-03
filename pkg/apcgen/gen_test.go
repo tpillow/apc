@@ -9,14 +9,14 @@ import (
 
 func TestRuneParserCaptureString(t *testing.T) {
 	type Person struct {
-		Name string `apc:"'name' $'Tommy'"`
-		Age  string `apc:"'age' $'29'"`
+		Name string `apc:"'person' $'Tommy'"`
+		Age  string `apc:"$'29'"`
 	}
 
 	parser, err := BuildRuneParser[Person](DefaultBuildOptions)
 	assert.NoError(t, err)
 
-	ctx := apc.NewStringContext(testOriginName, `name Tommy age 29`)
+	ctx := apc.NewStringContext(testOriginName, `person Tommy 29`)
 	node, err := apc.Parse[rune](ctx, parser, apc.DefaultParseConfig)
 	assert.NoError(t, err)
 	assert.Equal(t, &Person{"Tommy", "29"}, node)

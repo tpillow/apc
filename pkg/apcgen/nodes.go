@@ -1,9 +1,9 @@
 package apcgen
 
 const (
-	BuiltinMatchString string = "String"
-	BuiltinMatchRegex  string = "Regex"
-	BuiltinMatchToken  string = "Token"
+	BuiltinMatchString string = "string"
+	BuiltinMatchRegex  string = "regex"
+	BuiltinMatchToken  string = "token"
 )
 
 type IntRange struct {
