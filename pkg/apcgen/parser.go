@@ -85,7 +85,7 @@ var (
 						apc.Exact('.'),
 						func(node rune, orgRange apc.OriginRange) (Node, error) {
 							return &InferNode{
-								Origin: orgRange.Start,
+								InputIndex: orgRange.Start.ColNum - 1,
 							}, nil
 						},
 					),
@@ -123,8 +123,8 @@ var (
 			func(node *apc.Seq2Node[apc.MaybeValue[apc.Origin], Node]) Node {
 				if !node.Result1.IsNil() {
 					return &CaptureNode{
-						Child:  node.Result2,
-						Origin: node.Result1.Value(),
+						Child:      node.Result2,
+						InputIndex: node.Result1.Value().ColNum - 1,
 					}
 				}
 				return node.Result2

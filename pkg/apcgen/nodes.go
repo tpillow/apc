@@ -1,7 +1,5 @@
 package apcgen
 
-import "github.com/tpillow/apc/pkg/apc"
-
 const (
 	BuiltinMatchString string = "String"
 	BuiltinMatchRegex  string = "Regex"
@@ -37,12 +35,12 @@ type MatchTokenValueNode struct {
 }
 
 type InferNode struct {
-	Origin apc.Origin
+	InputIndex int
 }
 
 type CaptureNode struct {
-	Child  Node
-	Origin apc.Origin
+	Child      Node
+	InputIndex int
 }
 
 type AggregateNode struct {
