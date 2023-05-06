@@ -16,10 +16,9 @@ func (d *Dir) String() string {
 }
 
 type DirEntry struct {
-	// TODO: spaces in bnf between fields matters I think...
 	Name   string `apc:"'Entry' '{' $StrParser"`
-	Id     int    `apc:" $regex('[0-9]+')"`
-	SubDir *Dir   `apc:" $.? '}'"`
+	Id     int    `apc:"$regex('[0-9]+')"`
+	SubDir *Dir   `apc:"$.? '}'"`
 }
 
 func (de *DirEntry) String() string {
