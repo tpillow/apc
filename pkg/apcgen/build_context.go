@@ -22,8 +22,11 @@ type captureResult struct {
 }
 
 type buildContext[CT any] struct {
-	options               BuildOptions
+	options BuildOptions
+	// Generated parser cache
 	parserTypeParserCache map[reflect.Type]apc.Parser[CT, any]
+	// Parser currently being generated but not yet done
+	inProgressParserCache map[reflect.Type]*apc.Parser[CT, any]
 	providedParserMap     map[string]apc.Parser[CT, any]
 }
 
@@ -31,6 +34,7 @@ func newBuildContext[CT any](options BuildOptions, providedParsers map[string]ap
 	return &buildContext[CT]{
 		options:               options,
 		parserTypeParserCache: make(map[reflect.Type]apc.Parser[CT, any]),
+		inProgressParserCache: make(map[reflect.Type]*apc.Parser[CT, any]),
 		providedParserMap:     providedParsers,
 	}
 }
@@ -77,6 +81,13 @@ func (gc *buildContext[CT]) maybeGetCachedParserFromType(typ reflect.Type) apc.P
 	return nil
 }
 
+func (gc *buildContext[CT]) maybeMakeRefParserFromType(typ reflect.Type) apc.Parser[CT, any] {
+	if parserPtr, has := gc.inProgressParserCache[typ]; has {
+		return apc.Ref(parserPtr)
+	}
+	return nil
+}
+
 func (gc *buildContext[CT]) mustGetProvidedParserByName(name string) apc.Parser[CT, any] {
 	if parser, has := gc.providedParserMap[name]; has {
 		return parser
@@ -100,6 +111,7 @@ func assertPointerToStructType(resultType reflect.Type) {
 	if resultType.Kind() != reflect.Pointer {
 		panic(fmt.Sprintf("the result type must be a pointer type; instead got: %v", resultType.Kind()))
 	}
+
 	resultTypeElem := resultType.Elem()
 	if resultTypeElem.Kind() != reflect.Struct {
 		panic(fmt.Sprintf("the result type must be a pointer to a struct; instead got pointer to: %v", resultTypeElem.Kind()))

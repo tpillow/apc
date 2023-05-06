@@ -8,13 +8,14 @@ import (
 parenExpr = '(' expr ')'
 capturableValue = ( ident | '.' | '<str>' | string('') | regex('') | parenExpr )
 valueMaybeCaptured = ( '$'? capturableValue )
+value = valueMaybeCaptured endRangeSpecifier?
 
-orExpr = valueMaybeCaptured ('|' valueMaybeCaptured)+
-seqExpr = valueMaybeCaptured valueMaybeCaptured*
+orExpr = value ('|' value)+
+seqExpr = value value*
 
 endRangeSpecifier = ('*'|'+'|'?')
 
-expr = ( orExpr | seqExpr ) endRangeSpecifier?
+expr = ( orExpr | seqExpr )
 root = expr
 */
 
@@ -110,10 +111,50 @@ var (
 		},
 	)
 
-	seqExprParser = apc.Map(
+	valueParser = apc.Map(
 		apc.Seq2(
 			valueMaybeCapturedParser,
-			apc.ZeroOrMore(valueMaybeCapturedParser),
+			endRangeParser,
+		),
+		func(node *apc.Seq2Node[Node, apc.MaybeValue[IntRange]]) Node {
+			if node.Result2.IsNil() {
+				return node.Result1
+			}
+
+			switch node.Result2.Value() {
+			case maybeIntRange:
+				rNode := &MaybeNode{
+					Child: node.Result1,
+				}
+				if capNode, ok := node.Result1.(*CaptureNode); ok {
+					rNode.Child = capNode.Child
+					return &CaptureNode{
+						InputIndex: capNode.InputIndex,
+						Child:      rNode,
+					}
+				}
+				return rNode
+			default:
+				rNode := &RangeNode{
+					Range: node.Result2.Value(),
+					Child: node.Result1,
+				}
+				if capNode, ok := node.Result1.(*CaptureNode); ok {
+					rNode.Child = capNode.Child
+					return &CaptureNode{
+						InputIndex: capNode.InputIndex,
+						Child:      rNode,
+					}
+				}
+				return rNode
+			}
+		},
+	)
+
+	seqExprParser = apc.Map(
+		apc.Seq2(
+			valueParser,
+			apc.ZeroOrMore(valueParser),
 		),
 		func(node *apc.Seq2Node[Node, []Node]) Node {
 			if len(node.Result2) == 0 {
@@ -134,12 +175,12 @@ var (
 		apc.Seq2(
 			apc.Look(
 				apc.Seq2(
-					valueMaybeCapturedParser,
+					valueParser,
 					apc.Exact('|'),
 				),
 			),
 			apc.OneOrMoreSeparated(
-				valueMaybeCapturedParser,
+				valueParser,
 				apc.Exact('|'),
 			),
 		),
@@ -174,10 +215,7 @@ var (
 					Max: -1,
 				})
 			case "?":
-				return apc.NewMaybeValue(IntRange{
-					Min: 0,
-					Max: 1,
-				})
+				return apc.NewMaybeValue(maybeIntRange)
 			default:
 				panic("unreachable in endRangeParser")
 			}
@@ -201,23 +239,9 @@ var (
 )
 
 func initParser() {
-	realExprParser = apc.Map(
-		apc.Seq2(
-			apc.Any(
-				orExprParser,
-				seqExprParser,
-			),
-			endRangeParser,
-		),
-		func(node *apc.Seq2Node[Node, apc.MaybeValue[IntRange]]) Node {
-			if node.Result2.IsNil() {
-				return node.Result1
-			}
-			return &RangeNode{
-				Range: node.Result2.Value(),
-				Child: node.Result1,
-			}
-		},
+	realExprParser = apc.Any(
+		orExprParser,
+		seqExprParser,
 	)
 }
 

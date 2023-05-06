@@ -43,3 +43,47 @@ func TestCaptureInfer(t *testing.T) {
 		}),
 		node)
 }
+
+func TestGeneric1(t *testing.T) {
+	node, err := parseFull(
+		testOriginName,
+		`'Entry' '{' $StrParser $regex('[0-9]+') $.? $(.*) '}'`)
+	assert.NoError(t, err)
+	assert.Equal(
+		t,
+		root1(
+			&SeqNode{
+				Children: []Node{
+					&MatchStringNode{Value: "Entry"},
+					&MatchStringNode{Value: "{"},
+					&CaptureNode{
+						InputIndex: 13,
+						Child:      &ProvidedParserKeyNode{Name: "StrParser"},
+					},
+					&CaptureNode{
+						InputIndex: 24,
+						Child:      &MatchRegexNode{Regex: "[0-9]+"},
+					},
+					&CaptureNode{
+						InputIndex: 41,
+						Child: &MaybeNode{
+							Child: &InferNode{
+								InputIndex: 42,
+							},
+						},
+					},
+					&CaptureNode{
+						InputIndex: 44,
+						Child: &RangeNode{
+							Range: IntRange{Min: 0, Max: -1},
+							Child: &InferNode{
+								InputIndex: 47,
+							},
+						},
+					},
+					&MatchStringNode{Value: "}"},
+				},
+			},
+		),
+		node)
+}

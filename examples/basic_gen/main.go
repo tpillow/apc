@@ -8,24 +8,33 @@ import (
 )
 
 type Dir struct {
-	Entries []*DirEntry `apc:"'Dir' '{' $(.*) '}'"`
+	Entries []*DirEntry `apc:"'Dir' '{' $.* '}'"`
+}
+
+func (d *Dir) String() string {
+	return fmt.Sprintf("<Dir Entries=%v>", d.Entries)
 }
 
 type DirEntry struct {
+	// TODO: spaces in bnf between fields matters I think...
 	Name   string `apc:"'Entry' '{' $StrParser"`
-	Id     int    `apc:"$regex('[0-9]+')"`
-	SubDir *Dir   `apc:"$.? '}'"`
+	Id     int    `apc:" $regex('[0-9]+')"`
+	SubDir *Dir   `apc:" $.? '}'"`
+}
+
+func (de *DirEntry) String() string {
+	return fmt.Sprintf("<DirEntry Name=%v Id=%v SubDir=%v>", de.Name, de.Id, de.SubDir)
 }
 
 func main() {
-	parser := apcgen.BuildParser[*Dir](
+	parser := apcgen.BuildParser[Dir](
 		apcgen.DefaultBuildOptions,
 		map[string]apc.Parser[rune, any]{
 			"StrParser": apc.CastToAny(apc.DoubleQuotedStringParser),
 		},
 	)
 
-	input := `Dir { Entry { "Name1" 1 } Entry { "Name2" 2 Dir { } } }`
+	input := `Dir { Entry { "Name1" 1 } Entry { "Name2" 2 Dir {} } }`
 	ctx := apc.NewStringContext("<string>", input)
 	ctx.AddSkipParser(apc.CastToAny(apc.WhitespaceParser))
 

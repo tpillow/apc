@@ -8,13 +8,12 @@ import (
 	"github.com/tpillow/apc/pkg/apc"
 )
 
-func BuildParser[RT any](buildOpts BuildOptions, providedParsers map[string]apc.Parser[rune, any]) apc.Parser[rune, RT] {
-	var rtVal RT
-	rtType := reflect.TypeOf(rtVal)
+func BuildParser[RT any](buildOpts BuildOptions, providedParsers map[string]apc.Parser[rune, any]) apc.Parser[rune, *RT] {
+	rtType := reflect.TypeOf(new(RT))
 
 	buildCtx := newBuildContext(buildOpts, providedParsers)
 	baseParser := buildParserForType(buildCtx, rtType)
-	parser := apc.CastTo[rune, any, RT](baseParser)
+	parser := apc.CastTo[rune, any, *RT](baseParser)
 
 	if buildCtx.options.SkipWhitespace {
 		parser = apc.Skip(
@@ -28,9 +27,13 @@ func BuildParser[RT any](buildOpts BuildOptions, providedParsers map[string]apc.
 
 func buildParserForType(buildCtx *buildContext[rune], resultType reflect.Type) apc.Parser[rune, any] {
 	// Return cached parser if available
-	cachedParser := buildCtx.maybeGetCachedParserFromType(resultType)
-	if cachedParser != nil {
+	if cachedParser := buildCtx.maybeGetCachedParserFromType(resultType); cachedParser != nil {
 		return cachedParser
+	}
+	// If there is a circular reference to a parser not yet generated
+	// We must return a placeholder ref parser
+	if refParser := buildCtx.maybeMakeRefParserFromType(resultType); refParser != nil {
+		return refParser
 	}
 
 	// Create subcontext
@@ -39,9 +42,128 @@ func buildParserForType(buildCtx *buildContext[rune], resultType reflect.Type) a
 	if err != nil {
 		panic(fmt.Sprintf("error parsing parser definition for type '%v': %v", subCtx.resultTypeElemName, err))
 	}
+	parserPtr := new(apc.Parser[rune, any])
+	buildCtx.inProgressParserCache[resultType] = parserPtr
 	parser := buildParserFromRootNode(buildCtx, subCtx, node)
 	buildCtx.parserTypeParserCache[resultType] = parser
-	return parser
+	*parserPtr = parser
+	delete(buildCtx.inProgressParserCache, resultType)
+	return *parserPtr
+}
+
+func valueSetFieldOrAppendKind(rawVal any, valKind reflect.Kind, field reflect.Value) {
+	maybeAppendValToSliceTrueIfNot := func(val any) bool {
+		if field.Kind() != reflect.Slice {
+			return true
+		}
+		field.Set(reflect.Append(field, reflect.ValueOf(val)))
+		return false
+	}
+
+	panicUnsettable := func(val any, exp string) {
+		panic(fmt.Sprintf("cannot set field to value '%v': cannot convert %v", val, exp))
+	}
+
+	switch valKind {
+	case reflect.String:
+		switch val := rawVal.(type) {
+		case string:
+			if maybeAppendValToSliceTrueIfNot(val) {
+				field.SetString(val)
+			}
+		default:
+			panicUnsettable(rawVal, "to string")
+		}
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		switch val := rawVal.(type) {
+		case int, int8, int16, int32, int64:
+			if maybeAppendValToSliceTrueIfNot(val) {
+				field.SetInt(val.(int64))
+			}
+		case string:
+			if cVal, err := strconv.ParseInt(val, 10, 64); err == nil {
+				if maybeAppendValToSliceTrueIfNot(cVal) {
+					field.SetInt(cVal)
+				}
+			} else {
+				panicUnsettable(rawVal, "to int from string")
+			}
+		default:
+			panicUnsettable(rawVal, "to int")
+		}
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		switch val := rawVal.(type) {
+		case uint, uint8, uint16, uint32, uint64:
+			if maybeAppendValToSliceTrueIfNot(val) {
+				field.SetUint(val.(uint64))
+			}
+		case string:
+			if cVal, err := strconv.ParseUint(val, 10, 64); err == nil {
+				if maybeAppendValToSliceTrueIfNot(cVal) {
+					field.SetUint(cVal)
+				}
+			} else {
+				panicUnsettable(rawVal, "to uint from string")
+			}
+		default:
+			panicUnsettable(rawVal, "to uint")
+		}
+	case reflect.Float32, reflect.Float64:
+		switch val := rawVal.(type) {
+		case float32, float64:
+			if maybeAppendValToSliceTrueIfNot(val) {
+				field.SetFloat(val.(float64))
+			}
+		case string:
+			if cVal, err := strconv.ParseFloat(val, 64); err == nil {
+				if maybeAppendValToSliceTrueIfNot(cVal) {
+					field.SetFloat(cVal)
+				}
+			} else {
+				panicUnsettable(rawVal, "to float from string")
+			}
+		default:
+			panicUnsettable(rawVal, "to float")
+		}
+	case reflect.Bool:
+		switch val := rawVal.(type) {
+		case bool:
+			if maybeAppendValToSliceTrueIfNot(val) {
+				field.SetBool(val)
+			}
+		case string:
+			if cVal, err := strconv.ParseBool(val); err == nil {
+				if maybeAppendValToSliceTrueIfNot(cVal) {
+					field.SetBool(cVal)
+				}
+			} else {
+				panicUnsettable(rawVal, "to bool from string")
+			}
+		case apc.MaybeValue[any]:
+			field.SetBool(!val.IsNil())
+		case apc.MaybeValue[string]:
+			field.SetBool(!val.IsNil())
+		case apc.MaybeValue[apc.Token]:
+			field.SetBool(!val.IsNil())
+		default:
+			panicUnsettable(rawVal, "to bool")
+		}
+	case reflect.Pointer:
+		switch val := rawVal.(type) {
+		case apc.MaybeValue[any]:
+			if !val.IsNil() {
+				if maybeAppendValToSliceTrueIfNot(val.Value()) {
+					field.Set(reflect.ValueOf(val.Value()))
+				}
+			}
+		default:
+			if maybeAppendValToSliceTrueIfNot(val) {
+				field.Set(reflect.ValueOf(val))
+			}
+		}
+	default:
+		panicUnsettable(rawVal, fmt.Sprintf("unsupported value kind %v", valKind))
+	}
 }
 
 func setCaptureHelper(subCtx *buildSubcontext[rune], result reflect.Value, rawNode any) {
@@ -59,74 +181,24 @@ func setCaptureHelper(subCtx *buildSubcontext[rune], result reflect.Value, rawNo
 	}
 
 	fieldName := subCtx.fieldNameFromCaptureIdx(capNode.inputIndex)
-
-	panicHelper := func(reason string) {
-		panic(fmt.Sprintf("failed to set field '%v' on type '%v' via reflection when parsing: %v", fieldName, subCtx.resultTypeElemName, reason))
-	}
-
-	panicHelperCannotCastTo := func(toType string, val any) {
-		panicHelper(fmt.Sprintf("cannot cast to %v: %v", toType, val))
-	}
-
 	field := reflect.Indirect(result).FieldByName(fieldName)
 	if !field.IsValid() {
-		panicHelper("field not found")
+		panic(fmt.Sprintf("field '%v' (%v) not found on type '%v' via reflection", fieldName, field.Kind(), subCtx.resultTypeElemName))
 	}
 
 	switch field.Kind() {
-	case reflect.String:
-		if val, ok := capNode.value.(string); ok {
-			field.SetString(val)
-		} else {
-			panicHelperCannotCastTo("string", capNode.value)
-		}
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		if val, ok := capNode.value.(string); ok {
-			intVal, err := strconv.ParseInt(val, 10, 64)
-			if err != nil {
-				panicHelperCannotCastTo("int", fmt.Sprintf("%v (%v)", val, err))
+	case reflect.Slice:
+		fieldElemKind := field.Type().Elem().Kind()
+		switch capVal := capNode.value.(type) {
+		case []any:
+			for _, valElem := range capVal {
+				valueSetFieldOrAppendKind(valElem, fieldElemKind, field)
 			}
-			field.SetInt(intVal)
-		} else {
-			panicHelperCannotCastTo("int (requiring string now)", capNode.value)
-		}
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		if val, ok := capNode.value.(string); ok {
-			intVal, err := strconv.ParseUint(val, 10, 64)
-			if err != nil {
-				panicHelperCannotCastTo("uint", fmt.Sprintf("%v (%v)", val, err))
-			}
-			field.SetUint(intVal)
-		} else {
-			panicHelperCannotCastTo("uint (requiring string now)", capNode.value)
-		}
-	case reflect.Float32, reflect.Float64:
-		if val, ok := capNode.value.(string); ok {
-			floatVal, err := strconv.ParseFloat(val, 64)
-			if err != nil {
-				panicHelperCannotCastTo("float", fmt.Sprintf("%v (%v)", val, err))
-			}
-			field.SetFloat(floatVal)
-		} else {
-			panicHelperCannotCastTo("float (requiring string now)", capNode.value)
-		}
-	case reflect.Bool:
-		if val, ok := capNode.value.(string); ok {
-			boolVal, err := strconv.ParseBool(val)
-			if err != nil {
-				panicHelperCannotCastTo("bool", fmt.Sprintf("%v (%v)", val, err))
-			}
-			field.SetBool(boolVal)
-		} else {
-			panicHelperCannotCastTo("bool (requiring string now)", capNode.value)
+		default:
+			valueSetFieldOrAppendKind(capVal, fieldElemKind, field)
 		}
 	default:
-		// TODO: kind for slice, append values...
-		if field.CanSet() {
-			field.Set(reflect.ValueOf(capNode.value))
-		} else {
-			panicHelper("field not settable and is not an intrinsic type")
-		}
+		valueSetFieldOrAppendKind(capNode.value, field.Kind(), field)
 	}
 }
 
@@ -158,6 +230,9 @@ func buildParserFromNode(buildCtx *buildContext[rune], subCtx *buildSubcontext[r
 		if !ok {
 			panic(fmt.Sprintf("cannot infer parser: field '%v' not found in type '%v'", fieldName, subCtx.resultTypeElemName))
 		}
+		if field.Type.Kind() == reflect.Slice {
+			return buildParserForType(buildCtx, field.Type.Elem())
+		}
 		return buildParserForType(buildCtx, field.Type)
 	case *CaptureNode:
 		return apc.Map(
@@ -179,6 +254,8 @@ func buildParserFromNode(buildCtx *buildContext[rune], subCtx *buildSubcontext[r
 		return buildAnyParserFromNodes(buildCtx, subCtx, node.Children)
 	case *ProvidedParserKeyNode:
 		return buildCtx.mustGetProvidedParserByName(node.Name)
+	case *MaybeNode:
+		return apc.CastToAny(apc.Maybe(buildParserFromNode(buildCtx, subCtx, node.Child)))
 	default:
 		panic(fmt.Sprintf("unknown node to process in buildParserFromNode: %T", rawNode))
 	}
