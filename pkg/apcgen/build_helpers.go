@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/tpillow/apc/pkg/apc"
 )
@@ -24,7 +25,12 @@ func buildParserForTypeCommon[CT any](buildCtx *buildContext[CT], resultType ref
 	subCtx := newBuildSubContextFromType[CT](resultType)
 	node, err := parseFull(subCtx.resultTypeElemName, subCtx.grammarText)
 	if err != nil {
-		panic(fmt.Sprintf("error parsing parser definition for type '%v': %v", subCtx.resultTypeElemName, err))
+		locStr := ""
+		if parseErr, ok := err.(*apc.ParseError); ok {
+			locStr = "\n" + strings.Repeat(" ", parseErr.Origin.ColNum-1) + "^"
+		}
+		panic(fmt.Sprintf("error parsing parser definition for type '%v': %v\n%v%v",
+			subCtx.resultTypeElemName, err, subCtx.grammarText, locStr))
 	}
 	maybeLog(DebugPrintBuiltNodes, "Built parser of type %v: %v", subCtx.resultTypeElemName, node)
 	parserPtr := new(apc.Parser[CT, any])
