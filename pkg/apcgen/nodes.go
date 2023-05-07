@@ -4,84 +4,84 @@ import "fmt"
 
 type Node interface{}
 
-type RootNode struct {
+type rootNode struct {
 	Child Node
 }
 
-func (node *RootNode) String() string {
+func (node *rootNode) String() string {
 	return fmt.Sprintf("<Root Child=%v>", node.Child)
 }
 
-type ProvidedParserKeyNode struct {
+type providedParserKeyNode struct {
 	Name string
 }
 
-func (node *ProvidedParserKeyNode) String() string {
+func (node *providedParserKeyNode) String() string {
 	return fmt.Sprintf("<ProvidedParserKeyNode Name=%v>", node.Name)
 }
 
-type MatchStringNode struct {
+type matchStringNode struct {
 	Value string
 }
 
-func (node *MatchStringNode) String() string {
+func (node *matchStringNode) String() string {
 	return fmt.Sprintf("<MatchStringNode Value=%v>", node.Value)
 }
 
-type MatchRegexNode struct {
+type matchRegexNode struct {
 	Regex string
 }
 
-func (node *MatchRegexNode) String() string {
+func (node *matchRegexNode) String() string {
 	return fmt.Sprintf("<MatchRegexNode Regex=%v>", node.Regex)
 }
 
-type InferNode struct {
+type inferNode struct {
 	InputIndex int
 }
 
-func (node *InferNode) String() string {
+func (node *inferNode) String() string {
 	return fmt.Sprintf("<InferNode InputIndex=%v>", node.InputIndex)
 }
 
-type CaptureNode struct {
+type captureNode struct {
 	Child      Node
 	InputIndex int
 }
 
-func (node *CaptureNode) String() string {
+func (node *captureNode) String() string {
 	return fmt.Sprintf("<CaptureNode InputIndex=%v Child=%v>", node.InputIndex, node.Child)
 }
 
-type SeqNode struct {
+type seqNode struct {
 	Children []Node
 }
 
-func (node *SeqNode) String() string {
+func (node *seqNode) String() string {
 	return fmt.Sprintf("<SeqNode Children=%v>", node.Children)
 }
 
-type OrNode struct {
+type orNode struct {
 	Children []Node
 }
 
-func (node *OrNode) String() string {
+func (node *orNode) String() string {
 	return fmt.Sprintf("<OrNode Children=%v>", node.Children)
 }
 
-type RangeNode struct {
-	Range IntRange
+type rangeNode struct {
+	Range intRange
 	Child Node
 }
 
-func (node *RangeNode) String() string {
+func (node *rangeNode) String() string {
 	return fmt.Sprintf("<RangeNode Range=%v Child=%v>", node.Range, node.Child)
 }
 
-type MaybeNode struct {
+type maybeNode struct {
 	Child Node
 }
 
-func (node *MaybeNode) String() string {
+func (node *maybeNode) String() string {
 	return fmt.Sprintf("<MaybeNode Child=%v>", node.Child)
 }

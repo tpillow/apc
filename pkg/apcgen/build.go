@@ -202,7 +202,7 @@ func setCaptureHelper(subCtx *buildSubcontext[rune], result reflect.Value, rawNo
 	}
 }
 
-func buildParserFromRootNode(buildCtx *buildContext[rune], subCtx *buildSubcontext[rune], node *RootNode) apc.Parser[rune, any] {
+func buildParserFromRootNode(buildCtx *buildContext[rune], subCtx *buildSubcontext[rune], node *rootNode) apc.Parser[rune, any] {
 	rootParser := buildParserFromNode(buildCtx, subCtx, node.Child)
 	return apc.Named(
 		subCtx.resultTypeElemName,
@@ -219,11 +219,11 @@ func buildParserFromRootNode(buildCtx *buildContext[rune], subCtx *buildSubconte
 
 func buildParserFromNode(buildCtx *buildContext[rune], subCtx *buildSubcontext[rune], rawNode Node) apc.Parser[rune, any] {
 	switch node := rawNode.(type) {
-	case *MatchStringNode:
+	case *matchStringNode:
 		return apc.CastToAny(apc.ExactStr(node.Value))
-	case *MatchRegexNode:
+	case *matchRegexNode:
 		return apc.CastToAny(apc.Regex(node.Regex))
-	case *InferNode:
+	case *inferNode:
 		// TODO: if slice, use type of slice
 		fieldName := subCtx.fieldNameFromCaptureIdx(node.InputIndex)
 		field, ok := subCtx.resultType.Elem().FieldByName(fieldName)
@@ -234,7 +234,7 @@ func buildParserFromNode(buildCtx *buildContext[rune], subCtx *buildSubcontext[r
 			return buildParserForType(buildCtx, field.Type.Elem())
 		}
 		return buildParserForType(buildCtx, field.Type)
-	case *CaptureNode:
+	case *captureNode:
 		return apc.Map(
 			buildParserFromNode(buildCtx, subCtx, node.Child),
 			func(parseNode any) any {
@@ -244,17 +244,17 @@ func buildParserFromNode(buildCtx *buildContext[rune], subCtx *buildSubcontext[r
 				}
 			},
 		)
-	case *SeqNode:
+	case *seqNode:
 		parser := buildSeqParserFromNodes(buildCtx, subCtx, node.Children)
 		return apc.CastToAny(parser)
-	case *RangeNode:
+	case *rangeNode:
 		childParser := buildParserFromNode(buildCtx, subCtx, node.Child)
-		return apc.CastToAny(apc.Range(node.Range.Min, node.Range.Max, childParser))
-	case *OrNode:
+		return apc.CastToAny(apc.Range(node.Range.min, node.Range.max, childParser))
+	case *orNode:
 		return buildAnyParserFromNodes(buildCtx, subCtx, node.Children)
-	case *ProvidedParserKeyNode:
+	case *providedParserKeyNode:
 		return buildCtx.mustGetProvidedParserByName(node.Name)
-	case *MaybeNode:
+	case *maybeNode:
 		return apc.CastToAny(apc.Maybe(buildParserFromNode(buildCtx, subCtx, node.Child)))
 	default:
 		panic(fmt.Sprintf("unknown node to process in buildParserFromNode: %T", rawNode))

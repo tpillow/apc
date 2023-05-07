@@ -8,14 +8,6 @@ import (
 	"github.com/tpillow/apc/pkg/apc"
 )
 
-type BuildOptions struct {
-	SkipWhitespace bool
-}
-
-var DefaultBuildOptions = BuildOptions{
-	SkipWhitespace: true,
-}
-
 type captureResult struct {
 	inputIndex int
 	value      any

@@ -2,15 +2,15 @@ package apcgen
 
 import "fmt"
 
-var maybeIntRange = IntRange{Min: -2, Max: -2}
+var maybeIntRange = intRange{min: -2, max: -2}
 
-type IntRange struct {
-	Min int
-	Max int
+type intRange struct {
+	min int
+	max int
 }
 
-func (ir IntRange) String() string {
-	return fmt.Sprintf("<IntRange Min=%v Max=%v>", ir.Min, ir.Max)
+func (ir intRange) String() string {
+	return fmt.Sprintf("<IntRange Min=%v Max=%v>", ir.min, ir.max)
 }
 
 type keyValuePair[KT, VT any] struct {

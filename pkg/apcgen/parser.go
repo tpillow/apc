@@ -20,8 +20,9 @@ root = expr
 */
 
 var (
-	realExprParser apc.Parser[rune, Node]
-	exprParser     = apc.Ref(&realExprParser)
+	parserInitialized = false
+	realExprParser    apc.Parser[rune, Node]
+	exprParser        = apc.Ref(&realExprParser)
 
 	parenExprParser = apc.Map(
 		apc.Seq3(
@@ -37,7 +38,7 @@ var (
 	inferParser = apc.MapDetailed(
 		apc.Exact('.'),
 		func(_ rune, orgRange apc.OriginRange) (Node, error) {
-			return &InferNode{
+			return &inferNode{
 				InputIndex: orgRange.Start.ColNum,
 			}, nil
 		},
@@ -46,7 +47,7 @@ var (
 	builtinStrLitParser = apc.Map(
 		apc.SingleQuotedStringParser,
 		func(node string) Node {
-			return &MatchStringNode{
+			return &matchStringNode{
 				Value: node,
 			}
 		},
@@ -55,7 +56,7 @@ var (
 	providedParserNameParser = apc.Map(
 		apc.IdentifierParser,
 		func(node string) Node {
-			return &ProvidedParserKeyNode{
+			return &providedParserKeyNode{
 				Name: node,
 			}
 		},
@@ -69,7 +70,7 @@ var (
 			apc.Exact(')'),
 		),
 		func(node *apc.Seq4Node[string, rune, string, rune]) Node {
-			return &MatchRegexNode{
+			return &matchRegexNode{
 				Regex: node.Result3,
 			}
 		},
@@ -102,7 +103,7 @@ var (
 		),
 		func(node *apc.Seq2Node[apc.MaybeValue[apc.Origin], Node]) Node {
 			if !node.Result1.IsNil() {
-				return &CaptureNode{
+				return &captureNode{
 					Child:      node.Result2,
 					InputIndex: node.Result1.Value().ColNum,
 				}
@@ -116,32 +117,32 @@ var (
 			valueMaybeCapturedParser,
 			endRangeParser,
 		),
-		func(node *apc.Seq2Node[Node, apc.MaybeValue[IntRange]]) Node {
+		func(node *apc.Seq2Node[Node, apc.MaybeValue[intRange]]) Node {
 			if node.Result2.IsNil() {
 				return node.Result1
 			}
 
 			switch node.Result2.Value() {
 			case maybeIntRange:
-				rNode := &MaybeNode{
+				rNode := &maybeNode{
 					Child: node.Result1,
 				}
-				if capNode, ok := node.Result1.(*CaptureNode); ok {
+				if capNode, ok := node.Result1.(*captureNode); ok {
 					rNode.Child = capNode.Child
-					return &CaptureNode{
+					return &captureNode{
 						InputIndex: capNode.InputIndex,
 						Child:      rNode,
 					}
 				}
 				return rNode
 			default:
-				rNode := &RangeNode{
+				rNode := &rangeNode{
 					Range: node.Result2.Value(),
 					Child: node.Result1,
 				}
-				if capNode, ok := node.Result1.(*CaptureNode); ok {
+				if capNode, ok := node.Result1.(*captureNode); ok {
 					rNode.Child = capNode.Child
-					return &CaptureNode{
+					return &captureNode{
 						InputIndex: capNode.InputIndex,
 						Child:      rNode,
 					}
@@ -165,7 +166,7 @@ var (
 			for _, child := range node.Result2 {
 				children = append(children, child)
 			}
-			return &SeqNode{
+			return &seqNode{
 				Children: children,
 			}
 		},
@@ -189,7 +190,7 @@ var (
 			for _, child := range node.Result2 {
 				children = append(children, child)
 			}
-			return &OrNode{
+			return &orNode{
 				Children: children,
 			}
 		},
@@ -198,21 +199,21 @@ var (
 	endRangeParser = apc.Map(
 		// TODO: any range specifier {min, max}
 		apc.Regex("[\\*\\+\\?]?"),
-		func(node string) apc.MaybeValue[IntRange] {
+		func(node string) apc.MaybeValue[intRange] {
 			if node == "" {
-				return apc.NewNilMaybeValue[IntRange]()
+				return apc.NewNilMaybeValue[intRange]()
 			}
 
 			switch node {
 			case "*":
-				return apc.NewMaybeValue(IntRange{
-					Min: 0,
-					Max: -1,
+				return apc.NewMaybeValue(intRange{
+					min: 0,
+					max: -1,
 				})
 			case "+":
-				return apc.NewMaybeValue(IntRange{
-					Min: 1,
-					Max: -1,
+				return apc.NewMaybeValue(intRange{
+					min: 1,
+					max: -1,
 				})
 			case "?":
 				return apc.NewMaybeValue(maybeIntRange)
@@ -229,8 +230,8 @@ var (
 		apc.CastToAny(apc.Regex("[ \t]+")),
 		apc.Map(
 			exprParser,
-			func(node Node) *RootNode {
-				return &RootNode{
+			func(node Node) *rootNode {
+				return &rootNode{
 					Child: node,
 				}
 			},
@@ -238,15 +239,20 @@ var (
 	)
 )
 
-func initParser() {
+func maybeInitParser() {
+	if parserInitialized {
+		return
+	}
+	parserInitialized = true
+
 	realExprParser = apc.Any(
 		orExprParser,
 		seqExprParser,
 	)
 }
 
-func parseFull(originName string, input string) (*RootNode, error) {
-	initParser()
+func parseFull(originName string, input string) (*rootNode, error) {
+	maybeInitParser()
 	ctx := apc.NewStringContext(originName, input)
 	return apc.Parse[rune](ctx, rootParser, apc.DefaultParseConfig)
 }

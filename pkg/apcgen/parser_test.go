@@ -8,8 +8,8 @@ import (
 
 var testOriginName = "testOrigin"
 
-func root1(child Node) *RootNode {
-	return &RootNode{Child: child}
+func root1(child Node) *rootNode {
+	return &rootNode{Child: child}
 }
 
 func TestEmptyInput(t *testing.T) {
@@ -24,7 +24,7 @@ func TestInfer(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
-		root1(&InferNode{
+		root1(&inferNode{
 			InputIndex: 1,
 		}),
 		node)
@@ -35,8 +35,8 @@ func TestCaptureInfer(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
-		root1(&CaptureNode{
-			Child: &InferNode{
+		root1(&captureNode{
+			Child: &inferNode{
 				InputIndex: 2,
 			},
 			InputIndex: 1,
@@ -52,36 +52,36 @@ func TestGeneric1(t *testing.T) {
 	assert.Equal(
 		t,
 		root1(
-			&SeqNode{
+			&seqNode{
 				Children: []Node{
-					&MatchStringNode{Value: "Entry"},
-					&MatchStringNode{Value: "{"},
-					&CaptureNode{
+					&matchStringNode{Value: "Entry"},
+					&matchStringNode{Value: "{"},
+					&captureNode{
 						InputIndex: 13,
-						Child:      &ProvidedParserKeyNode{Name: "StrParser"},
+						Child:      &providedParserKeyNode{Name: "StrParser"},
 					},
-					&CaptureNode{
+					&captureNode{
 						InputIndex: 24,
-						Child:      &MatchRegexNode{Regex: "[0-9]+"},
+						Child:      &matchRegexNode{Regex: "[0-9]+"},
 					},
-					&CaptureNode{
+					&captureNode{
 						InputIndex: 41,
-						Child: &MaybeNode{
-							Child: &InferNode{
+						Child: &maybeNode{
+							Child: &inferNode{
 								InputIndex: 42,
 							},
 						},
 					},
-					&CaptureNode{
+					&captureNode{
 						InputIndex: 44,
-						Child: &RangeNode{
-							Range: IntRange{Min: 0, Max: -1},
-							Child: &InferNode{
+						Child: &rangeNode{
+							Range: intRange{min: 0, max: -1},
+							Child: &inferNode{
 								InputIndex: 47,
 							},
 						},
 					},
-					&MatchStringNode{Value: "}"},
+					&matchStringNode{Value: "}"},
 				},
 			},
 		),
