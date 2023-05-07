@@ -147,7 +147,7 @@ func buildParserFromNodeCommon[CT any](buildCtx *buildContext[CT], subCtx *build
 	case *maybeNode:
 		return apc.CastToAny(apc.Maybe(buildParserFromNodeFunc(buildCtx, subCtx, node.Child)))
 	case *lookNode:
-		return apc.CastToAny(apc.Look(buildParserFromNodeFunc(buildCtx, subCtx, node.Child)))
+		return apc.Look(buildParserFromNodeFunc(buildCtx, subCtx, node.Child))
 	default:
 		// To be handled in calling function
 		return nil
