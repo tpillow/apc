@@ -25,9 +25,9 @@ func buildTokenParserFromNode(buildCtx *buildContext[apc.Token], subCtx *buildSu
 		parts := strings.Split(node.Value, ":")
 		switch len(parts) {
 		case 1:
-			return apc.CastToAny(apc.MapTokenToValue[apc.Token, any](apc.ExactTokenType(apc.TokenType(parts[0]))))
+			return apc.MapTokenToValue[apc.Token, any](apc.ExactTokenType(apc.TokenType(parts[0])))
 		case 2:
-			return apc.CastToAny(apc.MapTokenToValue[apc.Token, any](apc.ExactTokenValue(apc.TokenType(parts[0]), parts[1])))
+			return apc.MapTokenToValue[apc.Token, any](apc.ExactTokenValue(apc.TokenType(parts[0]), parts[1]))
 		default:
 			panic(fmt.Sprintf("unknown token match specifier using a Token context: %v (format is 'TokenType' or 'TokenType:stringValue')", node.Value))
 		}
