@@ -44,6 +44,23 @@ func TestCaptureInfer(t *testing.T) {
 		node)
 }
 
+func TestCaptureInferRange(t *testing.T) {
+	node, err := parseFull(testOriginName, `$.{1,3}`)
+	assert.NoError(t, err)
+	assert.Equal(
+		t,
+		root1(&captureNode{
+			Child: &rangeNode{
+				Range: intRange{min: 1, max: 3},
+				Child: &inferNode{
+					InputIndex: 2,
+				},
+			},
+			InputIndex: 1,
+		}),
+		node)
+}
+
 func TestGeneric1(t *testing.T) {
 	node, err := parseFull(
 		testOriginName,

@@ -33,7 +33,7 @@ func main() {
 		},
 	)
 
-	input := `Dir { Entry { "Name1" 1 } Entry { "Name2" 2 Dir {} } }`
+	input := `Dir { Entry { "Name1" 1 } Entry { "Name2" 2 Dir { Entry { "Name3" 3 } } } }`
 	ctx := apc.NewStringContext("<string>", input)
 	ctx.AddSkipParser(apc.CastToAny(apc.WhitespaceParser))
 

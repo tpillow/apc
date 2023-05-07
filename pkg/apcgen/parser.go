@@ -1,6 +1,8 @@
 package apcgen
 
 import (
+	"fmt"
+
 	"github.com/tpillow/apc/pkg/apc"
 )
 
@@ -13,7 +15,7 @@ value = valueMaybeCaptured endRangeSpecifier?
 orExpr = value ('|' value)+
 seqExpr = value value*
 
-endRangeSpecifier = ('*'|'+'|'?')
+endRangeSpecifier = ('*'|'+'|'?'|{min,max})
 
 expr = ( orExpr | seqExpr )
 root = expr
@@ -115,7 +117,7 @@ var (
 	valueParser = apc.Map(
 		apc.Seq2(
 			valueMaybeCapturedParser,
-			endRangeParser,
+			apc.Maybe(endRangeParser),
 		),
 		func(node *apc.Seq2Node[Node, apc.MaybeValue[intRange]]) Node {
 			if node.Result2.IsNil() {
@@ -196,31 +198,52 @@ var (
 		},
 	)
 
-	endRangeParser = apc.Map(
-		// TODO: any range specifier {min, max}
-		apc.Regex("[\\*\\+\\?]?"),
-		func(node string) apc.MaybeValue[intRange] {
-			if node == "" {
-				return apc.NewNilMaybeValue[intRange]()
-			}
-
-			switch node {
-			case "*":
-				return apc.NewMaybeValue(intRange{
-					min: 0,
-					max: -1,
-				})
-			case "+":
-				return apc.NewMaybeValue(intRange{
-					min: 1,
-					max: -1,
-				})
-			case "?":
-				return apc.NewMaybeValue(maybeIntRange)
-			default:
-				panic("unreachable in endRangeParser")
-			}
-		},
+	endRangeParser = apc.Any(
+		apc.Map(
+			apc.Regex("[\\*\\+\\?]"),
+			func(node string) intRange {
+				switch node {
+				case "*":
+					return intRange{
+						min: 0,
+						max: -1,
+					}
+				case "+":
+					return intRange{
+						min: 1,
+						max: -1,
+					}
+				case "?":
+					return maybeIntRange
+				default:
+					panic("unreachable in endRangeParser")
+				}
+			},
+		),
+		apc.MapDetailed(
+			apc.Seq5(
+				apc.Exact('{'),
+				apc.IntParser,
+				apc.Exact(','),
+				apc.IntParser,
+				apc.Exact('}'),
+			),
+			func(node *apc.Seq5Node[rune, int64, rune, int64, rune], _ apc.OriginRange) (intRange, error) {
+				ir := intRange{
+					min: int(node.Result2),
+					max: int(node.Result4),
+				}
+				if ir.min < 0 {
+					return intRange{},
+						fmt.Errorf("invalid int range {%v, %v}: min value must be >= 0", ir.min, ir.max)
+				}
+				if ir.max < 0 && ir.max != -1 {
+					return intRange{},
+						fmt.Errorf("invalid int range {%v, %v}: max value must be >= 0 (or be == -1 for no limit)", ir.min, ir.max)
+				}
+				return ir, nil
+			},
+		),
 	)
 
 	rootParser = apc.Skip(
