@@ -22,11 +22,11 @@ func buildTokenParserFromNode(buildCtx *buildContext[apc.Token], subCtx *buildSu
 	}
 	switch node := rawNode.(type) {
 	case *matchStringNode:
-		parts := strings.Split(node.Value, ":")
-		switch len(parts) {
-		case 1:
+		colIdx := strings.LastIndex(node.Value, ":")
+		if colIdx <= 0 {
+			// case of 0 == ':' maps to a token type of ':'
 			return apc.Map(
-				apc.ExactTokenType(apc.TokenType(parts[0])),
+				apc.ExactTokenType(apc.TokenType(node.Value)),
 				func(node apc.Token) any {
 					if node.Value == nil {
 						return node.Type
@@ -34,19 +34,16 @@ func buildTokenParserFromNode(buildCtx *buildContext[apc.Token], subCtx *buildSu
 					return node.Value
 				},
 			)
-		case 2:
-			return apc.Map(
-				apc.ExactTokenValue(apc.TokenType(parts[0]), apc.TokenType(parts[1])),
-				func(node apc.Token) any {
-					if node.Value == nil {
-						return node.Type
-					}
-					return node.Value
-				},
-			)
-		default:
-			panic(fmt.Sprintf("unknown token match specifier using a Token context: %v (format is 'TokenType' or 'TokenType:stringValue')", node.Value))
 		}
+		return apc.Map(
+			apc.ExactTokenValue(apc.TokenType(node.Value[:colIdx]), node.Value[colIdx+1:]),
+			func(node apc.Token) any {
+				if node.Value == nil {
+					return node.Type
+				}
+				return node.Value
+			},
+		)
 	case *matchRegexNode:
 		panic("cannot use 'regex' when using a Token context")
 	default:
