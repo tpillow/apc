@@ -85,3 +85,11 @@ type maybeNode struct {
 func (node *maybeNode) String() string {
 	return fmt.Sprintf("<MaybeNode Child=%v>", node.Child)
 }
+
+type lookNode struct {
+	Child Node
+}
+
+func (node *lookNode) String() string {
+	return fmt.Sprintf("<LookNode Child=%v>", node.Child)
+}

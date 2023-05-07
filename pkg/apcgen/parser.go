@@ -78,7 +78,24 @@ var (
 		},
 	)
 
-	builtinFuncParser = builtinMatchRegexParser
+	builtinLookParser = apc.Map(
+		apc.Seq4(
+			apc.ExactStr("look"),
+			apc.Exact('('),
+			exprParser,
+			apc.Exact(')'),
+		),
+		func(node *apc.Seq4Node[string, rune, Node, rune]) Node {
+			return &lookNode{
+				Child: node.Result3,
+			}
+		},
+	)
+
+	builtinFuncParser = apc.Any(
+		builtinMatchRegexParser,
+		builtinLookParser,
+	)
 
 	capturableValueParser = apc.Any(
 		inferParser,
