@@ -164,7 +164,7 @@ func valueSetFieldOrAppendKind(rawVal any, valKind reflect.Kind, field reflect.V
 	}
 
 	panicUnsettable := func(val any, exp string) {
-		panic(fmt.Sprintf("cannot set field to value '%v': cannot convert %v", val, exp))
+		panic(fmt.Sprintf("cannot set field to value '%v' (type %T): cannot convert %v", val, val, exp))
 	}
 
 	switch valKind {
@@ -248,10 +248,8 @@ func valueSetFieldOrAppendKind(rawVal any, valKind reflect.Kind, field reflect.V
 			field.SetBool(!val.IsNil())
 		case apc.MaybeValue[apc.Token]:
 			field.SetBool(!val.IsNil())
-		// case nil:
-		// 	field.SetBool(false)
 		default:
-			panicUnsettable(rawVal, fmt.Sprintf("to bool from type %T", rawVal))
+			panicUnsettable(rawVal, "to bool")
 		}
 	case reflect.Pointer, reflect.Interface:
 		switch val := rawVal.(type) {
