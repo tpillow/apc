@@ -206,9 +206,7 @@ var (
 		),
 		func(node *apc.Seq2Node[*apc.Seq2Node[Node, rune], []Node]) Node {
 			children := []Node{node.Result1.Result1}
-			for _, child := range node.Result2 {
-				children = append(children, child)
-			}
+			children = append(children, node.Result2...)
 			return &orNode{
 				Children: children,
 			}
