@@ -5,6 +5,10 @@ package apc
 //
 // The number of parsers provided must be at least 2.
 func Seq[CT, T any](parsers ...Parser[CT, T]) Parser[CT, []T] {
+	if len(parsers) == 0 {
+		panic("must provide at least 1 parser to Seq")
+	}
+
 	return func(ctx Context[CT]) ([]T, error) {
 		nodes := make([]T, 0)
 		for i, parser := range parsers {
