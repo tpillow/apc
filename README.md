@@ -15,6 +15,7 @@ This specific feature is inspired by [alecthomas/participle](https://github.com/
 ## Future Plans
 
 - Better error messages / traces.
+- Better debug-ability / traces.
 - Write more tests.
 - Write more examples.
 - Doc generation (doc comments already added).

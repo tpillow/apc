@@ -2,6 +2,18 @@ package apcgen
 
 import "fmt"
 
+// Enable various debug prints
+var (
+	DebugPrintBuiltNodes = false
+)
+
+// Log helper
+func maybeLog(doLog bool, format string, formatArgs ...interface{}) {
+	if doLog {
+		fmt.Printf(fmt.Sprintf("[DEBUG] %v\n", format), formatArgs...)
+	}
+}
+
 var maybeIntRange = intRange{min: -2, max: -2}
 
 type intRange struct {

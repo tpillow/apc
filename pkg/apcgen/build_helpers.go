@@ -26,6 +26,7 @@ func buildParserForTypeCommon[CT any](buildCtx *buildContext[CT], resultType ref
 	if err != nil {
 		panic(fmt.Sprintf("error parsing parser definition for type '%v': %v", subCtx.resultTypeElemName, err))
 	}
+	maybeLog(DebugPrintBuiltNodes, "Built parser of type %v: %v", subCtx.resultTypeElemName, node)
 	parserPtr := new(apc.Parser[CT, any])
 	buildCtx.inProgressParserCache[resultType] = parserPtr
 	parser := buildParserFromRootNodeFunc(buildCtx, subCtx, node)
