@@ -6,14 +6,14 @@ import (
 	"github.com/tpillow/apc/pkg/apc"
 )
 
-func BuildParser[RT any](buildOpts RuneBuildOptions, providedParsers map[string]apc.Parser[rune, any]) apc.Parser[rune, *RT] {
+func BuildParser[RT any](buildOpts BuildOptions[rune], skipWhitespace bool) apc.Parser[rune, *RT] {
 	rtType := reflect.TypeOf(new(RT))
 
-	buildCtx := newBuildContext(providedParsers)
+	buildCtx := newBuildContext(buildOpts.ProvidedParsers)
 	baseParser := buildRuneParserForType(buildCtx, rtType)
 	parser := apc.CastTo[rune, any, *RT](baseParser)
 
-	if buildOpts.SkipWhitespace {
+	if skipWhitespace {
 		parser = apc.Skip(
 			apc.CastToAny(apc.WhitespaceParser),
 			parser,
@@ -23,10 +23,10 @@ func BuildParser[RT any](buildOpts RuneBuildOptions, providedParsers map[string]
 	return parser
 }
 
-func BuildTokenizedParser[RT any](providedParsers map[string]apc.Parser[apc.Token, any]) apc.Parser[apc.Token, *RT] {
+func BuildTokenizedParser[RT any](buildOpts BuildOptions[apc.Token]) apc.Parser[apc.Token, *RT] {
 	rtType := reflect.TypeOf(new(RT))
 
-	buildCtx := newBuildContext(providedParsers)
+	buildCtx := newBuildContext(buildOpts.ProvidedParsers)
 	baseParser := buildTokenParserForType(buildCtx, rtType)
 	return apc.CastTo[apc.Token, any, *RT](baseParser)
 }

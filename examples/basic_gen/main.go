@@ -27,10 +27,10 @@ func (de *DirEntry) String() string {
 
 func main() {
 	parser := apcgen.BuildParser[Dir](
-		apcgen.DefaultRuneBuildOptions,
-		map[string]apc.Parser[rune, any]{
-			"StrParser": apc.CastToAny(apc.DoubleQuotedStringParser),
-		},
+		apcgen.WithDefaultBuildOptions(
+			apcgen.WithParserOption("StrParser", apc.CastToAny(apc.DoubleQuotedStringParser)),
+		),
+		true,
 	)
 
 	input := `Dir { Entry { "Name1" 1 } Entry { "Name2" 2 Dir { Entry { "Name3" 3 } } } }`

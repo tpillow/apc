@@ -24,7 +24,7 @@ func TestTokenParserCaptureBasic(t *testing.T) {
 		),
 	)
 
-	parser := BuildTokenizedParser[Person](map[string]apc.Parser[apc.Token, any]{})
+	parser := BuildTokenizedParser[Person](WithDefaultBuildOptions[apc.Token]())
 
 	ctx := apc.NewStringContext(testOriginName, `person Tommy 29`)
 	lexer := apc.NewParseReader[rune](ctx, lexParser)
