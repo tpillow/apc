@@ -96,6 +96,9 @@ func BindToToken[CT, T any](parser Parser[CT, T], tokenType TokenType) Parser[CT
 // the Value of the parser result.
 func MapTokenToValue[CT, T any](parser Parser[CT, Token]) Parser[CT, T] {
 	return Map(parser, func(node Token) T {
+		if node.Value == nil {
+			return zeroVal[T]()
+		}
 		return node.Value.(T)
 	})
 }
