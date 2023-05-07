@@ -56,6 +56,7 @@ func OneOrMore[CT, T any](parser Parser[CT, T]) Parser[CT, []T] {
 // Same as Range(0, 1, parser), but with the resulting slice mapped
 // to a single value, or default T if 0 matches occurred.
 func Maybe[CT, T any](parser Parser[CT, T]) Parser[CT, MaybeValue[T]] {
+	// TODO: it might be smart to just automatically wrap the parser in a `Look`
 	return Map(Range(0, 1, parser), func(node []T) MaybeValue[T] {
 		if node == nil || len(node) <= 0 {
 			return NewNilMaybeValue[T]()
