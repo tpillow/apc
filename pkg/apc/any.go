@@ -3,8 +3,8 @@ package apc
 // Returns a parser that attempts to parse, in order, the provided parsers.
 // Returns the result of the first successful parser.
 func Any[CT, T any](parsers ...Parser[CT, T]) Parser[CT, T] {
-	if len(parsers) < 2 {
-		panic("must provide at least 2 parsers to Any")
+	if len(parsers) == 0 {
+		panic("must provide at least 1 parser to Any")
 	}
 
 	return func(ctx Context[CT]) (T, error) {

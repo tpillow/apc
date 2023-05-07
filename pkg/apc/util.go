@@ -55,3 +55,32 @@ func interfaceToErrString(val interface{}) string {
 	}
 	return ret
 }
+
+// Represents any value along with if the value is nil. Useful when working with non-pointer types.
+type MaybeValue[T any] struct {
+	isNil bool
+	value T
+}
+
+// Returns true if the value represented is nil.
+func (val MaybeValue[T]) IsNil() bool {
+	return val.isNil
+}
+
+// Returns the value represented. Panics if IsNil().
+func (val MaybeValue[T]) Value() T {
+	if val.isNil {
+		panic("cannot call Value() on a nil MaybeValue")
+	}
+	return val.value
+}
+
+// Returns a MaybeValue that returns true for IsNil().
+func NewNilMaybeValue[T any]() MaybeValue[T] {
+	return MaybeValue[T]{isNil: true}
+}
+
+// Returns a MaybeValue that returns the provide value for Value().
+func NewMaybeValue[T any](value T) MaybeValue[T] {
+	return MaybeValue[T]{isNil: false, value: value}
+}

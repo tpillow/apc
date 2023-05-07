@@ -6,18 +6,26 @@ APC is flexible enough to parse an input stream directly, or optionally the inpu
 
 APC supports backtracking by use of the `Look` parser.
 
+## Embedded Golang Struct BNF-Style Parse Tree Generator (`apcgen`)
+
+The `apcgen` package provides support for generating parse trees by embedding the BNF-style syntax to define a parse tree into Golang structs. This can be done by directly matching on text input, or by providing a custom token-based parser.
+
+This specific feature is inspired by [alecthomas/participle](https://github.com/alecthomas/participle), however the implementation is completely unique to `apc`. For more information on how to use `apcgen`, see [here](#apcgen-usage).
+
 ## Future Plans
 
 - Better error messages / traces.
 - Write more tests.
+- Write more examples.
 - Doc generation (doc comments already added).
-- Embedded struct EBNF definition parser generator.
+- Allow value type fields to be set with `apcgen`.
 
 ## Example Executables
 
 - [JSON Parser](examples/json/main.go) that parses the JSON format into Go nodes.
 - [JSON Parser using Lexer](examples/json_using_lexer/main.go) is the same as JSON Parser above, but it first lexes the input into tokens. This JSON parser then parses tokens instead of the raw input stream. This approach allows for better error messages.
 - [Calculator](examples/calculator/main.go) that parses simple mathematical expression.
+- [Basic Gen](examples/basic_gen/main.go) uses `apcgen` to define a basic BNF parser embedded into Golang structs that produces a parse tree.
 
 ## The Basics
 
@@ -84,7 +92,11 @@ TODO
 
 TODO
 
-### Origin
+## `apcgen` Usage
+
+TODO
+
+## Origin
 
 The `Origin` type holds information about a location in the input stream. This includes a name (usually the source filename), along with a line number and column number.
 

@@ -4,32 +4,6 @@ import (
 	"fmt"
 )
 
-// TODO: comment
-type MaybeValue[T any] struct {
-	isNil bool
-	value T
-}
-
-// TODO: comment
-func (val MaybeValue[T]) IsNil() bool {
-	return val.isNil
-}
-
-// TODO: comment
-func (val MaybeValue[T]) Value() T {
-	return val.value
-}
-
-// TODO: comment
-func NewNilMaybeValue[T any]() MaybeValue[T] {
-	return MaybeValue[T]{isNil: true}
-}
-
-// TODO: comment
-func NewMaybeValue[T any](value T) MaybeValue[T] {
-	return MaybeValue[T]{isNil: false, value: value}
-}
-
 // Returns a parser that runs parser at least min, but at most max, times.
 // Returns each parser result in order as a slice.
 //
@@ -82,6 +56,7 @@ func OneOrMore[CT, T any](parser Parser[CT, T]) Parser[CT, []T] {
 // Same as Range(0, 1, parser), but with the resulting slice mapped
 // to a single value, or default T if 0 matches occurred.
 func Maybe[CT, T any](parser Parser[CT, T]) Parser[CT, MaybeValue[T]] {
+	// TODO: it might be smart to just automatically wrap the parser in a `Look`
 	return Map(Range(0, 1, parser), func(node []T) MaybeValue[T] {
 		if node == nil || len(node) <= 0 {
 			return NewNilMaybeValue[T]()
