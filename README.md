@@ -18,6 +18,7 @@ This specific feature is inspired by [alecthomas/participle](https://github.com/
 - Write more tests.
 - Write more examples.
 - Doc generation (doc comments already added).
+- Allow value type fields to be set with `apcgen`.
 
 ## Example Executables
 
