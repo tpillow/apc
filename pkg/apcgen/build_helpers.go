@@ -249,11 +249,7 @@ func valueSetFieldOrAppendKind(rawVal any, valKind reflect.Kind, field reflect.V
 		case apc.MaybeValue[apc.Token]:
 			field.SetBool(!val.IsNil())
 		default:
-			cVal, ok := val.(bool)
-			if !ok {
-				panicUnsettable(rawVal, "to bool")
-			}
-			field.SetBool(cVal)
+			field.SetBool(val != reflect.Zero(reflect.TypeOf(val)).Interface())
 		}
 	case reflect.Pointer, reflect.Interface:
 		switch val := rawVal.(type) {
