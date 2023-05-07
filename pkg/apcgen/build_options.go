@@ -1,9 +1,9 @@
 package apcgen
 
-type BuildOptions struct {
+type RuneBuildOptions struct {
 	SkipWhitespace bool
 }
 
-var DefaultBuildOptions = BuildOptions{
+var DefaultRuneBuildOptions = RuneBuildOptions{
 	SkipWhitespace: true,
 }

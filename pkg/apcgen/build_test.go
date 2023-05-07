@@ -1,9 +1,10 @@
 package apcgen
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/tpillow/apc/pkg/apc"
-	"testing"
 )
 
 func TestParserCaptureStringAndRegex(t *testing.T) {
@@ -12,7 +13,7 @@ func TestParserCaptureStringAndRegex(t *testing.T) {
 		Age  string `apc:"$'29'"`
 	}
 
-	parser := BuildParser[Person](DefaultBuildOptions, map[string]apc.Parser[rune, any]{})
+	parser := BuildParser[Person](DefaultRuneBuildOptions, map[string]apc.Parser[rune, any]{})
 
 	ctx := apc.NewStringContext(testOriginName, `person Tommy 29`)
 	node, err := apc.Parse[rune](ctx, parser, apc.DefaultParseConfig)
@@ -25,7 +26,7 @@ func TestSliceCaptureString(t *testing.T) {
 		Values []string `apc:"$'ha'*"`
 	}
 
-	parser := BuildParser[Obj](DefaultBuildOptions, map[string]apc.Parser[rune, any]{})
+	parser := BuildParser[Obj](DefaultRuneBuildOptions, map[string]apc.Parser[rune, any]{})
 
 	ctx := apc.NewStringContext(testOriginName, `ha ha ha ha`)
 	node, err := apc.Parse[rune](ctx, parser, apc.DefaultParseConfig)
@@ -43,7 +44,7 @@ func TestSliceCaptureStruct(t *testing.T) {
 		NameObjs []*NameObj `apc:"$.*"`
 	}
 
-	parser := BuildParser[Obj](DefaultBuildOptions, map[string]apc.Parser[rune, any]{})
+	parser := BuildParser[Obj](DefaultRuneBuildOptions, map[string]apc.Parser[rune, any]{})
 
 	ctx := apc.NewStringContext(testOriginName, `Name1 Name2 Name3`)
 	node, err := apc.Parse[rune](ctx, parser, apc.DefaultParseConfig)
@@ -77,7 +78,7 @@ func TestParserIntrinsicConversions(t *testing.T) {
 		BoolFromMaybeT bool `apc:"$'maybe'?"`
 		BoolFromMaybeF bool `apc:"$'nonexistent'?"`
 	}
-	parser := BuildParser[Obj](DefaultBuildOptions, map[string]apc.Parser[rune, any]{})
+	parser := BuildParser[Obj](DefaultRuneBuildOptions, map[string]apc.Parser[rune, any]{})
 
 	ctx := apc.NewStringContext(testOriginName, `strVal 51 52 53 54 55 56 57 58 59 60 71.1 72.2 true false maybe`)
 	node, err := apc.Parse[rune](ctx, parser, apc.DefaultParseConfig)

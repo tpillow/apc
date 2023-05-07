@@ -27,7 +27,7 @@ func (de *DirEntry) String() string {
 
 func main() {
 	parser := apcgen.BuildParser[Dir](
-		apcgen.DefaultBuildOptions,
+		apcgen.DefaultRuneBuildOptions,
 		map[string]apc.Parser[rune, any]{
 			"StrParser": apc.CastToAny(apc.DoubleQuotedStringParser),
 		},

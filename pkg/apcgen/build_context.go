@@ -14,7 +14,6 @@ type captureResult struct {
 }
 
 type buildContext[CT any] struct {
-	options BuildOptions
 	// Generated parser cache
 	parserTypeParserCache map[reflect.Type]apc.Parser[CT, any]
 	// Parser currently being generated but not yet done
@@ -22,9 +21,8 @@ type buildContext[CT any] struct {
 	providedParserMap     map[string]apc.Parser[CT, any]
 }
 
-func newBuildContext[CT any](options BuildOptions, providedParsers map[string]apc.Parser[CT, any]) *buildContext[CT] {
+func newBuildContext[CT any](providedParsers map[string]apc.Parser[CT, any]) *buildContext[CT] {
 	return &buildContext[CT]{
-		options:               options,
 		parserTypeParserCache: make(map[reflect.Type]apc.Parser[CT, any]),
 		inProgressParserCache: make(map[reflect.Type]*apc.Parser[CT, any]),
 		providedParserMap:     providedParsers,
