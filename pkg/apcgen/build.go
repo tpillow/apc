@@ -24,19 +24,9 @@ func BuildParser[RT any](buildOpts RuneBuildOptions, providedParsers map[string]
 }
 
 func BuildTokenizedParser[RT any](providedParsers map[string]apc.Parser[apc.Token, any]) apc.Parser[apc.Token, *RT] {
-	return nil
-	// rtType := reflect.TypeOf(new(RT))
+	rtType := reflect.TypeOf(new(RT))
 
-	// buildCtx := newBuildContext(buildOpts, providedParsers)
-	// baseParser := buildTokenParserForType(buildCtx, rtType)
-	// parser := apc.CastTo[apc.Token, any, *RT](baseParser)
-
-	// if buildCtx.options.SkipWhitespace {
-	// 	parser = apc.Skip(
-	// 		apc.CastToAny(apc.WhitespaceParser),
-	// 		parser,
-	// 	)
-	// }
-
-	// return parser
+	buildCtx := newBuildContext(providedParsers)
+	baseParser := buildTokenParserForType(buildCtx, rtType)
+	return apc.CastTo[apc.Token, any, *RT](baseParser)
 }
