@@ -29,7 +29,7 @@ func buildTokenParserFromNode(buildCtx *buildContext[apc.Token], subCtx *buildSu
 				apc.ExactTokenType(apc.TokenType(parts[0])),
 				func(node apc.Token) any {
 					if node.Value == nil {
-						return ""
+						return node.Type
 					}
 					return node.Value
 				},
@@ -39,7 +39,7 @@ func buildTokenParserFromNode(buildCtx *buildContext[apc.Token], subCtx *buildSu
 				apc.ExactTokenValue(apc.TokenType(parts[0]), apc.TokenType(parts[1])),
 				func(node apc.Token) any {
 					if node.Value == nil {
-						return ""
+						return node.Type
 					}
 					return node.Value
 				},
