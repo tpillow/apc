@@ -248,7 +248,7 @@ func valueSetFieldOrAppendKind(rawVal any, valKind reflect.Kind, field reflect.V
 		default:
 			panicUnsettable(rawVal, "to bool")
 		}
-	case reflect.Pointer:
+	case reflect.Pointer, reflect.Interface:
 		switch val := rawVal.(type) {
 		case apc.MaybeValue[any]:
 			if !val.IsNil() {

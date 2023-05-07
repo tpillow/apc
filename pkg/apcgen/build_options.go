@@ -24,7 +24,7 @@ func WithDefaultBuildOptions[CT any](buildFuncs ...BuildOptionFunc[CT]) BuildOpt
 func WithParserOption[CT any](name string, parser apc.Parser[CT, any]) BuildOptionFunc[CT] {
 	return func(opts *BuildOptions[CT]) {
 		if _, has := opts.ProvidedParsers[name]; has {
-			panic(fmt.Sprintf("cannot use WithParser: name '%v' already specified", name))
+			panic(fmt.Sprintf("cannot use WithParserOption: name '%v' already specified", name))
 		}
 		opts.ProvidedParsers[name] = parser
 	}
