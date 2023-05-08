@@ -8,6 +8,9 @@ func Any[CT, T any](parsers ...Parser[CT, T]) Parser[CT, T] {
 	}
 
 	return func(ctx Context[CT]) (T, error) {
+		ctx.DebugStart("any")
+		defer ctx.DebugEnd("any")
+
 		for _, parser := range parsers {
 			node, err := parser(ctx)
 			if err == nil {

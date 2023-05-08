@@ -13,14 +13,14 @@ func root1(child Node) *rootNode {
 }
 
 func TestEmptyInput(t *testing.T) {
-	_, err := parseFull(testOriginName, ``)
+	_, err := parseFull(testOriginName, ``, false)
 	assert.Error(t, err)
-	_, err = parseFull(testOriginName, " \t  \t ")
+	_, err = parseFull(testOriginName, " \t  \t ", false)
 	assert.Error(t, err)
 }
 
 func TestInfer(t *testing.T) {
-	node, err := parseFull(testOriginName, `.`)
+	node, err := parseFull(testOriginName, `.`, false)
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
@@ -31,7 +31,7 @@ func TestInfer(t *testing.T) {
 }
 
 func TestCaptureInfer(t *testing.T) {
-	node, err := parseFull(testOriginName, `$.`)
+	node, err := parseFull(testOriginName, `$.`, false)
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
@@ -44,8 +44,37 @@ func TestCaptureInfer(t *testing.T) {
 		node)
 }
 
+func TestOr(t *testing.T) {
+	node, err := parseFull(testOriginName, `$'hi' | ($. 'hi')`, false)
+	assert.NoError(t, err)
+	assert.Equal(
+		t,
+		root1(
+			&orNode{
+				Children: []Node{
+					&captureNode{
+						InputIndex: 1,
+						Child:      &matchStringNode{Value: "hi"},
+					},
+					&seqNode{
+						Children: []Node{
+							&captureNode{
+								InputIndex: 10,
+								Child: &inferNode{
+									InputIndex: 11,
+								},
+							},
+							&matchStringNode{Value: "hi"},
+						},
+					},
+				},
+			},
+		),
+		node)
+}
+
 func TestCaptureInferRange(t *testing.T) {
-	node, err := parseFull(testOriginName, `$.{1,3}`)
+	node, err := parseFull(testOriginName, `$.{1,3}`, false)
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
@@ -64,7 +93,7 @@ func TestCaptureInferRange(t *testing.T) {
 func TestGeneric1(t *testing.T) {
 	node, err := parseFull(
 		testOriginName,
-		`'Entry' '{' $StrParser $regex('[0-9]+') $.? $(.*) '}'`)
+		`'Entry' '{' $StrParser $regex('[0-9]+') $.? $(.*) '}'`, false)
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
@@ -99,6 +128,73 @@ func TestGeneric1(t *testing.T) {
 						},
 					},
 					&matchStringNode{Value: "}"},
+				},
+			},
+		),
+		node)
+}
+
+func TestGeneric2(t *testing.T) {
+	node, err := parseFull(
+		testOriginName,
+		`look($'const'? $'identifier' ':') $.? ('hi' | ( 'bye' 'lie'))`, true)
+	assert.NoError(t, err)
+	assert.Equal(
+		t,
+		root1(
+			&seqNode{
+				Children: []Node{
+					&lookNode{
+						Child: &seqNode{
+							Children: []Node{
+								&captureNode{
+									InputIndex: 6,
+									Child: &maybeNode{
+										Child: &matchStringNode{Value: "const"},
+									},
+								},
+								&captureNode{
+									InputIndex: 15,
+									Child:      &matchStringNode{Value: "identifier"},
+								},
+								&matchStringNode{Value: ":"},
+							},
+						},
+					},
+					&captureNode{
+						InputIndex: 35,
+						Child: &maybeNode{
+							Child: &inferNode{
+								InputIndex: 36,
+							},
+						},
+					},
+					&orNode{
+						Children: []Node{
+							&matchStringNode{Value: "hi"},
+							&seqNode{
+								Children: []Node{
+									&matchStringNode{Value: "bye"},
+									&matchStringNode{Value: "lie"},
+								},
+							},
+						},
+					},
+					// &orNode{
+					// 	Children: []Node{
+					// 		&matchStringNode{Value: ";"},
+					// 		&seqNode{
+					// 			Children: []Node{
+					// 				&matchStringNode{Value: "="},
+					// 				&captureNode{
+					// 					InputIndex: -1,
+					// 					Child:      &matchStringNode{Value: "."},
+					// 				},
+					// 				&matchStringNode{Value: ";"},
+					// 			},
+					// 		},
+					// 	},
+					// },
 				},
 			},
 		),

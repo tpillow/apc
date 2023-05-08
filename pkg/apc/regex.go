@@ -29,6 +29,7 @@ func Regex(pattern string) Parser[rune, string] {
 		reader := &RuneContextPeekingRuneReader{Context: ctx}
 		loc := regex.FindReaderIndex(reader)
 		if loc == nil {
+			ctx.DebugPrint("regex: %v => got no match", pattern)
 			return "", ParseErrExpectedButGotNext(ctx, ctx.GetCurParserName(), nil)
 		}
 		if loc[0] != 0 {
@@ -36,6 +37,7 @@ func Regex(pattern string) Parser[rune, string] {
 		}
 
 		matchVal, err := ctx.Consume(loc[1])
+		ctx.DebugPrint("regex: %v => got %v", pattern, string(matchVal))
 		if err != nil && !errors.Is(err, ErrEOF) {
 			return "", err
 		}

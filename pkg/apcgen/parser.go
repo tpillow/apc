@@ -109,8 +109,8 @@ var (
 		apc.Look(
 			apc.Seq2(
 				apc.MapDetailed(
-					apc.Maybe(apc.ExactStr("$")),
-					func(maybeNode apc.MaybeValue[string], orgRange apc.OriginRange) (apc.MaybeValue[apc.Origin], error) {
+					apc.Maybe(apc.Exact('$')),
+					func(maybeNode apc.MaybeValue[rune], orgRange apc.OriginRange) (apc.MaybeValue[apc.Origin], error) {
 						if !maybeNode.IsNil() {
 							return apc.NewMaybeValue(orgRange.Start), nil
 						}
@@ -172,21 +172,13 @@ var (
 	)
 
 	seqExprParser = apc.Map(
-		apc.Seq2(
-			valueParser,
-			apc.ZeroOrMore(valueParser),
-		),
-		func(node *apc.Seq2Node[Node, []Node]) Node {
-			if len(node.Result2) == 0 {
-				return node.Result1
-			}
-
-			children := []Node{node.Result1}
-			for _, child := range node.Result2 {
-				children = append(children, child)
+		apc.OneOrMore(valueParser),
+		func(nodes []Node) Node {
+			if len(nodes) == 1 {
+				return nodes[0]
 			}
 			return &seqNode{
-				Children: children,
+				Children: nodes,
 			}
 		},
 	)
@@ -265,7 +257,7 @@ var (
 		// TODO: not allowing newlines, so we can track position via the column
 		// of an Origin to map captures to appropriate fields. Can probably
 		// come up with a work-around at some point.
-		apc.CastToAny(apc.Regex("[ \t]+")),
+		apc.CastToAny(apc.Regex("( |\\t)+")),
 		apc.Map(
 			exprParser,
 			func(node Node) *rootNode {
@@ -289,8 +281,9 @@ func maybeInitParser() {
 	)
 }
 
-func parseFull(originName string, input string) (*rootNode, error) {
+func parseFull(originName string, input string, debugParsers bool) (*rootNode, error) {
 	maybeInitParser()
 	ctx := apc.NewStringContext(originName, input)
+	ctx.DebugParsers = debugParsers
 	return apc.Parse[rune](ctx, rootParser, apc.DefaultParseConfig)
 }

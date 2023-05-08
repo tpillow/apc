@@ -18,6 +18,9 @@ func Range[CT, T any](min int, max int, parser Parser[CT, T]) Parser[CT, []T] {
 	}
 
 	return func(ctx Context[CT]) ([]T, error) {
+		ctx.DebugStart("range: %v to %v", min, max)
+		defer ctx.DebugEnd("range: %v to %v", min, max)
+
 		nodes := make([]T, 0)
 
 		node, err := parser(ctx)
@@ -56,16 +59,20 @@ func OneOrMore[CT, T any](parser Parser[CT, T]) Parser[CT, []T] {
 // Same as Range(0, 1, parser), but with the resulting slice mapped
 // to a single value, or default T if 0 matches occurred.
 func Maybe[CT, T any](parser Parser[CT, T]) Parser[CT, MaybeValue[T]] {
-	// TODO: it might be smart to just automatically wrap the parser in a `Look`
-	return Map(Range(0, 1, parser), func(node []T) MaybeValue[T] {
-		if node == nil || len(node) <= 0 {
-			return NewNilMaybeValue[T]()
+	return func(ctx Context[CT]) (MaybeValue[T], error) {
+		ctx.DebugStart("maybe")
+		defer ctx.DebugEnd("maybe")
+
+		node, err := parser(ctx)
+		if IsMustReturnParseErr(err) {
+			return NewNilMaybeValue[T](), err
 		}
-		if len(node) != 1 {
-			panic("unreachable: Range(0, 1) should return at most 1 node")
+
+		if err == nil {
+			return NewMaybeValue(node), nil
 		}
-		return NewMaybeValue(node[0])
-	})
+		return NewNilMaybeValue[T](), nil
+	}
 }
 
 // Same as OneOrMore(parser), but ensures that each subsequent match is separated by

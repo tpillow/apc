@@ -23,7 +23,7 @@ func buildParserForTypeCommon[CT any](buildCtx *buildContext[CT], resultType ref
 
 	// Create subcontext
 	subCtx := newBuildSubContextFromType[CT](resultType)
-	node, err := parseFull(subCtx.resultTypeElemName, subCtx.grammarText)
+	node, err := parseFull(subCtx.resultTypeElemName, subCtx.grammarText, false)
 	if err != nil {
 		locStr := ""
 		if parseErr, ok := err.(*apc.ParseError); ok {

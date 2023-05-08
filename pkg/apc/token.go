@@ -22,7 +22,7 @@ type Token struct {
 func (t Token) String() string {
 	valStr := ""
 	if t.Value != nil {
-		valStr = fmt.Sprintf(" ('%v')", t.Value)
+		valStr = fmt.Sprintf(" ('%v')", anyConvertRunesToString(t.Value))
 	}
 	return fmt.Sprintf("token of type %v%v", t.Type, valStr)
 }
@@ -40,9 +40,11 @@ func ExactTokenType(tokenType TokenType) Parser[Token, Token] {
 			return Token{}, err
 		}
 		if len(vals) == 0 {
+			ctx.DebugPrint("exact token type: %v => got EOF", tokenType)
 			return Token{}, ParseErrExpectedButGotNext(ctx, fmt.Sprintf("token of type %v", tokenType), nil)
 		}
 		val := vals[0]
+		ctx.DebugPrint("exact token type: %v => got %v", tokenType, val)
 		if val.Type != tokenType {
 			return Token{}, ParseErrExpectedButGot(ctx, fmt.Sprintf("token of type %v", tokenType), val, nil)
 		}
@@ -58,6 +60,9 @@ func ExactTokenType(tokenType TokenType) Parser[Token, Token] {
 // has a Type that is tokenType and a Value that is value.
 func ExactTokenValue(tokenType TokenType, value any) Parser[Token, Token] {
 	return func(ctx Context[Token]) (Token, error) {
+		ctx.DebugStart("exact token value: %v : %v", tokenType, value)
+		defer ctx.DebugEnd("exact token value: %v : %v", tokenType, value)
+
 		err := ctx.RunSkipParsers()
 		if err != nil {
 			return Token{}, err
@@ -67,9 +72,11 @@ func ExactTokenValue(tokenType TokenType, value any) Parser[Token, Token] {
 			return Token{}, err
 		}
 		if len(vals) == 0 {
+			ctx.DebugPrint("exact token value: (%v, %v) => got EOF", tokenType, value)
 			return Token{}, ParseErrExpectedButGotNext(ctx, fmt.Sprintf("token of type %v ('%v')", tokenType, value), nil)
 		}
 		val := vals[0]
+		ctx.DebugPrint("exact token value: (%v, %v) => got %v", tokenType, value, val)
 		if val.Type != tokenType || val.Value != value {
 			return Token{}, ParseErrExpectedButGot(ctx, fmt.Sprintf("token of type %v ('%v')", tokenType, value), val, nil)
 		}

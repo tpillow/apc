@@ -3,8 +3,10 @@ package apc
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"os"
+	"reflect"
 	"strings"
 )
 
@@ -22,28 +24,29 @@ type ReaderContext[CT any] struct {
 	skipParsers []Parser[CT, any]
 	// Whether or not RunSkipParsers is currently running.
 	skipping bool
-	// If true, RunSkipParsers will be a no-op. The assumption is that
-	// when RunSkipParsers is run, it does not need to be run again until
-	// a Consume call.
-	skippedSinceLastConsume bool
 	// Current parser name.
 	curParserName string
 	// Current look offset value.
 	lookOffset int
+	// Current debug indentation.
+	debugIndentation string
+	// Whether or not to enable debugging.
+	DebugParsers bool
 }
 
 // Returns a *ReaderContext[CT] with the given reader.
 func NewReaderContext[CT any](reader ReaderWithOrigin[CT]) *ReaderContext[CT] {
 	return &ReaderContext[CT]{
-		reader:                  reader,
-		buffer:                  make([]CT, 0),
-		bufferOrigins:           make([]Origin, 0),
-		lastOrigin:              Origin{},
-		skipParsers:             make([]Parser[CT, any], 0),
-		skipping:                false,
-		skippedSinceLastConsume: false,
-		curParserName:           "<unknown>",
-		lookOffset:              InvalidLookOffset,
+		reader:           reader,
+		buffer:           make([]CT, 0),
+		bufferOrigins:    make([]Origin, 0),
+		lastOrigin:       Origin{},
+		skipParsers:      make([]Parser[CT, any], 0),
+		skipping:         false,
+		curParserName:    "<unknown>",
+		lookOffset:       InvalidLookOffset,
+		debugIndentation: "",
+		DebugParsers:     false,
 	}
 }
 
@@ -81,7 +84,12 @@ func (ctx *ReaderContext[CT]) maybeEnsureBufferLoaded(num int) error {
 	val, origin, err := ctx.reader.Read()
 	for err == nil {
 		ctx.buffer = append(ctx.buffer, val)
-		maybeLog(DebugPrintReaderContext, "ReaderContext %p appended to buffer: %v", ctx, val)
+		var tmpRune rune
+		if reflect.TypeOf(val) == reflect.TypeOf(tmpRune) {
+			maybeLog(DebugPrintReaderContext, "ReaderContext %p appended to buffer: %c", ctx, val)
+		} else {
+			maybeLog(DebugPrintReaderContext, "ReaderContext %p appended to buffer: %v", ctx, val)
+		}
 		ctx.bufferOrigins = append(ctx.bufferOrigins, origin)
 		ctx.lastOrigin = origin
 		if len(ctx.buffer) >= num {
@@ -127,7 +135,6 @@ func (ctx *ReaderContext[CT]) Peek(offset int, num int) ([]CT, error) {
 // with any consumed elements (which may be less than num elements in length
 // if end of input has been reached).
 func (ctx *ReaderContext[CT]) Consume(num int) ([]CT, error) {
-	ctx.skippedSinceLastConsume = false
 	lookOffset := 0
 	if ctx.lookOffset != InvalidLookOffset {
 		lookOffset = ctx.lookOffset
@@ -205,7 +212,7 @@ func (ctx *ReaderContext[CT]) RemoveSkipParser(parser Parser[CT, any]) {
 // successfully matches. The results of any matched parsers is discarded.
 // Should only return nil or non-ParseError errors.
 func (ctx *ReaderContext[CT]) RunSkipParsers() error {
-	if ctx.skipping || ctx.skippedSinceLastConsume {
+	if ctx.skipping {
 		return nil
 	}
 
@@ -226,7 +233,6 @@ func (ctx *ReaderContext[CT]) RunSkipParsers() error {
 		}
 	}
 
-	ctx.skippedSinceLastConsume = true
 	ctx.skipping = false
 	return nil
 }
@@ -249,4 +255,30 @@ func (ctx *ReaderContext[CT]) SetCurParserName(name string) {
 // Gets the current name of parsers.
 func (ctx *ReaderContext[CT]) GetCurParserName() string {
 	return ctx.curParserName
+}
+
+// TODO: document
+func (ctx *ReaderContext[CT]) DebugStart(format string, formatArgs ...interface{}) {
+	if !ctx.DebugParsers {
+		return
+	}
+	fmt.Printf("%vSTART: %v (in %v) @ %v\n", ctx.debugIndentation, fmt.Sprintf(format, formatArgs...), ctx.GetCurParserName(), ctx.GetCurOrigin())
+	ctx.debugIndentation += "  "
+}
+
+// TODO: document
+func (ctx *ReaderContext[CT]) DebugPrint(format string, formatArgs ...interface{}) {
+	if !ctx.DebugParsers {
+		return
+	}
+	fmt.Printf("%vDEBUG: %v (in %v) @ %v\n", ctx.debugIndentation, fmt.Sprintf(format, formatArgs...), ctx.GetCurParserName(), ctx.GetCurOrigin())
+}
+
+// TODO: document
+func (ctx *ReaderContext[CT]) DebugEnd(format string, formatArgs ...interface{}) {
+	if !ctx.DebugParsers {
+		return
+	}
+	ctx.debugIndentation = ctx.debugIndentation[:len(ctx.debugIndentation)-2]
+	fmt.Printf("%vEND: %v @ %v\n", ctx.debugIndentation, fmt.Sprintf(format, formatArgs...), ctx.GetCurOrigin())
 }

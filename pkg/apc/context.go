@@ -49,4 +49,8 @@ type Context[CT any] interface {
 	SetLookOffset(val int)
 	// Gets the look offset value.
 	GetLookOffset() int
+	// TODO: document
+	DebugStart(format string, formatArgs ...interface{})
+	DebugPrint(format string, formatArgs ...interface{})
+	DebugEnd(format string, formatArgs ...interface{})
 }

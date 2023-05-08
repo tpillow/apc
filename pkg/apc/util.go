@@ -23,6 +23,17 @@ func zeroVal[T any]() T {
 	return val
 }
 
+func anyConvertRunesToString(rawVal any) string {
+	switch val := rawVal.(type) {
+	case rune:
+		return string(val)
+	case []rune:
+		return string(val)
+	default:
+		return fmt.Sprintf("%v", val)
+	}
+}
+
 // RuneContextPeekingRuneReader implements io.RuneReader using the given
 // Context[rune] by peeking one rune at a time, starting at offset 0.
 type RuneContextPeekingRuneReader struct {

@@ -10,6 +10,9 @@ func Seq[CT, T any](parsers ...Parser[CT, T]) Parser[CT, []T] {
 	}
 
 	return func(ctx Context[CT]) ([]T, error) {
+		ctx.DebugStart("seq")
+		defer ctx.DebugEnd("seq")
+
 		nodes := make([]T, 0)
 		for i, parser := range parsers {
 			node, err := parser(ctx)

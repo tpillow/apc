@@ -7,6 +7,9 @@ package apc
 // Look frame.
 func Look[CT, T any](parser Parser[CT, T]) Parser[CT, T] {
 	return func(ctx Context[CT]) (T, error) {
+		ctx.DebugStart("look")
+		defer ctx.DebugEnd("look")
+
 		lastLook := ctx.GetLookOffset()
 		if lastLook == InvalidLookOffset {
 			ctx.SetLookOffset(0)
