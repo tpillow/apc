@@ -28,7 +28,6 @@ func WithParserOption[CT any](name string, parser apc.Parser[CT, any]) BuildOpti
 		if _, has := opts.ProvidedParsers[name]; has {
 			panic(fmt.Sprintf("cannot use WithParserOption: name '%v' already specified", name))
 		}
-		fmt.Printf("DEBUG added parser option: %v\n", name)
 		opts.ProvidedParsers[name] = parser
 	}
 }
@@ -38,7 +37,7 @@ func WithBuildParserOption[RT any](skipWhitespace bool) BuildOptionFunc[rune] {
 		typeName := reflect.TypeOf(new(RT)).Elem().Name()
 		var parser apc.Parser[rune, *RT]
 		parserRef := apc.Ref(&parser)
-		WithParserOption(typeName, apc.CastToAny(parserRef))
+		WithParserOption(typeName, apc.CastToAny(parserRef))(opts)
 		parser = BuildParser[RT](opts, skipWhitespace)
 	}
 }
@@ -48,7 +47,7 @@ func WithBuildTokenizedParserOption[RT any]() BuildOptionFunc[apc.Token] {
 		typeName := reflect.TypeOf(new(RT)).Elem().Name()
 		var parser apc.Parser[apc.Token, *RT]
 		parserRef := apc.Ref(&parser)
-		WithParserOption(typeName, apc.CastToAny(parserRef))
+		WithParserOption(typeName, apc.CastToAny(parserRef))(opts)
 		parser = BuildTokenizedParser[RT](opts)
 	}
 }
