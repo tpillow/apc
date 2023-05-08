@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	runeParserCache  *parserCache[rune]      = newParserCache[rune]()
-	tokenParserCache *parserCache[apc.Token] = newParserCache[apc.Token]()
+	runeParserCache  parserCache[rune]      = make(parserCache[rune])
+	tokenParserCache parserCache[apc.Token] = make(parserCache[apc.Token])
 )
 
 func BuildParser[RT any](buildOpts *BuildOptions[rune], skipWhitespace bool) apc.Parser[rune, *RT] {

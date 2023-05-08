@@ -13,40 +13,27 @@ type captureResult struct {
 	value      any
 }
 
-type parserCache[CT any] struct {
-	// Generated parser cache
-	parserTypeParserCache map[reflect.Type]apc.Parser[CT, any]
-	// Parser currently being generated but not yet done
-	inProgressParserCache map[reflect.Type]*apc.Parser[CT, any]
-}
+type parserCache[CT any] map[reflect.Type]*apc.Parser[CT, any]
 
-func newParserCache[CT any]() *parserCache[CT] {
-	return &parserCache[CT]{
-		parserTypeParserCache: make(map[reflect.Type]apc.Parser[CT, any]),
-		inProgressParserCache: make(map[reflect.Type]*apc.Parser[CT, any]),
-	}
-}
-
-func (gc *parserCache[CT]) maybeGetCachedParserFromType(typ reflect.Type) apc.Parser[CT, any] {
-	if parser, has := gc.parserTypeParserCache[typ]; has {
-		return parser
-	}
-	return nil
-}
-
-func (gc *parserCache[CT]) maybeMakeRefParserFromType(typ reflect.Type) apc.Parser[CT, any] {
-	if parserPtr, has := gc.inProgressParserCache[typ]; has {
+func (cache parserCache[CT]) maybeGetCachedParserFromType(typ reflect.Type) apc.Parser[CT, any] {
+	if parserPtr, has := cache[typ]; has {
+		if *parserPtr != nil {
+			// Already fully generated; skip the Ref parser wrapper
+			return *parserPtr
+		}
+		// Not fully generated, so we must wrap in a Ref parser
 		return apc.Ref(parserPtr)
 	}
+	// Not requested for generation yet
 	return nil
 }
 
 type buildContext[CT any] struct {
-	parserCache       *parserCache[CT]
+	parserCache       parserCache[CT]
 	providedParserMap map[string]apc.Parser[CT, any]
 }
 
-func newBuildContext[CT any](parserCache *parserCache[CT], providedParsers map[string]apc.Parser[CT, any]) *buildContext[CT] {
+func newBuildContext[CT any](parserCache parserCache[CT], providedParsers map[string]apc.Parser[CT, any]) *buildContext[CT] {
 	return &buildContext[CT]{
 		parserCache:       parserCache,
 		providedParserMap: providedParsers,
