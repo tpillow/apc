@@ -35,19 +35,19 @@ func WithParserOption[CT any](name string, parser apc.Parser[CT, any]) BuildOpti
 func WithBuildParserOption[RT any](skipWhitespace bool) BuildOptionFunc[rune] {
 	return func(opts *BuildOptions[rune]) {
 		typeName := reflect.TypeOf(new(RT)).Elem().Name()
-		var parser *apc.Parser[rune, *RT]
-		parserRef := apc.Ref(parser)
+		var parser apc.Parser[rune, *RT]
+		parserRef := apc.Ref(&parser)
 		WithParserOption(typeName, apc.CastToAny(parserRef))
-		*parser = BuildParser[RT](opts, skipWhitespace)
+		parser = BuildParser[RT](opts, skipWhitespace)
 	}
 }
 
 func WithBuildTokenizedParserOption[RT any]() BuildOptionFunc[apc.Token] {
 	return func(opts *BuildOptions[apc.Token]) {
 		typeName := reflect.TypeOf(new(RT)).Elem().Name()
-		var parser *apc.Parser[apc.Token, *RT]
-		parserRef := apc.Ref(parser)
+		var parser apc.Parser[apc.Token, *RT]
+		parserRef := apc.Ref(&parser)
 		WithParserOption(typeName, apc.CastToAny(parserRef))
-		*parser = BuildTokenizedParser[RT](opts)
+		parser = BuildTokenizedParser[RT](opts)
 	}
 }
