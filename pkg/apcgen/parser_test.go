@@ -137,7 +137,7 @@ func TestGeneric1(t *testing.T) {
 func TestGeneric2(t *testing.T) {
 	node, err := parseFull(
 		testOriginName,
-		`look($'const'? $'identifier' ':') $.? ('hi' | ( 'bye' 'lie'))`, true)
+		`look($'const'? $'identifier' ':') $.? ('hi' | ( 'bye' 'lie' ) )`, false)
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
