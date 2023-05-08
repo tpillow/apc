@@ -12,12 +12,12 @@ type BuildOptions[CT any] struct {
 	ProvidedParsers map[string]apc.Parser[CT, any]
 }
 
-func WithDefaultBuildOptions[CT any](buildFuncs ...BuildOptionFunc[CT]) BuildOptions[CT] {
-	opts := BuildOptions[CT]{
+func WithDefaultBuildOptions[CT any](buildFuncs ...BuildOptionFunc[CT]) *BuildOptions[CT] {
+	opts := &BuildOptions[CT]{
 		ProvidedParsers: make(map[string]apc.Parser[CT, any]),
 	}
 	for _, buildFunc := range buildFuncs {
-		buildFunc(&opts)
+		buildFunc(opts)
 	}
 	return opts
 }
