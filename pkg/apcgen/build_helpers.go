@@ -12,12 +12,12 @@ import (
 func buildParserForTypeCommon[CT any](buildCtx *buildContext[CT], resultType reflect.Type,
 	buildParserFromRootNodeFunc func(*buildContext[CT], *buildSubcontext[CT], *rootNode) apc.Parser[CT, any]) apc.Parser[CT, any] {
 	// Return cached parser if available
-	if cachedParser := buildCtx.maybeGetCachedParserFromType(resultType); cachedParser != nil {
+	if cachedParser := buildCtx.parserCache.maybeGetCachedParserFromType(resultType); cachedParser != nil {
 		return cachedParser
 	}
 	// If there is a circular reference to a parser not yet generated
 	// We must return a placeholder ref parser
-	if refParser := buildCtx.maybeMakeRefParserFromType(resultType); refParser != nil {
+	if refParser := buildCtx.parserCache.maybeMakeRefParserFromType(resultType); refParser != nil {
 		return refParser
 	}
 
@@ -34,11 +34,11 @@ func buildParserForTypeCommon[CT any](buildCtx *buildContext[CT], resultType ref
 	}
 	maybeLog(DebugPrintBuiltNodes, "Built parser of type %v: %v", subCtx.resultTypeElemName, node)
 	parserPtr := new(apc.Parser[CT, any])
-	buildCtx.inProgressParserCache[resultType] = parserPtr
+	buildCtx.parserCache.inProgressParserCache[resultType] = parserPtr
 	parser := buildParserFromRootNodeFunc(buildCtx, subCtx, node)
-	buildCtx.parserTypeParserCache[resultType] = parser
+	buildCtx.parserCache.parserTypeParserCache[resultType] = parser
 	*parserPtr = parser
-	delete(buildCtx.inProgressParserCache, resultType)
+	delete(buildCtx.parserCache.inProgressParserCache, resultType)
 	return *parserPtr
 }
 

@@ -13,19 +13,43 @@ type captureResult struct {
 	value      any
 }
 
-type buildContext[CT any] struct {
+type parserCache[CT any] struct {
 	// Generated parser cache
 	parserTypeParserCache map[reflect.Type]apc.Parser[CT, any]
 	// Parser currently being generated but not yet done
 	inProgressParserCache map[reflect.Type]*apc.Parser[CT, any]
-	providedParserMap     map[string]apc.Parser[CT, any]
 }
 
-func newBuildContext[CT any](providedParsers map[string]apc.Parser[CT, any]) *buildContext[CT] {
-	return &buildContext[CT]{
+func newParserCache[CT any]() *parserCache[CT] {
+	return &parserCache[CT]{
 		parserTypeParserCache: make(map[reflect.Type]apc.Parser[CT, any]),
 		inProgressParserCache: make(map[reflect.Type]*apc.Parser[CT, any]),
-		providedParserMap:     providedParsers,
+	}
+}
+
+func (gc *parserCache[CT]) maybeGetCachedParserFromType(typ reflect.Type) apc.Parser[CT, any] {
+	if parser, has := gc.parserTypeParserCache[typ]; has {
+		return parser
+	}
+	return nil
+}
+
+func (gc *parserCache[CT]) maybeMakeRefParserFromType(typ reflect.Type) apc.Parser[CT, any] {
+	if parserPtr, has := gc.inProgressParserCache[typ]; has {
+		return apc.Ref(parserPtr)
+	}
+	return nil
+}
+
+type buildContext[CT any] struct {
+	parserCache       *parserCache[CT]
+	providedParserMap map[string]apc.Parser[CT, any]
+}
+
+func newBuildContext[CT any](parserCache *parserCache[CT], providedParsers map[string]apc.Parser[CT, any]) *buildContext[CT] {
+	return &buildContext[CT]{
+		parserCache:       parserCache,
+		providedParserMap: providedParsers,
 	}
 }
 
@@ -62,20 +86,6 @@ func newBuildSubContextFromType[CT any](resultType reflect.Type) *buildSubcontex
 		grammarText:               sb.String(),
 		minCaptureIdxToFieldNames: minCaptureIdxToFieldNames,
 	}
-}
-
-func (gc *buildContext[CT]) maybeGetCachedParserFromType(typ reflect.Type) apc.Parser[CT, any] {
-	if parser, has := gc.parserTypeParserCache[typ]; has {
-		return parser
-	}
-	return nil
-}
-
-func (gc *buildContext[CT]) maybeMakeRefParserFromType(typ reflect.Type) apc.Parser[CT, any] {
-	if parserPtr, has := gc.inProgressParserCache[typ]; has {
-		return apc.Ref(parserPtr)
-	}
-	return nil
 }
 
 func (gc *buildContext[CT]) mustGetProvidedParserByName(name string) apc.Parser[CT, any] {

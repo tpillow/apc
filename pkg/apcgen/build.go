@@ -6,10 +6,15 @@ import (
 	"github.com/tpillow/apc/pkg/apc"
 )
 
+var (
+	runeParserCache  *parserCache[rune]      = newParserCache[rune]()
+	tokenParserCache *parserCache[apc.Token] = newParserCache[apc.Token]()
+)
+
 func BuildParser[RT any](buildOpts *BuildOptions[rune], skipWhitespace bool) apc.Parser[rune, *RT] {
 	rtType := reflect.TypeOf(new(RT))
 
-	buildCtx := newBuildContext(buildOpts.ProvidedParsers)
+	buildCtx := newBuildContext(runeParserCache, buildOpts.ProvidedParsers)
 	baseParser := buildRuneParserForType(buildCtx, rtType)
 	parser := apc.CastTo[rune, any, *RT](baseParser)
 
@@ -26,7 +31,7 @@ func BuildParser[RT any](buildOpts *BuildOptions[rune], skipWhitespace bool) apc
 func BuildTokenizedParser[RT any](buildOpts *BuildOptions[apc.Token]) apc.Parser[apc.Token, *RT] {
 	rtType := reflect.TypeOf(new(RT))
 
-	buildCtx := newBuildContext(buildOpts.ProvidedParsers)
+	buildCtx := newBuildContext(tokenParserCache, buildOpts.ProvidedParsers)
 	baseParser := buildTokenParserForType(buildCtx, rtType)
 	return apc.CastTo[apc.Token, any, *RT](baseParser)
 }
