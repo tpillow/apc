@@ -11,8 +11,7 @@ import (
 )
 
 var (
-	_scrapOrgRange  apc.OriginRange
-	orgRangeRefType = reflect.TypeOf(_scrapOrgRange)
+	orgRangeRefType = reflect.TypeOf(*new(apc.OriginRange))
 )
 
 func buildParserForTypeCommon[CT any](buildCtx *buildContext[CT], resultType reflect.Type,
