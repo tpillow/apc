@@ -10,6 +10,11 @@ import (
 	"github.com/tpillow/apc/pkg/apc"
 )
 
+var (
+	_scrapOrgRange  apc.OriginRange
+	orgRangeRefType = reflect.TypeOf(_scrapOrgRange)
+)
+
 func buildParserForTypeCommon[CT any](buildCtx *buildContext[CT], resultType reflect.Type,
 	buildParserFromRootNodeFunc func(*buildContext[CT], *buildSubcontext[CT], *rootNode) apc.Parser[CT, any]) apc.Parser[CT, any] {
 	// Return cached parser if available
@@ -41,12 +46,16 @@ func buildParserFromRootNodeCommon[CT any](buildCtx *buildContext[CT], subCtx *b
 	rootParser := buildParserFromNodeFunc(buildCtx, subCtx, node.Child)
 	return apc.Named(
 		subCtx.resultTypeElemName,
-		apc.Map(
+		apc.MapDetailed(
 			rootParser,
-			func(parseNode any) any {
-				result := reflect.New(subCtx.resultType.Elem())
+			func(parseNode any, orgRange apc.OriginRange) (any, error) {
+				resultElem := subCtx.resultType.Elem()
+				result := reflect.New(resultElem)
 				setCaptureHelper(subCtx, result, parseNode)
-				return result.Interface()
+				if orgRangeField, ok := resultElem.FieldByName("OriginRange"); ok && orgRangeField.Type == orgRangeRefType {
+					result.Elem().FieldByName("OriginRange").Set(reflect.ValueOf(orgRange))
+				}
+				return result.Interface(), nil
 			},
 		),
 	)

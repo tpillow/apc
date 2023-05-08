@@ -21,9 +21,10 @@ func TestParserCaptureStringAndRegex(t *testing.T) {
 	assert.Equal(t, &Person{"Tommy", "29"}, node)
 }
 
-func TestSliceCaptureString(t *testing.T) {
+func TestSliceCaptureStringWithOrigin(t *testing.T) {
 	type Obj struct {
-		Values []string `apc:"$'ha'*"`
+		OriginRange apc.OriginRange
+		Values      []string `apc:"$'ha'*"`
 	}
 
 	parser := BuildParser[Obj](WithDefaultBuildOptions[rune](), true)
@@ -32,6 +33,18 @@ func TestSliceCaptureString(t *testing.T) {
 	node, err := apc.Parse[rune](ctx, parser, apc.DefaultParseConfig)
 	assert.NoError(t, err)
 	assert.Equal(t, &Obj{
+		OriginRange: apc.OriginRange{
+			Start: apc.Origin{
+				Name:    testOriginName,
+				LineNum: 1,
+				ColNum:  1,
+			},
+			End: apc.Origin{
+				Name:    testOriginName,
+				LineNum: 1,
+				ColNum:  11,
+			},
+		},
 		Values: []string{"ha", "ha", "ha", "ha"},
 	}, node)
 }
