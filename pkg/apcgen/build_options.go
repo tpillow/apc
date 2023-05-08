@@ -28,6 +28,7 @@ func WithParserOption[CT any](name string, parser apc.Parser[CT, any]) BuildOpti
 		if _, has := opts.ProvidedParsers[name]; has {
 			panic(fmt.Sprintf("cannot use WithParserOption: name '%v' already specified", name))
 		}
+		fmt.Printf("DEBUG added parser option: %v\n", name)
 		opts.ProvidedParsers[name] = parser
 	}
 }
