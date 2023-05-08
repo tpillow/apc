@@ -181,7 +181,13 @@ func valueSetFieldOrAppendKind(rawVal any, valKind reflect.Kind, field reflect.V
 				field.SetString(val)
 			}
 		default:
-			panicUnsettable(rawVal, "to string")
+			strVal, ok := val.(string)
+			if !ok {
+				strVal = fmt.Sprintf("%v", val)
+			}
+			if maybeAppendValToSliceTrueIfNot(strVal) {
+				field.SetString(strVal)
+			}
 		}
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		switch val := rawVal.(type) {
