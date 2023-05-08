@@ -1,6 +1,9 @@
 package apc
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
 // Parses one or more whitespace characters and returns the string result.
 var WhitespaceParser = Named("whitespace", Regex("\\s+"))
@@ -29,6 +32,26 @@ var IdentifierParser = Named("identifier", Regex("[a-zA-Z_][a-zA-Z_0-9]*"))
 // Parses "true" and "false" literals into a boolean and returns
 // the boolean result.
 var BoolParser = Named("boolean", Any(Bind(ExactStr("true"), true), Bind(ExactStr("false"), false)))
+
+// Parses int and floating point numbers and returns a int64 or float64 result.
+// May be preceded with '+' or '-'.
+var IntOrFloatParser = Named("int or float",
+	Map(
+		Regex("[+\\-]?\\d+(\\.\\d+)?"),
+		func(node string) any {
+			if strings.ContainsAny(node, ".") {
+				val, err := strconv.ParseFloat(node, 64)
+				if err != nil {
+					panic(err)
+				}
+				return val
+			}
+			val, err := strconv.ParseInt(node, 10, 64)
+			if err != nil {
+				panic(err)
+			}
+			return val
+		}))
 
 // Parses floating point numbers and returns a float64 result.
 // May be preceded with '+' or '-'.
