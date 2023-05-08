@@ -7,10 +7,11 @@ import (
 	"github.com/tpillow/apc/pkg/apc"
 )
 
-func TestParserCaptureStringAndRegex(t *testing.T) {
+func TestParserCaptureStringAndRegexBadOriginRange(t *testing.T) {
 	type Person struct {
-		Name string `apc:"'person' $regex('[a-zA-Z]+')"`
-		Age  string `apc:"$'29'"`
+		OriginRange string // wrong type, should not be set
+		Name        string `apc:"'person' $regex('[a-zA-Z]+')"`
+		Age         string `apc:"$'29'"`
 	}
 
 	parser := BuildParser[Person](WithDefaultBuildOptions[rune](), true)
@@ -18,7 +19,7 @@ func TestParserCaptureStringAndRegex(t *testing.T) {
 	ctx := apc.NewStringContext(testOriginName, `person Tommy 29`)
 	node, err := apc.Parse[rune](ctx, parser, apc.DefaultParseConfig)
 	assert.NoError(t, err)
-	assert.Equal(t, &Person{"Tommy", "29"}, node)
+	assert.Equal(t, &Person{"", "Tommy", "29"}, node)
 }
 
 func TestSliceCaptureStringWithOrigin(t *testing.T) {
