@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/kr/pretty"
 	"github.com/tpillow/apc/pkg/apc"
 )
 
@@ -32,7 +33,7 @@ func buildParserForTypeCommon[CT any](buildCtx *buildContext[CT], resultType ref
 		panic(fmt.Sprintf("error parsing parser definition for type '%v': %v\n%v%v",
 			subCtx.resultTypeElemName, err, subCtx.grammarText, locStr))
 	}
-	maybeLog(DebugPrintBuiltNodes, "Built parser of type %v: %v", subCtx.resultTypeElemName, node)
+	maybeLog(DebugPrintBuiltNodes, "Built parser of type %v: %v", subCtx.resultTypeElemName, pretty.Sprint(node))
 	parserPtr := new(apc.Parser[CT, any])
 	buildCtx.parserCache.inProgressParserCache[resultType] = parserPtr
 	parser := buildParserFromRootNodeFunc(buildCtx, subCtx, node)
