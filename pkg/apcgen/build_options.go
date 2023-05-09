@@ -17,6 +17,7 @@ type BuildOptions[CT any] struct {
 func WithDefaultBuildOptions[CT any](buildFuncs ...BuildOptionFunc[CT]) *BuildOptions[CT] {
 	opts := &BuildOptions[CT]{
 		ProvidedParsers: make(map[string]apc.Parser[CT, any]),
+		SkipParsers:     make([]apc.Parser[CT, any], 0),
 	}
 	for _, buildFunc := range buildFuncs {
 		buildFunc(opts)
@@ -41,7 +42,13 @@ func WithSkipParserOption[CT any](parser apc.Parser[CT, any]) BuildOptionFunc[CT
 
 func WithBuildParserOption[RT any]() BuildOptionFunc[rune] {
 	return func(opts *BuildOptions[rune]) {
-		typeName := reflect.TypeOf(new(RT)).Elem().Name()
+		// TODO: make common function
+		typeRef := reflect.TypeOf(*new(RT))
+		typeName := typeRef.Name()
+		if typeRef.Kind() == reflect.Pointer {
+			typeName = typeRef.Elem().Name()
+		}
+
 		var parser apc.Parser[rune, RT]
 		parserRef := apc.Ref(&parser)
 		WithParserOption(typeName, apc.CastToAny(parserRef))(opts)
@@ -51,7 +58,13 @@ func WithBuildParserOption[RT any]() BuildOptionFunc[rune] {
 
 func WithBuildTokenizedParserOption[RT any]() BuildOptionFunc[apc.Token] {
 	return func(opts *BuildOptions[apc.Token]) {
-		typeName := reflect.TypeOf(new(RT)).Elem().Name()
+		// TODO: make common function
+		typeRef := reflect.TypeOf(*new(RT))
+		typeName := typeRef.Name()
+		if typeRef.Kind() == reflect.Pointer {
+			typeName = typeRef.Elem().Name()
+		}
+
 		var parser apc.Parser[apc.Token, RT]
 		parserRef := apc.Ref(&parser)
 		WithParserOption(typeName, apc.CastToAny(parserRef))(opts)
