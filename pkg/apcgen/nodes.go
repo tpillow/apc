@@ -1,5 +1,7 @@
 package apcgen
 
+import "github.com/tpillow/apc/pkg/apc"
+
 type Node interface{}
 
 type rootNode struct {
@@ -12,6 +14,11 @@ type providedParserKeyNode struct {
 
 type matchStringNode struct {
 	Value string
+}
+
+type matchTokenNode struct {
+	TokenType string
+	Value     apc.MaybeValue[string]
 }
 
 type matchRegexNode struct {

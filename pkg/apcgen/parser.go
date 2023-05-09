@@ -8,7 +8,7 @@ import (
 
 /*
 parenExpr = '(' expr ')'
-capturableValue = ( ident | '.' | '<str>' | string('') | regex('') | parenExpr )
+capturableValue = ( ident | '.' | '<str>' | string('') | regex('') | token('type' [, 'val']) | parenExpr )
 valueMaybeCaptured = ( '$'? capturableValue )
 value = valueMaybeCaptured endRangeSpecifier?
 
@@ -78,6 +78,20 @@ var (
 		},
 	)
 
+	builtinMatchStringParser = apc.Map(
+		apc.Seq4(
+			apc.ExactStr("string"),
+			apc.Exact('('),
+			apc.SingleQuotedStringParser,
+			apc.Exact(')'),
+		),
+		func(node *apc.Seq4Node[string, rune, string, rune]) Node {
+			return &matchStringNode{
+				Value: node.Result3,
+			}
+		},
+	)
+
 	builtinLookParser = apc.Map(
 		apc.Seq4(
 			apc.ExactStr("look"),
@@ -92,9 +106,35 @@ var (
 		},
 	)
 
+	builtinMatchTokenParser = apc.Map(
+		apc.Seq5(
+			apc.ExactStr("token"),
+			apc.Exact('('),
+			apc.SingleQuotedStringParser,
+			apc.Maybe(
+				apc.Seq2(
+					apc.Exact(','),
+					apc.SingleQuotedStringParser,
+				),
+			),
+			apc.Exact(')'),
+		),
+		func(node *apc.Seq5Node[string, rune, string, apc.MaybeValue[*apc.Seq2Node[rune, string]], rune]) Node {
+			matchVal := apc.NewNilMaybeValue[string]()
+			if !node.Result4.IsNil() {
+				matchVal = apc.NewMaybeValue(node.Result4.Value().Result2)
+			}
+			return &matchTokenNode{
+				TokenType: node.Result3,
+				Value:     matchVal,
+			}
+		},
+	)
+
 	builtinFuncParser = apc.Any(
 		builtinMatchRegexParser,
 		builtinLookParser,
+		builtinMatchStringParser,
 	)
 
 	capturableValueParser = apc.Any(

@@ -22,9 +22,12 @@ func buildTokenParserFromNode(buildCtx *buildContext[apc.Token], subCtx *buildSu
 	}
 	switch node := rawNode.(type) {
 	case *matchStringNode:
-		colIdx := strings.LastIndex(node.Value, ":")
-		if colIdx <= 0 {
-			// case of 0 == ':' maps to a token type of ':'
+		colIdx := strings.Index(node.Value, ":")
+		if colIdx == 0 {
+			panic(fmt.Sprintf("invalid token 'type' or 'type:value' pair to match token: '%v' "+
+				"(if you intend to match a token type of ':' use the explicit matcher: \"token('<type' [, '<value>'])\")", node.Value))
+		}
+		if colIdx < 0 {
 			return apc.Map(
 				apc.ExactTokenType(apc.TokenType(node.Value)),
 				func(node apc.Token) any {
@@ -37,6 +40,22 @@ func buildTokenParserFromNode(buildCtx *buildContext[apc.Token], subCtx *buildSu
 		}
 		return apc.Map(
 			apc.ExactTokenValue(apc.TokenType(node.Value[:colIdx]), node.Value[colIdx+1:]),
+			func(node apc.Token) any {
+				if node.Value == nil {
+					return node.Type
+				}
+				return node.Value
+			},
+		)
+	case *matchTokenNode:
+		var exactTokParser apc.Parser[apc.Token, apc.Token]
+		if node.Value.IsNil() {
+			exactTokParser = apc.ExactTokenType(apc.TokenType(node.TokenType))
+		} else {
+			exactTokParser = apc.ExactTokenValue(apc.TokenType(node.TokenType), node.Value.Value())
+		}
+		return apc.Map(
+			exactTokParser,
 			func(node apc.Token) any {
 				if node.Value == nil {
 					return node.Type

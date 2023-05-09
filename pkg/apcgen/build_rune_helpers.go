@@ -24,6 +24,8 @@ func buildRuneParserFromNode(buildCtx *buildContext[rune], subCtx *buildSubconte
 		return apc.CastToAny(apc.ExactStr(node.Value))
 	case *matchRegexNode:
 		return apc.CastToAny(apc.Regex(node.Regex))
+	case *matchTokenNode:
+		panic("cannot use 'token' when using a Token context")
 	default:
 		panic(fmt.Sprintf("unknown node to process in buildRuneParserFromNode: %T", rawNode))
 	}
