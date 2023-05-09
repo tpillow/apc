@@ -12,7 +12,7 @@ func BuildSimpleLexer(
 	identifierParser apc.Parser[rune, string],
 	specialIdentifierTokenTypes []apc.TokenType,
 	exactMatchTokenTypes []apc.TokenType,
-	providedParsers map[apc.TokenType]apc.Parser[rune, apc.Token],
+	providedParsers []apc.Parser[rune, apc.Token],
 	skipParsers []apc.Parser[rune, any],
 ) apc.Parser[rune, apc.Token] {
 	sort.Slice(
@@ -74,6 +74,8 @@ func BuildSimpleLexer(
 
 		parsers = append(parsers, exactMatchLexParser)
 	}
+
+	parsers = append(parsers, providedParsers...)
 
 	lexParser := apc.Named(
 		"valid token",
