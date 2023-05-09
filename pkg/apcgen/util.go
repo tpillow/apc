@@ -1,6 +1,9 @@
 package apcgen
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+)
 
 // Enable various debug prints
 var (
@@ -28,4 +31,9 @@ func (ir intRange) String() string {
 type keyValuePair[KT, VT any] struct {
 	key   KT
 	value VT
+}
+
+func reflectTypeOf[T any]() reflect.Type {
+	var tmp T
+	return reflect.TypeOf(tmp)
 }

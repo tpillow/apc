@@ -74,6 +74,28 @@ func TestSliceCaptureStruct(t *testing.T) {
 	}, node)
 }
 
+func TestCapRefValTest(t *testing.T) {
+	type NameObj struct {
+		Name string `apc:"$regex('[a-zA-Z0-9]+')"`
+	}
+	type Obj struct {
+		Name1 *NameObj `apc:"$."`
+		Name2 NameObj  `apc:"$."`
+	}
+
+	parser := BuildParser[Obj](WithDefaultBuildOptions(
+		WithSkipParserOption(apc.CastToAny(apc.WhitespaceParser)),
+	))
+
+	ctx := apc.NewStringContext(testOriginName, `Name1 Name2`)
+	node, err := apc.Parse[rune](ctx, parser, apc.DefaultParseConfig)
+	assert.NoError(t, err)
+	assert.Equal(t, Obj{
+		Name1: &NameObj{Name: "Name1"},
+		Name2: NameObj{Name: "Name2"},
+	}, node)
+}
+
 func TestParserIntrinsicConversions(t *testing.T) {
 	type Obj struct {
 		StrVal string `apc:"$'strVal'"`

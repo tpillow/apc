@@ -2,7 +2,6 @@ package apcgen
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/tpillow/apc/pkg/apc"
 )
@@ -42,32 +41,20 @@ func WithSkipParserOption[CT any](parser apc.Parser[CT, any]) BuildOptionFunc[CT
 
 func WithBuildParserOption[RT any]() BuildOptionFunc[rune] {
 	return func(opts *BuildOptions[rune]) {
-		// TODO: make common function
-		typeRef := reflect.TypeOf(*new(RT))
-		typeName := typeRef.Name()
-		if typeRef.Kind() == reflect.Pointer {
-			typeName = typeRef.Elem().Name()
-		}
-
+		resultStructType := mustGetResultStructTypeFromType(reflectTypeOf[RT]())
 		var parser apc.Parser[rune, RT]
 		parserRef := apc.Ref(&parser)
-		WithParserOption(typeName, apc.CastToAny(parserRef))(opts)
+		WithParserOption(resultStructType.Name(), apc.CastToAny(parserRef))(opts)
 		parser = BuildParser[RT](opts)
 	}
 }
 
 func WithBuildTokenizedParserOption[RT any]() BuildOptionFunc[apc.Token] {
 	return func(opts *BuildOptions[apc.Token]) {
-		// TODO: make common function
-		typeRef := reflect.TypeOf(*new(RT))
-		typeName := typeRef.Name()
-		if typeRef.Kind() == reflect.Pointer {
-			typeName = typeRef.Elem().Name()
-		}
-
+		resultStructType := mustGetResultStructTypeFromType(reflectTypeOf[RT]())
 		var parser apc.Parser[apc.Token, RT]
 		parserRef := apc.Ref(&parser)
-		WithParserOption(typeName, apc.CastToAny(parserRef))(opts)
+		WithParserOption(resultStructType.Name(), apc.CastToAny(parserRef))(opts)
 		parser = BuildTokenizedParser[RT](opts)
 	}
 }

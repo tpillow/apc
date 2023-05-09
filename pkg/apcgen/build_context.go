@@ -42,20 +42,33 @@ func newBuildContext[CT any](parserCache parserCache[CT], providedParsers map[st
 
 type buildSubcontext[CT any] struct {
 	resultType                reflect.Type
-	resultTypeElemName        string
+	resultStructType          reflect.Type
 	grammarText               string
 	minCaptureIdxToFieldNames []keyValuePair[int, string]
+}
+
+func mustGetResultStructTypeFromType(resultType reflect.Type) reflect.Type {
+	switch resultType.Kind() {
+	case reflect.Pointer:
+		resultType = resultType.Elem()
+		if resultType.Kind() != reflect.Struct {
+			panic(fmt.Sprintf("the result type must be a struct or pointer to a struct; instead got: pointer to %v", resultType.Kind()))
+		}
+		return resultType
+	case reflect.Struct:
+		return resultType
+	default:
+		panic(fmt.Sprintf("the result type must be a struct or pointer to a struct; instead got: %v", resultType.Kind()))
+	}
 }
 
 func newBuildSubContextFromType[CT any](resultType reflect.Type) *buildSubcontext[CT] {
 	var sb strings.Builder
 	minCaptureIdxToFieldNames := make([]keyValuePair[int, string], 0)
+	resultStructType := mustGetResultStructTypeFromType(resultType)
 
-	assertPointerToStructType(resultType)
-	resultElemType := resultType.Elem()
-
-	for i := 0; i < resultElemType.NumField(); i++ {
-		field := resultElemType.Field(i)
+	for i := 0; i < resultStructType.NumField(); i++ {
+		field := resultStructType.Field(i)
 		apcTag := field.Tag.Get("apc")
 		if apcTag == "" {
 			continue
@@ -69,7 +82,7 @@ func newBuildSubContextFromType[CT any](resultType reflect.Type) *buildSubcontex
 
 	return &buildSubcontext[CT]{
 		resultType:                resultType,
-		resultTypeElemName:        resultElemType.Name(),
+		resultStructType:          resultStructType,
 		grammarText:               sb.String(),
 		minCaptureIdxToFieldNames: minCaptureIdxToFieldNames,
 	}
@@ -90,18 +103,5 @@ func (gc *buildSubcontext[CT]) fieldNameFromCaptureIdx(idx int) string {
 		}
 	}
 	panic(fmt.Sprintf("could not find field name in struct '%v' relating to capture index %v known ranges were: %v",
-		gc.resultTypeElemName, idx, gc.minCaptureIdxToFieldNames))
-}
-
-func assertPointerToStructType(resultType reflect.Type) {
-	// Sanity checks for return type assumptions
-	if resultType.Kind() != reflect.Pointer {
-		// TODO: allow value types
-		panic(fmt.Sprintf("currently apcgen can only build parsers that are a pointer type; instead got: %v", resultType.Kind()))
-	}
-
-	resultTypeElem := resultType.Elem()
-	if resultTypeElem.Kind() != reflect.Struct {
-		panic(fmt.Sprintf("the result type must be a struct; instead got: %v", resultTypeElem.Kind()))
-	}
+		gc.resultStructType.Name(), idx, gc.minCaptureIdxToFieldNames))
 }

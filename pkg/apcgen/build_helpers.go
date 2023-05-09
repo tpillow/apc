@@ -10,10 +10,6 @@ import (
 	"github.com/tpillow/apc/pkg/apc"
 )
 
-var (
-	orgRangeRefType = reflect.TypeOf(*new(apc.OriginRange))
-)
-
 func wrapWithSkipParsers[CT, RT any](parser apc.Parser[CT, RT], skipParsers []apc.Parser[CT, any]) apc.Parser[CT, RT] {
 	for _, skipParser := range skipParsers {
 		parser = apc.Skip(skipParser, parser)
@@ -30,19 +26,24 @@ func buildParserForTypeCommon[CT any](buildCtx *buildContext[CT], resultType ref
 
 	// Create subcontext
 	subCtx := newBuildSubContextFromType[CT](resultType)
-	node, err := parseFull(subCtx.resultTypeElemName, subCtx.grammarText, false)
+
+	// Parse the grammar of the result type struct
+	node, err := parseFull(subCtx.resultStructType.Name(), subCtx.grammarText, false)
 	if err != nil {
 		locStr := ""
 		if parseErr, ok := err.(*apc.ParseError); ok {
 			locStr = "\n" + strings.Repeat(" ", parseErr.Origin.ColNum-1) + "^"
 		}
 		panic(fmt.Sprintf("error parsing parser definition for type '%v': %v\n%v%v",
-			subCtx.resultTypeElemName, err, subCtx.grammarText, locStr))
+			subCtx.resultStructType.Name(), err, subCtx.grammarText, locStr))
 	}
-	maybeLog(DebugPrintBuiltNodes, "Built parser of type %v: %v", subCtx.resultTypeElemName, pretty.Sprint(node))
+	// Debug print the built parser
+	maybeLog(DebugPrintBuiltNodes, "Built parser of type %v: %v", subCtx.resultStructType.Name(), pretty.Sprint(node))
 
+	// Log that this result type parser is being built
 	parserPtr := new(apc.Parser[CT, any])
 	buildCtx.parserCache[resultType] = parserPtr
+	// Actually build the parser and set it
 	*parserPtr = buildParserFromRootNodeFunc(buildCtx, subCtx, node)
 	return *parserPtr
 }
@@ -51,27 +52,36 @@ func buildParserFromRootNodeCommon[CT any](buildCtx *buildContext[CT], subCtx *b
 	buildParserFromNodeFunc func(*buildContext[CT], *buildSubcontext[CT], Node) apc.Parser[CT, any]) apc.Parser[CT, any] {
 	rootParser := buildParserFromNodeFunc(buildCtx, subCtx, node.Child)
 	return apc.Named(
-		subCtx.resultTypeElemName,
+		subCtx.resultStructType.Name(),
 		apc.MapDetailed(
 			rootParser,
 			func(parseNode any, orgRange apc.OriginRange) (any, error) {
-				resultElem := subCtx.resultType.Elem()
-				result := reflect.New(resultElem)
-				setCaptureHelper(subCtx, result, parseNode)
-				if orgRangeField, ok := resultElem.FieldByName("OriginRange"); ok && orgRangeField.Type == orgRangeRefType {
-					result.Elem().FieldByName("OriginRange").Set(reflect.ValueOf(orgRange))
+				// Set fields of the resulting populated struct
+				resultPtrVal := reflect.New(subCtx.resultStructType)
+				setCaptureHelper(subCtx, resultPtrVal, parseNode)
+
+				// If the struct has an "OriginRange" field of type apc.OriginRange, set the origin range that matched
+				if orgRangeField, ok := subCtx.resultStructType.FieldByName("OriginRange"); ok && orgRangeField.Type == reflectTypeOf[apc.OriginRange]() {
+					resultPtrVal.Elem().FieldByName("OriginRange").Set(reflect.ValueOf(orgRange))
 				}
-				return result.Interface(), nil
+
+				// Return the actual value
+				switch subCtx.resultType.Kind() {
+				case reflect.Pointer:
+					return resultPtrVal.Interface(), nil
+				default:
+					return reflect.Indirect(resultPtrVal).Interface(), nil
+				}
 			},
 		),
 	)
 }
 
-func setCaptureHelper[CT any](subCtx *buildSubcontext[CT], result reflect.Value, rawVal any) {
+func setCaptureHelper[CT any](subCtx *buildSubcontext[CT], resultPtrVal reflect.Value, rawVal any) {
 	if arrNode, ok := rawVal.([]any); ok {
 		// Recursively process capture results
 		for _, elem := range arrNode {
-			setCaptureHelper(subCtx, result, elem)
+			setCaptureHelper(subCtx, resultPtrVal, elem)
 		}
 		return
 	}
@@ -82,9 +92,9 @@ func setCaptureHelper[CT any](subCtx *buildSubcontext[CT], result reflect.Value,
 	}
 
 	fieldName := subCtx.fieldNameFromCaptureIdx(capNode.inputIndex)
-	field := reflect.Indirect(result).FieldByName(fieldName)
+	field := reflect.Indirect(resultPtrVal).FieldByName(fieldName)
 	if !field.IsValid() {
-		panic(fmt.Sprintf("field '%v' (%v) not found on type '%v' via reflection", fieldName, field.Kind(), subCtx.resultTypeElemName))
+		panic(fmt.Sprintf("field '%v' (%v) not found on type '%v' via reflection", fieldName, field.Kind(), subCtx.resultStructType.Name()))
 	}
 
 	switch field.Kind() {
@@ -93,13 +103,13 @@ func setCaptureHelper[CT any](subCtx *buildSubcontext[CT], result reflect.Value,
 		switch capVal := capNode.value.(type) {
 		case []any:
 			for _, valElem := range capVal {
-				valueSetFieldOrAppendKind(valElem, fieldElemKind, field)
+				valueSetFieldOrAppendKind(valElem, fieldElemKind, fieldName, field)
 			}
 		default:
-			valueSetFieldOrAppendKind(capVal, fieldElemKind, field)
+			valueSetFieldOrAppendKind(capVal, fieldElemKind, fieldName, field)
 		}
 	default:
-		valueSetFieldOrAppendKind(capNode.value, field.Kind(), field)
+		valueSetFieldOrAppendKind(capNode.value, field.Kind(), fieldName, field)
 	}
 }
 
@@ -131,9 +141,9 @@ func buildParserFromNodeCommon[CT any](buildCtx *buildContext[CT], subCtx *build
 	case *inferNode:
 		// TODO: if slice, use type of slice
 		fieldName := subCtx.fieldNameFromCaptureIdx(node.InputIndex)
-		field, ok := subCtx.resultType.Elem().FieldByName(fieldName)
+		field, ok := subCtx.resultStructType.FieldByName(fieldName)
 		if !ok {
-			panic(fmt.Sprintf("cannot infer parser: field '%v' not found in type '%v'", fieldName, subCtx.resultTypeElemName))
+			panic(fmt.Sprintf("cannot infer parser: field '%v' not found in type '%v'", fieldName, subCtx.resultStructType.Name()))
 		}
 		if field.Type.Kind() == reflect.Slice {
 			return buildParserForTypeFunc(buildCtx, field.Type.Elem())
@@ -171,7 +181,7 @@ func buildParserFromNodeCommon[CT any](buildCtx *buildContext[CT], subCtx *build
 	}
 }
 
-func valueSetFieldOrAppendKind(rawVal any, valKind reflect.Kind, field reflect.Value) {
+func valueSetFieldOrAppendKind(rawVal any, valKind reflect.Kind, fieldName string, field reflect.Value) {
 	maybeAppendValToSliceTrueIfNot := func(val any) bool {
 		if field.Kind() != reflect.Slice {
 			return true
@@ -181,7 +191,7 @@ func valueSetFieldOrAppendKind(rawVal any, valKind reflect.Kind, field reflect.V
 	}
 
 	panicUnsettable := func(val any, exp string) {
-		panic(fmt.Sprintf("cannot set field to value '%v' (type %T): cannot convert %v", val, val, exp))
+		panic(fmt.Sprintf("cannot set field '%v' to value '%v' (type %T): cannot convert %v", fieldName, val, val, exp))
 	}
 
 	switch valKind {
@@ -274,7 +284,7 @@ func valueSetFieldOrAppendKind(rawVal any, valKind reflect.Kind, field reflect.V
 		default:
 			field.SetBool(val != reflect.Zero(reflect.TypeOf(val)).Interface())
 		}
-	case reflect.Pointer, reflect.Interface:
+	case reflect.Pointer, reflect.Interface, reflect.Struct:
 		switch val := rawVal.(type) {
 		case apc.MaybeValue[any]:
 			if !val.IsNil() {
