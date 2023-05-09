@@ -86,6 +86,19 @@ func setCaptureHelper[CT any](subCtx *buildSubcontext[CT], resultPtrVal reflect.
 		return
 	}
 
+	// TODO: validate this...
+	if maybeNode, ok := rawVal.(apc.MaybeValue[[]any]); ok {
+		if !maybeNode.IsNil() {
+			for _, elem := range maybeNode.Value() {
+				setCaptureHelper(subCtx, resultPtrVal, elem)
+			}
+		}
+	} else if maybeNode, ok := rawVal.(apc.MaybeValue[any]); ok {
+		if !maybeNode.IsNil() {
+			setCaptureHelper(subCtx, resultPtrVal, maybeNode.Value())
+		}
+	}
+
 	capNode, ok := rawVal.(captureResult)
 	if !ok {
 		return
