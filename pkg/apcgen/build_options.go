@@ -42,7 +42,7 @@ func WithSkipParserOption[CT any](parser apc.Parser[CT, any]) BuildOptionFunc[CT
 func WithBuildParserOption[RT any]() BuildOptionFunc[rune] {
 	return func(opts *BuildOptions[rune]) {
 		typeName := reflect.TypeOf(new(RT)).Elem().Name()
-		var parser apc.Parser[rune, *RT]
+		var parser apc.Parser[rune, RT]
 		parserRef := apc.Ref(&parser)
 		WithParserOption(typeName, apc.CastToAny(parserRef))(opts)
 		parser = BuildParser[RT](opts)
@@ -52,7 +52,7 @@ func WithBuildParserOption[RT any]() BuildOptionFunc[rune] {
 func WithBuildTokenizedParserOption[RT any]() BuildOptionFunc[apc.Token] {
 	return func(opts *BuildOptions[apc.Token]) {
 		typeName := reflect.TypeOf(new(RT)).Elem().Name()
-		var parser apc.Parser[apc.Token, *RT]
+		var parser apc.Parser[apc.Token, RT]
 		parserRef := apc.Ref(&parser)
 		WithParserOption(typeName, apc.CastToAny(parserRef))(opts)
 		parser = BuildTokenizedParser[RT](opts)

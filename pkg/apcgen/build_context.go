@@ -96,11 +96,12 @@ func (gc *buildSubcontext[CT]) fieldNameFromCaptureIdx(idx int) string {
 func assertPointerToStructType(resultType reflect.Type) {
 	// Sanity checks for return type assumptions
 	if resultType.Kind() != reflect.Pointer {
-		panic(fmt.Sprintf("the result type must be a pointer type; instead got: %v", resultType.Kind()))
+		// TODO: allow value types
+		panic(fmt.Sprintf("currently apcgen can only build parsers that are a pointer type; instead got: %v", resultType.Kind()))
 	}
 
 	resultTypeElem := resultType.Elem()
 	if resultTypeElem.Kind() != reflect.Struct {
-		panic(fmt.Sprintf("the result type must be a pointer to a struct; instead got pointer to: %v", resultTypeElem.Kind()))
+		panic(fmt.Sprintf("the result type must be a struct; instead got: %v", resultTypeElem.Kind()))
 	}
 }

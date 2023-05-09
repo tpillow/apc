@@ -14,7 +14,7 @@ var (
 	orgRangeRefType = reflect.TypeOf(*new(apc.OriginRange))
 )
 
-func wrapWithSkipParsers[CT, RT any](parser apc.Parser[CT, *RT], skipParsers []apc.Parser[CT, any]) apc.Parser[CT, *RT] {
+func wrapWithSkipParsers[CT, RT any](parser apc.Parser[CT, RT], skipParsers []apc.Parser[CT, any]) apc.Parser[CT, RT] {
 	for _, skipParser := range skipParsers {
 		parser = apc.Skip(skipParser, parser)
 	}

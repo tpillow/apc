@@ -14,7 +14,7 @@ func TestParserCaptureStringAndRegexBadOriginRange(t *testing.T) {
 		Age         string `apc:"$'29'"`
 	}
 
-	parser := BuildParser[Person](WithDefaultBuildOptions[rune](
+	parser := BuildParser[*Person](WithDefaultBuildOptions(
 		WithSkipParserOption(apc.CastToAny(apc.WhitespaceParser)),
 	))
 
@@ -30,7 +30,7 @@ func TestSliceCaptureStringWithOrigin(t *testing.T) {
 		Values      []string `apc:"$'ha'*"`
 	}
 
-	parser := BuildParser[Obj](WithDefaultBuildOptions[rune](
+	parser := BuildParser[*Obj](WithDefaultBuildOptions(
 		WithSkipParserOption(apc.CastToAny(apc.WhitespaceParser)),
 	))
 
@@ -62,7 +62,7 @@ func TestSliceCaptureStruct(t *testing.T) {
 		NameObjs []*NameObj `apc:"$.*"`
 	}
 
-	parser := BuildParser[Obj](WithDefaultBuildOptions[rune](
+	parser := BuildParser[*Obj](WithDefaultBuildOptions(
 		WithSkipParserOption(apc.CastToAny(apc.WhitespaceParser)),
 	))
 
@@ -98,7 +98,7 @@ func TestParserIntrinsicConversions(t *testing.T) {
 		BoolFromMaybeT bool `apc:"$'maybe'?"`
 		BoolFromMaybeF bool `apc:"$'nonexistent'?"`
 	}
-	parser := BuildParser[Obj](WithDefaultBuildOptions[rune](
+	parser := BuildParser[*Obj](WithDefaultBuildOptions(
 		WithSkipParserOption(apc.CastToAny(apc.WhitespaceParser)),
 	))
 
