@@ -131,11 +131,28 @@ var (
 		},
 	)
 
+	builtinNamedParser = apc.Map(
+		apc.Seq5(
+			apc.ExactStr("named"),
+			apc.Exact('('),
+			apc.SingleQuotedStringParser,
+			exprParser,
+			apc.Exact(')'),
+		),
+		func(node *apc.Seq5Node[string, rune, string, Node, rune]) Node {
+			return &namedNode{
+				Name:  node.Result3,
+				Child: node.Result4,
+			}
+		},
+	)
+
 	builtinFuncParser = apc.Any(
 		builtinMatchRegexParser,
 		builtinLookParser,
 		builtinMatchStringParser,
 		builtinMatchTokenParser,
+		builtinNamedParser,
 	)
 
 	capturableValueParser = apc.Any(

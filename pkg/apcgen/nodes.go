@@ -21,6 +21,11 @@ type matchTokenNode struct {
 	Value     apc.MaybeValue[string]
 }
 
+type namedNode struct {
+	Name  string
+	Child Node
+}
+
 type matchRegexNode struct {
 	Regex string
 }
