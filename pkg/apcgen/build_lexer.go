@@ -8,35 +8,35 @@ import (
 )
 
 type SimpleLexerBuildOptions struct {
-	identifierTokenType         apc.TokenType
-	identifierParser            apc.Parser[rune, string]
-	specialIdentifierTokenTypes []apc.TokenType
-	exactMatchTokenTypes        []apc.TokenType
-	providedParsers             []apc.Parser[rune, apc.Token]
-	skipParsers                 []apc.Parser[rune, any]
+	IdentifierTokenType         apc.TokenType
+	IdentifierParser            apc.Parser[rune, string]
+	SpecialIdentifierTokenTypes []apc.TokenType
+	ExactMatchTokenTypes        []apc.TokenType
+	ProvidedParsers             []apc.Parser[rune, apc.Token]
+	SkipParsers                 []apc.Parser[rune, any]
 }
 
 func BuildSimpleLexer(
 	opts SimpleLexerBuildOptions,
 ) apc.Parser[rune, apc.Token] {
 	sort.Slice(
-		opts.exactMatchTokenTypes,
+		opts.ExactMatchTokenTypes,
 		func(i int, j int) bool {
-			return len(opts.exactMatchTokenTypes[i]) > len(opts.exactMatchTokenTypes[j])
+			return len(opts.ExactMatchTokenTypes[i]) > len(opts.ExactMatchTokenTypes[j])
 		},
 	)
 	exactMatchTokenLookLen := 0
-	if len(opts.exactMatchTokenTypes) > 0 {
-		exactMatchTokenLookLen = len(opts.exactMatchTokenTypes[0])
+	if len(opts.ExactMatchTokenTypes) > 0 {
+		exactMatchTokenLookLen = len(opts.ExactMatchTokenTypes[0])
 	}
 
 	specialIdentifierTokenTypeMap := map[string]apc.TokenType{}
-	for _, tokType := range opts.specialIdentifierTokenTypes {
+	for _, tokType := range opts.SpecialIdentifierTokenTypes {
 		specialIdentifierTokenTypeMap[string(tokType)] = tokType
 	}
 
 	identLexParser := apc.Map(
-		opts.identifierParser,
+		opts.IdentifierParser,
 		func(node string) apc.Token {
 			if tokType, ok := specialIdentifierTokenTypeMap[node]; ok {
 				return apc.Token{
@@ -45,7 +45,7 @@ func BuildSimpleLexer(
 				}
 			}
 			return apc.Token{
-				Type:  opts.identifierTokenType,
+				Type:  opts.IdentifierTokenType,
 				Value: node,
 			}
 		},
@@ -53,14 +53,14 @@ func BuildSimpleLexer(
 
 	parsers := []apc.Parser[rune, apc.Token]{identLexParser}
 
-	if len(opts.exactMatchTokenTypes) > 0 {
+	if len(opts.ExactMatchTokenTypes) > 0 {
 		exactMatchLexParser := func(ctx apc.Context[rune]) (apc.Token, error) {
 			peekRunes, err := ctx.Peek(0, exactMatchTokenLookLen)
 			if err != nil {
 				return apc.Token{}, err
 			}
 			peek := string(peekRunes)
-			for _, tokType := range opts.exactMatchTokenTypes {
+			for _, tokType := range opts.ExactMatchTokenTypes {
 				tokTypeStr := string(tokType)
 				if strings.HasPrefix(peek, tokTypeStr) {
 					_, err := ctx.Consume(len(tokTypeStr))
@@ -79,7 +79,7 @@ func BuildSimpleLexer(
 		parsers = append(parsers, exactMatchLexParser)
 	}
 
-	parsers = append(parsers, opts.providedParsers...)
+	parsers = append(parsers, opts.ProvidedParsers...)
 
 	lexParser := apc.Named(
 		"valid token",
@@ -87,6 +87,6 @@ func BuildSimpleLexer(
 			parsers...,
 		),
 	)
-	lexParser = wrapWithSkipParsers(lexParser, opts.skipParsers)
+	lexParser = wrapWithSkipParsers(lexParser, opts.SkipParsers)
 	return lexParser
 }
