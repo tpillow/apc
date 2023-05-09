@@ -14,6 +14,13 @@ var (
 	orgRangeRefType = reflect.TypeOf(*new(apc.OriginRange))
 )
 
+func wrapWithSkipParsers[CT, RT any](parser apc.Parser[CT, *RT], skipParsers []apc.Parser[CT, any]) apc.Parser[CT, *RT] {
+	for _, skipParser := range skipParsers {
+		parser = apc.Skip(skipParser, parser)
+	}
+	return parser
+}
+
 func buildParserForTypeCommon[CT any](buildCtx *buildContext[CT], resultType reflect.Type,
 	buildParserFromRootNodeFunc func(*buildContext[CT], *buildSubcontext[CT], *rootNode) apc.Parser[CT, any]) apc.Parser[CT, any] {
 	// Return cached parser if available
