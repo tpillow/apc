@@ -135,6 +135,7 @@ var (
 		builtinMatchRegexParser,
 		builtinLookParser,
 		builtinMatchStringParser,
+		builtinMatchTokenParser,
 	)
 
 	capturableValueParser = apc.Any(
