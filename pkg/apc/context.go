@@ -53,4 +53,6 @@ type Context[CT any] interface {
 	DebugStart(format string, formatArgs ...interface{})
 	DebugPrint(format string, formatArgs ...interface{})
 	DebugEnd(format string, formatArgs ...interface{})
+	SetUserData(data any)
+	GetUserData() any
 }

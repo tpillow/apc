@@ -32,6 +32,8 @@ type ReaderContext[CT any] struct {
 	debugIndentation string
 	// Whether or not to enable debugging.
 	DebugParsers bool
+	// User data storage
+	userData any
 }
 
 // Returns a *ReaderContext[CT] with the given reader.
@@ -47,6 +49,7 @@ func NewReaderContext[CT any](reader ReaderWithOrigin[CT]) *ReaderContext[CT] {
 		lookOffset:       InvalidLookOffset,
 		debugIndentation: "",
 		DebugParsers:     false,
+		userData:         nil,
 	}
 }
 
@@ -281,4 +284,12 @@ func (ctx *ReaderContext[CT]) DebugEnd(format string, formatArgs ...interface{})
 	}
 	ctx.debugIndentation = ctx.debugIndentation[:len(ctx.debugIndentation)-2]
 	fmt.Printf("%vEND: %v @ %v\n", ctx.debugIndentation, fmt.Sprintf(format, formatArgs...), ctx.GetCurOrigin())
+}
+
+func (ctx *ReaderContext[CT]) SetUserData(data any) {
+	ctx.userData = data
+}
+
+func (ctx *ReaderContext[CT]) GetUserData() any {
+	return ctx.userData
 }
