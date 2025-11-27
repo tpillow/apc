@@ -1,44 +1,32 @@
-// Package apc provides a minimalist parser combinator library.
 package apc
 
-// A sane default for ParseConfig.
-var DefaultParseConfig = ParseConfig{
-	MustParseToEOF: true,
+type ParserFunc[IT, OT any] func(ctx Context[IT]) (OT, error)
+
+type Parser[IT, OT any] interface {
+	Parse(ctx Context[IT]) (OT, error)
 }
 
-// Parser[CT, T] represents a parser that takes a Context[CT] and returns a result of type T or an error.
-//
-// Should return a nil error if the result was parsed and consumed.
-// Should return a ParseError error if parsing failed, and no input was consumed.
-// Should return a ParseErrorConsumed error if parsing failed, but some input was consumed.
-// Any other error type may be returned, and is treated like ParseErrorConsumed.
-//
-// Any terminal parser (such as Exact or Regex) should call ctx.RunSkipParsers first.
-type Parser[CT, T any] func(ctx Context[CT]) (T, error)
-
-// ParseConfig contains settings that can be passed to the Parse function.
-type ParseConfig struct {
-	// If true, parsing will fail if there is remaining input in the Context after parsing.
-	MustParseToEOF bool
+type callbackParser[IT, OT any] struct {
+	callback ParserFunc[IT, OT]
 }
 
-// Executes the provided parser using the given context, first applying the parseConfig.
-func Parse[CT, T any](ctx Context[CT], parser Parser[CT, T], parseConfig ParseConfig) (T, error) {
-	node, err := parser(ctx)
-	if err != nil {
-		return zeroVal[T](), err
+func (p callbackParser[IT, OT]) Parse(ctx Context[IT]) (OT, error) {
+	return p.callback(ctx)
+}
+
+func NewCallbackParser[IT, OT any](callback ParserFunc[IT, OT]) Parser[IT, OT] {
+	return callbackParser[IT, OT]{
+		callback: callback,
 	}
+}
 
-	if parseConfig.MustParseToEOF {
-		err := ctx.RunSkipParsers()
-		if err != nil {
-			return zeroVal[T](), err
-		}
+type ParserRef[IT, OT any] struct {
+	Parser Parser[IT, OT]
+}
 
-		if _, err := ctx.Peek(0, 1); err == nil {
-			return zeroVal[T](), ParseErrExpectedButGotNext(ctx, "EOF", nil)
-		}
+func (p ParserRef[IT, OT]) Parse(ctx Context[IT]) (OT, error) {
+	if p.Parser == nil {
+		panic("cannot call Parse on a ParserRef that does not have its Parser attribute set")
 	}
-
-	return node, nil
+	return p.Parser.Parse(ctx)
 }

@@ -1,58 +1,83 @@
 package apc
 
-// Value of an invalid look offset.
-const InvalidLookOffset int = -1
+type Context[IT any] interface {
+	CurIndex() int
+	TotalLength() int
+	Peek() IT
+	PeekN(count int) []IT
+	Pop() IT
+	PopN(count int) []IT
+	Rewind(count int)
+	IsEof() bool
+}
 
-// Context[CT] holds the current state of some input parsing stream
-// of type CT, and provides methods to peek the input stream, consume it,
-// get the current Origin of the input stream, etc.
-//
-// Also allows for parsers to be added/removed that will skip matched
-// input.
-type Context[CT any] interface {
-	// Returns a []CT of num elements beginning at offset without consuming
-	// the elements.
-	// The offset is a non-negative value relative to the next unconsumed
-	// element in the input stream.
-	//
-	// If the end of input is reached, an EOFError is returned along
-	// with any peeked elements (which may be less than num elements in length
-	// if end of input has been reached).
-	Peek(offset int, num int) ([]CT, error)
-	// Advances the input stream by num elements, returning the consumed
-	// elements.
-	//
-	// If the end of input is reached, an EOFError is returned along
-	// with any consumed elements (which may be less than num elements in length
-	// if end of input has been reached).
-	Consume(num int) ([]CT, error)
-	// Returns an Origin representing the next unconsumed element in the
-	// input stream.
-	GetCurOrigin() Origin
-	// Adds the parser to the list of parsers that attempt to run when
-	// RunSkipParsers is called. If the parser matches, its result will
-	// be discarded. Duplicate parsers cannot be added.
-	AddSkipParser(parser Parser[CT, any])
-	// Removes the parser from the list of parsers that attempt to run
-	// when RunSkipParsers is called. If the parser has not been added,
-	// the function panics.
-	RemoveSkipParser(parser Parser[CT, any])
-	// Attempts to run any added skip parsers as long as one of the parsers
-	// successfully matches. The results of any matched parsers is discarded.
-	// Should only return nil or non-ParseError errors.
-	RunSkipParsers() error
-	// Sets the name of all subsequent parsers.
-	SetCurParserName(name string)
-	// Gets the current name of parsers.
-	GetCurParserName() string
-	// Sets the look offset value.
-	SetLookOffset(val int)
-	// Gets the look offset value.
-	GetLookOffset() int
-	// TODO: document
-	DebugStart(format string, formatArgs ...interface{})
-	DebugPrint(format string, formatArgs ...interface{})
-	DebugEnd(format string, formatArgs ...interface{})
-	SetUserData(data any)
-	GetUserData() any
+type sliceContext[IT any] struct {
+	source   []IT
+	curIndex int
+}
+
+func NewSliceContext[IT any](source []IT) Context[IT] {
+	return &sliceContext[IT]{
+		source:   source,
+		curIndex: 0,
+	}
+}
+
+func (ctx *sliceContext[IT]) CurIndex() int {
+	return ctx.curIndex
+}
+
+func (ctx *sliceContext[IT]) TotalLength() int {
+	return len(ctx.source)
+}
+
+func (ctx *sliceContext[IT]) Peek() IT {
+	if ctx.IsEof() {
+		panic("cannot Peek or Pop when at EOF")
+	}
+	return ctx.source[ctx.curIndex]
+}
+
+func (ctx *sliceContext[IT]) PeekN(count int) []IT {
+	if count == 0 {
+		panic("cannot PeekN or PopN with count == 0")
+	}
+	if count < 0 {
+		return ctx.source[ctx.CurIndex():]
+	}
+	if ctx.CurIndex()+count >= ctx.TotalLength() {
+		panic("cannot PeekN or PopN with a count that goes past EOF")
+	}
+	return ctx.source[ctx.CurIndex() : ctx.CurIndex()+count]
+}
+
+func (ctx *sliceContext[IT]) PopN(count int) []IT {
+	result := ctx.PeekN(count)
+	if count < 0 {
+		ctx.curIndex = ctx.TotalLength()
+	} else {
+		ctx.curIndex += count
+	}
+	return result
+}
+
+func (ctx *sliceContext[IT]) Pop() IT {
+	val := ctx.Peek()
+	ctx.curIndex += 1
+	return val
+}
+
+func (ctx *sliceContext[IT]) Rewind(count int) {
+	if count <= 0 {
+		panic("cannot Rewind with count <= 0")
+	}
+	newIndex := ctx.curIndex - count
+	if newIndex < 0 {
+		panic("cannot Rewind past index 0")
+	}
+	ctx.curIndex = newIndex
+}
+
+func (ctx *sliceContext[IT]) IsEof() bool {
+	return ctx.CurIndex() < ctx.TotalLength()
 }
