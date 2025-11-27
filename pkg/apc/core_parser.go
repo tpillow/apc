@@ -80,3 +80,17 @@ func Map[IT, OTA, OTB any](parser Parser[IT, OTA], transform func(value OTA) (OT
 		return transform(result)
 	})
 }
+
+func Named[IT, OT any](description string, parser Parser[IT, OT]) Parser[IT, OT] {
+	return NewCallbackParser(func(ctx Context[IT]) (OT, error) {
+		result, err := parser.Parse(ctx)
+		if err != nil {
+			return newT[OT](), ExpErr{
+				AtIndex:    ctx.CurIndex(),
+				Expected:   description,
+				Unexpected: fmt.Sprintf("%s", err),
+			}
+		}
+		return result, nil
+	})
+}
