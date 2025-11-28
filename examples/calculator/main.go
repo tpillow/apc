@@ -25,14 +25,13 @@ const (
 )
 
 var (
-	opAddParser = apc.Bind(apc.ExactStr(string(OpAdd)), OpAdd)
-	opSubParser = apc.Bind(apc.ExactStr(string(OpSub)), OpSub)
-	opMulParser = apc.Bind(apc.ExactStr(string(OpMul)), OpMul)
-	opDivParser = apc.Bind(apc.ExactStr(string(OpDiv)), OpDiv)
-	opExpParser = apc.Bind(apc.ExactStr(string(OpExp)), OpExp)
+	opAddParser = apc.Bind(apc.String(string(OpAdd)), OpAdd)
+	opSubParser = apc.Bind(apc.String(string(OpSub)), OpSub)
+	opMulParser = apc.Bind(apc.String(string(OpMul)), OpMul)
+	opDivParser = apc.Bind(apc.String(string(OpDiv)), OpDiv)
+	opExpParser = apc.Bind(apc.String(string(OpExp)), OpExp)
 
-	factorParser    apc.Parser[rune, Executable]
-	factorParserRef = apc.Ref(&factorParser)
+	factorParser = apc.ParserRef[Executable, Executable]{}
 
 	exponentTermParser = apc.Named("exponential term",
 		apc.Map(
@@ -98,7 +97,7 @@ var (
 )
 
 func initParser() {
-	factorParser = apc.Named("factor",
+	factorParser.Parser = apc.Named("factor",
 		apc.Any(
 			apc.Map(
 				apc.FloatParser,

@@ -39,8 +39,8 @@ func Range[IT, OT any](parser Parser[IT, OT], min int, max int) Parser[IT, []OT]
 }
 
 func Seq[IT, OT any](parsers ...Parser[IT, OT]) Parser[IT, []OT] {
-	if len(parsers) < 2 {
-		panic("cannot have Seq Parser with < 2 parsers")
+	if len(parsers) < 1 {
+		panic("cannot have Seq Parser with < 1 parsers")
 	}
 	return NewCallbackParser(func(ctx Context[IT]) ([]OT, error) {
 		results := []OT{}
@@ -52,6 +52,23 @@ func Seq[IT, OT any](parsers ...Parser[IT, OT]) Parser[IT, []OT] {
 			results = append(results, result)
 		}
 		return results, nil
+	})
+}
+
+func Any[IT, OT any](parsers ...Parser[IT, OT]) Parser[IT, OT] {
+	if len(parsers) < 1 {
+		panic("cannot have Any Parser with < 1 parsers")
+	}
+	return NewCallbackParser(func(ctx Context[IT]) (OT, error) {
+		var err error
+		for _, parser := range parsers {
+			result, err := parser.Parse(ctx)
+			if err != nil {
+				continue
+			}
+			return result, nil
+		}
+		return newT[OT](), err
 	})
 }
 
@@ -78,6 +95,16 @@ func Map[IT, OTA, OTB any](parser Parser[IT, OTA], transform func(value OTA) (OT
 			return newT[OTB](), err
 		}
 		return transform(result)
+	})
+}
+
+func Bind[IT, OTA, OTB any](parser Parser[IT, OTA], value OTB) Parser[IT, OTB] {
+	return NewCallbackParser(func(ctx Context[IT]) (OTB, error) {
+		_, err := parser.Parse(ctx)
+		if err != nil {
+			return newT[OTB](), err
+		}
+		return value, nil
 	})
 }
 
