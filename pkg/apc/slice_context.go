@@ -62,6 +62,10 @@ func NewRuneSliceContext(source []rune) Context {
 	}
 }
 
+func NewStringContext(source string) Context {
+	return NewRuneSliceContext([]rune(source))
+}
+
 func (ctx *sliceContext) Peek() any {
 	if ctx.location.Index < 0 {
 		panic("sliceContext location.Index must be >= 0")
