@@ -74,6 +74,23 @@ func (parser Parser) Optional(defaultValue any) Parser {
 	})
 }
 
+func (parser Parser) Describe(description string) Parser {
+	return NewParser(description, func(ctx Context) (any, error) {
+		startLoc := ctx.CurLocation()
+		result, err := parser.Parse(ctx)
+		if err != nil {
+			return nil, ParseError{
+				Up:            err,
+				Expected:      description,
+				Unexpected:    ctx.Peek(),
+				StartLocation: startLoc,
+				EndLocation:   ctx.CurLocation(),
+			}
+		}
+		return result, nil
+	})
+}
+
 func (first Parser) Then(second Parser) Parser {
 	desc := fmt.Sprintf("%s followed by %s, keeping the second", first.Description, second.Description)
 
