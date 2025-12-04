@@ -1,6 +1,9 @@
 package apc
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 type ParseFunc func(ctx Context) (any, error)
 
@@ -29,8 +32,15 @@ func (parser Parser) Peek() Parser {
 	return NewParser(func(ctx Context) (any, error) {
 		startLoc := ctx.CurLocation()
 		result, err := parser.Parse(ctx)
+		endLoc := ctx.CurLocation()
 		ctx.SetLocation(startLoc)
-		return result, err
+		return result, ParseError{
+			Up:            err,
+			Expected:      "peeking parser",
+			Unexpected:    ctx.Peek(),
+			StartLocation: startLoc,
+			EndLocation:   endLoc,
+		}
 	})
 }
 
@@ -107,7 +117,13 @@ func (parser Parser) Times(min int, max int) Parser {
 					ctx.SetLocation(startLoc)
 					break
 				}
-				return nil, err
+				return nil, ParseError{
+					Up:            err,
+					Expected:      fmt.Sprintf("parser to succeed %d to %d times", min, max),
+					Unexpected:    ctx.Peek(),
+					StartLocation: startLoc,
+					EndLocation:   ctx.CurLocation(),
+				}
 			}
 			results = append(results, result)
 		}

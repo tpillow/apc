@@ -1,7 +1,6 @@
 package apc
 
 import (
-	"fmt"
 	"regexp"
 )
 
@@ -19,14 +18,27 @@ func ExactStr(expectStr string) Parser {
 		startLoc := runeCtx.location
 		remainingLen := len(runeCtx.source) - startLoc.Index
 		if remainingLen < len(expectStr) {
-			return nil, fmt.Errorf("unexpected EOF")
+			return nil, ParseError{
+				Up:            nil,
+				Expected:      expectStr,
+				Unexpected:    EofToken{},
+				StartLocation: startLoc,
+				EndLocation:   ctx.CurLocation(),
+			}
 		}
 
 		for i := 0; i < len(expectStr); i++ {
 			token := ctx.Pop()
 			if expectStr[i] != token {
+				endLoc := ctx.CurLocation()
 				ctx.SetLocation(startLoc)
-				return nil, fmt.Errorf("not matched")
+				return nil, ParseError{
+					Up:            nil,
+					Expected:      expectStr,
+					Unexpected:    token,
+					StartLocation: startLoc,
+					EndLocation:   endLoc,
+				}
 			}
 		}
 
@@ -48,7 +60,13 @@ func RegexGroup(pattern string, groupIndex int) Parser {
 		matches := regex.FindStringSubmatch(remaining)
 
 		if matches == nil {
-			return "", fmt.Errorf("todo")
+			return "", ParseError{
+				Up:            nil,
+				Expected:      "regex to match",
+				Unexpected:    "unmatched regex",
+				StartLocation: startLoc,
+				EndLocation:   ctx.CurLocation(),
+			}
 		}
 		matchGroup := matches[groupIndex]
 		if len(matchGroup) <= 0 {
