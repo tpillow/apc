@@ -2,72 +2,68 @@ package apc
 
 import "fmt"
 
-func basicMatchCallback[IT comparable](what IT, doPop bool) ParserFunc[IT, IT] {
-	return func(ctx Context[IT]) (IT, error) {
-		if ctx.IsEof() {
-			return newT[IT](), ExpErr{
-				AtIndex:    ctx.CurIndex(),
-				Expected:   fmt.Sprintf("%v", what),
-				Unexpected: "EOF",
-			}
+func Eof() Parser {
+	return Exact(EofToken{})
+}
+
+func Exact(expectToken any) Parser {
+	return NewParser(func(ctx Context) (any, error) {
+		token := ctx.Peek()
+		if token == expectToken {
+			return ctx.Pop(), nil
 		}
-		val := ctx.Peek()
-		if val != what {
-			return newT[IT](), ExpErr{
-				AtIndex:    ctx.CurIndex(),
-				Expected:   fmt.Sprintf("%v", what),
-				Unexpected: fmt.Sprintf("%v", val),
-			}
-		}
-		if doPop {
-			ctx.Pop()
-		}
-		return val, nil
+		return nil, fmt.Errorf("no match")
+	})
+}
+
+func Succeed(value any) Parser {
+	return NewParser(func(ctx Context) (any, error) {
+		return value, nil
+	})
+}
+
+func Fail(err error) Parser {
+	return NewParser(func(ctx Context) (any, error) {
+		return nil, err
+	})
+}
+
+func Seq(parsers ...Parser) Parser {
+	if len(parsers) < 1 {
+		panic("Seq parser must have at least 1 parser")
 	}
-}
 
-func Match[IT comparable](what IT) Parser[IT, IT] {
-	return NewCallbackParser(basicMatchCallback(what, true))
-}
-
-func Test[IT comparable](what IT) Parser[IT, IT] {
-	return NewCallbackParser(basicMatchCallback(what, false))
-}
-
-func Peek[IT, OT any](parser Parser[IT, OT]) Parser[IT, OT] {
-	return NewCallbackParser(func(ctx Context[IT]) (OT, error) {
-		indexBefore := ctx.CurIndex()
-		result, err := parser.Parse(ctx)
-		indexAfter := ctx.CurIndex()
-		ctx.Rewind(indexAfter - indexBefore)
-		return result, err
-	})
-}
-
-func Succeed[IT, OT any](val OT) Parser[IT, OT] {
-	return NewCallbackParser(func(ctx Context[IT]) (OT, error) {
-		return val, nil
-	})
-}
-
-func Fail[IT any](errMsg string) Parser[IT, IT] {
-	return NewCallbackParser(func(ctx Context[IT]) (IT, error) {
-		return newT[IT](), CustomErr{
-			AtIndex: ctx.CurIndex(),
-			Message: errMsg,
-		}
-	})
-}
-
-func Eof[IT any]() Parser[IT, IT] {
-	return NewCallbackParser(func(ctx Context[IT]) (IT, error) {
-		if !ctx.IsEof() {
-			return newT[IT](), ExpErr{
-				AtIndex:    ctx.CurIndex(),
-				Expected:   "EOF",
-				Unexpected: fmt.Sprintf("%v", ctx.Peek()),
+	return NewParser(func(ctx Context) (any, error) {
+		results := []any{}
+		for _, parser := range parsers {
+			result, err := parser.Parse(ctx)
+			if err != nil {
+				return nil, err
 			}
+			results = append(results, result)
 		}
-		return newT[IT](), nil
+		return results, nil
+	})
+}
+
+func AnyOf(parsers ...Parser) Parser {
+	if len(parsers) < 1 {
+		panic("Alt parser must have at least 1 parser")
+	}
+
+	return NewParser(func(ctx Context) (any, error) {
+		for i, parser := range parsers {
+			startLoc := ctx.CurLocation()
+			result, err := parser.Parse(ctx)
+			if err != nil {
+				if i == len(parsers)-1 {
+					return nil, err
+				}
+				ctx.SetLocation(startLoc)
+				continue
+			}
+			return result, nil
+		}
+		return nil, fmt.Errorf("todo")
 	})
 }

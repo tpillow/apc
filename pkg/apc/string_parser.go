@@ -3,69 +3,68 @@ package apc
 import (
 	"fmt"
 	"regexp"
-	"strings"
 )
 
-func String(what string) Parser[rune, string] {
-	if len(what) <= 0 {
-		panic("cannot use String Parser with empty string")
+func ExactStr(expectStr string) Parser {
+	if len(expectStr) <= 0 {
+		panic("MatchStr requires a string with length > 0")
 	}
-	return NewCallbackParser(func(ctx Context[rune]) (string, error) {
-		if ctx.IsEof() {
-			return "", ExpErr{
-				AtIndex:    ctx.CurIndex(),
-				Expected:   fmt.Sprintf("%v", what),
-				Unexpected: "EOF",
+
+	return NewParser(func(ctx Context) (any, error) {
+		runeCtx, ok := ctx.(*runeSliceContext)
+		if !ok {
+			panic("MatchStr requires a sliceContext")
+		}
+
+		startLoc := runeCtx.location
+		remainingLen := len(runeCtx.source) - startLoc.Index
+		if remainingLen < len(expectStr) {
+			return nil, fmt.Errorf("unexpected EOF")
+		}
+
+		for i := 0; i < len(expectStr); i++ {
+			token := ctx.Pop()
+			if expectStr[i] != token {
+				ctx.SetLocation(startLoc)
+				return nil, fmt.Errorf("not matched")
 			}
 		}
-		remaining := string(ctx.PeekN(ctx.TotalLength() - ctx.CurIndex()))
-		if !strings.HasPrefix(remaining, what) {
-			return "", ExpErr{
-				AtIndex:    ctx.CurIndex(),
-				Expected:   what,
-				Unexpected: remaining,
-			}
-		}
-		val := string(ctx.PopN(len(what)))
-		if val != what {
-			panic("unreachable")
-		}
-		return val, nil
+
+		return expectStr, nil
 	})
 }
 
-func RegexGroup(pattern string, groupIndex int) Parser[rune, string] {
+func RegexGroup(pattern string, groupIndex int) Parser {
 	regex := regexp.MustCompile("^" + pattern)
 
-	return NewCallbackParser(func(ctx Context[rune]) (string, error) {
-		if ctx.IsEof() {
-			return "", ExpErr{
-				AtIndex:    ctx.CurIndex(),
-				Expected:   pattern,
-				Unexpected: "EOF",
-			}
+	return NewParser(func(ctx Context) (any, error) {
+		runeCtx, ok := ctx.(*runeSliceContext)
+		if !ok {
+			panic("MatchStr requires a sliceContext")
 		}
-		remaining := string(ctx.PeekN(ctx.TotalLength() - ctx.CurIndex()))
+
+		startLoc := runeCtx.sliceContext.location
+		remaining := string(runeCtx.sourceAsRuneSlice[startLoc.Index:])
 		matches := regex.FindStringSubmatch(remaining)
+
 		if matches == nil {
-			return "", ExpErr{
-				AtIndex:    ctx.CurIndex(),
-				Expected:   fmt.Sprintf("regex<%s>", pattern),
-				Unexpected: remaining,
-			}
+			return "", fmt.Errorf("todo")
 		}
 		matchGroup := matches[groupIndex]
 		if len(matchGroup) <= 0 {
 			panic("a Regex Parser cannot have a 0 length match")
 		}
-		val := string(ctx.PopN(len(matchGroup)))
-		if val != matchGroup {
-			panic("unreachable")
+
+		for i := 0; i < len(matchGroup); i++ {
+			if IsEofToken(ctx.Pop()) {
+				panic("unreachable")
+			}
 		}
-		return val, nil
+
+		return matchGroup, nil
 	})
 }
 
-func Regex(pattern string) Parser[rune, string] {
+func Regex(pattern string) Parser {
 	return RegexGroup(pattern, 0)
 }
