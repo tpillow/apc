@@ -13,20 +13,16 @@ type ParseError struct {
 func (err ParseError) Error() string {
 	baseMsg := ""
 	if err.Unexpected == nil {
-		if err.Up == nil {
-			panic("ParseError with no Unexpected should have an Up error")
-		}
-
-		baseMsg = fmt.Sprintf("while expecting '%v', got an error at %v (to %v)",
-			err.Expected, err.StartLocation, err.EndLocation)
+		baseMsg = fmt.Sprintf("at %v to %v:\n  expected: %v",
+			err.StartLocation, err.EndLocation, err.Expected)
 	} else {
-		baseMsg = fmt.Sprintf("expected '%v' but got unexpected '%v' at %v (to %v)",
-			err.Expected, err.Unexpected, err.StartLocation, err.EndLocation)
+		baseMsg = fmt.Sprintf("at %v to %v:\n  expected: %v\n  unexpected: %v",
+			err.StartLocation, err.EndLocation, err.Expected, err.Unexpected)
 	}
 
 	if err.Up == nil {
 		return baseMsg
 	}
 
-	return fmt.Sprintf("%s\n  stems from:\n%s", baseMsg, err.Up)
+	return fmt.Sprintf("%s\n  error stems from:\n%s", baseMsg, err.Up)
 }

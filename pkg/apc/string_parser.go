@@ -1,6 +1,7 @@
 package apc
 
 import (
+	"fmt"
 	"regexp"
 )
 
@@ -9,7 +10,9 @@ func ExactStr(expectStr string) Parser {
 		panic("MatchStr requires a string with length > 0")
 	}
 
-	return NewParser(func(ctx Context) (any, error) {
+	desc := fmt.Sprintf("exactly '%s'", expectStr)
+
+	return NewParser(desc, func(ctx Context) (any, error) {
 		runeCtx, ok := ctx.(*runeSliceContext)
 		if !ok {
 			panic("MatchStr requires a sliceContext")
@@ -20,7 +23,7 @@ func ExactStr(expectStr string) Parser {
 		if remainingLen < len(expectStr) {
 			return nil, ParseError{
 				Up:            nil,
-				Expected:      expectStr,
+				Expected:      desc,
 				Unexpected:    EofToken{},
 				StartLocation: startLoc,
 				EndLocation:   ctx.CurLocation(),
@@ -34,7 +37,7 @@ func ExactStr(expectStr string) Parser {
 				ctx.SetLocation(startLoc)
 				return nil, ParseError{
 					Up:            nil,
-					Expected:      expectStr,
+					Expected:      desc,
 					Unexpected:    token,
 					StartLocation: startLoc,
 					EndLocation:   endLoc,
@@ -46,10 +49,10 @@ func ExactStr(expectStr string) Parser {
 	})
 }
 
-func RegexGroup(pattern string, groupIndex int) Parser {
+func RegexGroup(description string, pattern string, groupIndex int) Parser {
 	regex := regexp.MustCompile("^" + pattern)
 
-	return NewParser(func(ctx Context) (any, error) {
+	return NewParser(description, func(ctx Context) (any, error) {
 		runeCtx, ok := ctx.(*runeSliceContext)
 		if !ok {
 			panic("MatchStr requires a sliceContext")
@@ -83,6 +86,6 @@ func RegexGroup(pattern string, groupIndex int) Parser {
 	})
 }
 
-func Regex(pattern string) Parser {
-	return RegexGroup(pattern, 0)
+func Regex(description string, pattern string) Parser {
+	return RegexGroup(description, pattern, 0)
 }

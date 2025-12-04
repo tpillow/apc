@@ -8,12 +8,14 @@ import (
 type ParseFunc func(ctx Context) (any, error)
 
 type Parser struct {
-	ParseFunc ParseFunc
+	Description string
+	ParseFunc   ParseFunc
 }
 
-func NewParser(parseFunc ParseFunc) Parser {
+func NewParser(description string, parseFunc ParseFunc) Parser {
 	return Parser{
-		ParseFunc: parseFunc,
+		Description: description,
+		ParseFunc:   parseFunc,
 	}
 }
 
@@ -29,14 +31,15 @@ func (parser Parser) ParseToEof(ctx Context) (any, error) {
 }
 
 func (parser Parser) Peek() Parser {
-	return NewParser(func(ctx Context) (any, error) {
+	desc := fmt.Sprintf("peeking parser of %s", parser.Description)
+	return NewParser(desc, func(ctx Context) (any, error) {
 		startLoc := ctx.CurLocation()
 		result, err := parser.Parse(ctx)
 		endLoc := ctx.CurLocation()
 		ctx.SetLocation(startLoc)
 		return result, ParseError{
 			Up:            err,
-			Expected:      "peeking parser",
+			Expected:      desc,
 			Unexpected:    ctx.Peek(),
 			StartLocation: startLoc,
 			EndLocation:   endLoc,
@@ -45,7 +48,7 @@ func (parser Parser) Peek() Parser {
 }
 
 func (parser Parser) Map(transform func(value any) any) Parser {
-	return NewParser(func(ctx Context) (any, error) {
+	return NewParser(parser.Description, func(ctx Context) (any, error) {
 		result, err := parser.Parse(ctx)
 		if err != nil {
 			return nil, err
@@ -59,7 +62,8 @@ func (parser Parser) Bind(value any) Parser {
 }
 
 func (parser Parser) Optional(defaultValue any) Parser {
-	return NewParser(func(ctx Context) (any, error) {
+	desc := fmt.Sprintf("optional %s", parser.Description)
+	return NewParser(desc, func(ctx Context) (any, error) {
 		startLoc := ctx.CurLocation()
 		result, err := parser.Parse(ctx)
 		if err != nil {
@@ -71,24 +75,61 @@ func (parser Parser) Optional(defaultValue any) Parser {
 }
 
 func (first Parser) Then(second Parser) Parser {
-	return NewParser(func(ctx Context) (any, error) {
+	desc := fmt.Sprintf("%s followed by %s, keeping the second", first.Description, second.Description)
+
+	return NewParser(desc, func(ctx Context) (any, error) {
+		startLoc := ctx.CurLocation()
 		_, err := first.Parse(ctx)
 		if err != nil {
-			return nil, err
+			return nil, ParseError{
+				Up:            err,
+				Expected:      desc,
+				Unexpected:    ctx.Peek(),
+				StartLocation: startLoc,
+				EndLocation:   ctx.CurLocation(),
+			}
 		}
-		return second.Parse(ctx)
+
+		startLoc = ctx.CurLocation()
+		result, err := second.Parse(ctx)
+		if err != nil {
+			return nil, ParseError{
+				Up:            err,
+				Expected:      desc,
+				Unexpected:    ctx.Peek(),
+				StartLocation: startLoc,
+				EndLocation:   ctx.CurLocation(),
+			}
+		}
+		return result, nil
 	})
 }
 
 func (first Parser) Skip(second Parser) Parser {
-	return NewParser(func(ctx Context) (any, error) {
+	desc := fmt.Sprintf("%s followed by %s, keeping the first", first.Description, second.Description)
+	return NewParser(desc, func(ctx Context) (any, error) {
+		startLoc := ctx.CurLocation()
 		firstResult, err := first.Parse(ctx)
 		if err != nil {
-			return nil, err
+			return nil, ParseError{
+				Up:            err,
+				Expected:      desc,
+				Unexpected:    ctx.Peek(),
+				StartLocation: startLoc,
+				EndLocation:   ctx.CurLocation(),
+			}
 		}
+
+		startLoc = ctx.CurLocation()
 		_, err = second.Parse(ctx)
 		if err != nil {
-			return nil, err
+			return nil, ParseError{
+				Up:            err,
+				Expected:      desc,
+				Unexpected:    ctx.Peek(),
+				StartLocation: startLoc,
+				EndLocation:   ctx.CurLocation(),
+			}
 		}
 		return firstResult, nil
 	})
@@ -105,7 +146,9 @@ func (parser Parser) Times(min int, max int) Parser {
 		panic("Times parser max must be < min")
 	}
 
-	return NewParser(func(ctx Context) (any, error) {
+	desc := fmt.Sprintf("%s %d to %d times", parser.Description, min, max)
+
+	return NewParser(desc, func(ctx Context) (any, error) {
 		results := []any{}
 
 		for len(results) < max {
@@ -119,7 +162,7 @@ func (parser Parser) Times(min int, max int) Parser {
 				}
 				return nil, ParseError{
 					Up:            err,
-					Expected:      fmt.Sprintf("parser to succeed %d to %d times", min, max),
+					Expected:      desc,
 					Unexpected:    ctx.Peek(),
 					StartLocation: startLoc,
 					EndLocation:   ctx.CurLocation(),
