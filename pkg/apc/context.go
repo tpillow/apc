@@ -2,14 +2,14 @@ package apc
 
 type Location interface{}
 
-type EofToken struct{}
+type EofValue struct{}
 
-func (EofToken) String() string {
+func (EofValue) String() string {
 	return "<<EOF>>"
 }
 
 func IsEofToken(thing any) bool {
-	_, ok := thing.(EofToken)
+	_, ok := thing.(EofValue)
 	return ok
 }
 

@@ -77,7 +77,7 @@ func (ctx *sliceContext) Peek() any {
 		panic("sliceContext location.Index must be >= 0")
 	}
 	if ctx.location.Index >= len(ctx.source) {
-		return EofToken{}
+		return EofValue{}
 	}
 	return ctx.source[ctx.location.Index]
 }

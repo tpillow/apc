@@ -24,7 +24,7 @@ func ExactStr(expectStr string) *Parser {
 			return nil, ParseError{
 				Up:            nil,
 				Expected:      desc,
-				Unexpected:    EofToken{},
+				Unexpected:    EofValue{},
 				StartLocation: startLoc,
 				EndLocation:   ctx.CurLocation(),
 			}

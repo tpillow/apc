@@ -11,7 +11,7 @@ func TestEofPositive(t *testing.T) {
 	ctx := NewStringContext("")
 	result, err := Eof.ParseToEof(ctx)
 	assert.NoError(t, err)
-	assert.Equal(t, EofToken{}, result)
+	assert.Equal(t, EofValue{}, result)
 }
 
 func TestExact(t *testing.T) {

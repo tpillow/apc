@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	Eof                = Exact(EofToken{}).Describe("<<EOF>>")
+	Eof                = Exact(EofValue{}).Describe("<<EOF>>")
 	Whitespace         = Regex(`\s+`).Describe("whitespace")
 	OptionalWhitespace = Whitespace.Optional("")
 	AnyChar            = Regex(`.`).Describe("any character")
