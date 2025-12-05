@@ -26,6 +26,30 @@ func (parser *Parser) Parse(ctx Context) (any, error) {
 	if parser.ParseFunc == nil {
 		panic("cannot use a Parser whose ParseFunc is nil")
 	}
+
+	if ctx.IsRunningPreParser() {
+		return parser.ParseFunc(ctx)
+	}
+
+	preParser := ctx.GetPreParser()
+	if preParser == nil {
+		return parser.ParseFunc(ctx)
+	}
+
+	ctx.SetRunningPreParser(true)
+	startLoc := ctx.CurLocation()
+	_, err := preParser.Parse(ctx)
+	if err != nil {
+		return nil, ParseError{
+			Up:            err,
+			Expected:      fmt.Sprintf("pre-parser %s to match", preParser.Description),
+			Unexpected:    ctx.Peek(),
+			StartLocation: startLoc,
+			EndLocation:   ctx.CurLocation(),
+		}
+	}
+	ctx.SetRunningPreParser(false)
+
 	return parser.ParseFunc(ctx)
 }
 

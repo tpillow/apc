@@ -58,12 +58,13 @@ func ParseJson(text string) (Value, error) {
 	parser := value_parser
 
 	ctx := apc.NewStringContext(text)
+	ctx.SetPreParser(apc.OptionalWhitespace)
 	return parser.ParseToEof(ctx)
 }
 
 func main() {
-	//test_json := `{"a": 1, "b": true, "c": [1, 2, 3], "d": {}, "e": []}`
-	test_json := `{"a":1,"b":true,"c":[1,2,3],"d":{},"e":[]}`
+	test_json := `{"a": 1, "b": true, "c": [1, 2, 3], "d": {}, "e": []}`
+	//test_json := `{"a":1,"b":true,"c":[1,2,3],"d":{},"e":[]}`
 	result, err := ParseJson(test_json)
 	if err != nil {
 		fmt.Printf("ERROR: %s\n", err)

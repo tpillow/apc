@@ -36,8 +36,10 @@ func (loc SliceLocation) next(token any) SliceLocation {
 }
 
 type sliceContext struct {
-	source   []any
-	location SliceLocation
+	source           []any
+	location         SliceLocation
+	inBetweenParser  *Parser
+	runningPreParser bool
 }
 
 type runeSliceContext struct {
@@ -53,6 +55,8 @@ func NewSliceContext(source []any) Context {
 			LineNum: 1,
 			ColNum:  0,
 		},
+		inBetweenParser:  nil,
+		runningPreParser: false,
 	}
 }
 
@@ -98,4 +102,20 @@ func (ctx *sliceContext) SetLocation(rawLoc Location) {
 		panic("sliceContext SetLocation must take a SliceLocation type")
 	}
 	ctx.location = loc
+}
+
+func (ctx *sliceContext) SetPreParser(parser *Parser) {
+	ctx.inBetweenParser = parser
+}
+
+func (ctx *sliceContext) GetPreParser() *Parser {
+	return ctx.inBetweenParser
+}
+
+func (ctx *sliceContext) SetRunningPreParser(running bool) {
+	ctx.runningPreParser = running
+}
+
+func (ctx *sliceContext) IsRunningPreParser() bool {
+	return ctx.runningPreParser
 }
