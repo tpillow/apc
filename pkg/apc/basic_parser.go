@@ -22,10 +22,6 @@ func Exact(expectToken any) *Parser {
 	})
 }
 
-func Eof() *Parser {
-	return Exact(EofToken{})
-}
-
 func Succeed(value any) *Parser {
 	return NewParser("always successful", func(ctx Context) (any, error) {
 		return value, nil

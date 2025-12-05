@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	Eof                = Exact(EofToken{}).Describe("<<EOF>>")
 	Whitespace         = Regex(`\s+`).Describe("whitespace")
 	OptionalWhitespace = Whitespace.Optional("")
 	Float              = Regex(`-?[0-9]+\.[0-9]+`).Map(func(rawValue any) any {

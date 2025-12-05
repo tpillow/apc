@@ -9,7 +9,7 @@ import (
 
 func TestEofPositive(t *testing.T) {
 	ctx := NewStringContext("")
-	result, err := Eof().ParseToEof(ctx)
+	result, err := Eof.ParseToEof(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, EofToken{}, result)
 }
@@ -23,7 +23,7 @@ func TestExact(t *testing.T) {
 
 func TestEofNegative(t *testing.T) {
 	ctx := NewStringContext("a")
-	_, err := Eof().ParseToEof(ctx)
+	_, err := Eof.ParseToEof(ctx)
 	assert.Error(t, err)
 }
 

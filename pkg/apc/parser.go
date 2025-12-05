@@ -30,7 +30,7 @@ func (parser *Parser) Parse(ctx Context) (any, error) {
 }
 
 func (parser *Parser) ParseToEof(ctx Context) (any, error) {
-	return parser.Skip(Eof()).Parse(ctx)
+	return parser.Skip(Eof).Parse(ctx)
 }
 
 func (parser *Parser) Peek() *Parser {
