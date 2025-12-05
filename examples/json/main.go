@@ -18,9 +18,9 @@ type pair struct {
 
 func ParseJson(text string) (Value, error) {
 	keyword_parser := apc.AnyOf(
-		apc.ExactStr("true").Bind(true),
-		apc.ExactStr("false").Bind(false),
-		apc.ExactStr("null").Bind(nil))
+		apc.ExactStr("true").MapValue(true),
+		apc.ExactStr("false").MapValue(false),
+		apc.ExactStr("null").MapValue(nil))
 	simple_value_parser := apc.AnyOf(
 		apc.Float64, apc.Int64, apc.DoubleQuotedString, keyword_parser)
 

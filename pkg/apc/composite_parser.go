@@ -2,7 +2,7 @@ package apc
 
 import "math"
 
-func (parser *Parser) Bind(value any) *Parser {
+func (parser *Parser) MapValue(value any) *Parser {
 	return parser.Map(func(_ any) any { return value })
 }
 
