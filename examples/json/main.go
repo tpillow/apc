@@ -36,15 +36,18 @@ func ParseJson(text string) (Value, error) {
 		value_parser.SeparatedBy(comma_parser, 0, math.MaxInt32)).Skip(right_bracket_parser)
 	pair_parser := apc.Seq(apc.DoubleQuotedString.Skip(colon_parser), value_parser).Map(func(rawValues any) any {
 		values := rawValues.([]any)
-		key := values[0].(Key)
-		val := values[1].(Value)
-		return pair{key, val}
+		key := values[0].(string)
+		return pair{Key(key), Value(values[1])}
 	})
 	dict_parser := left_brace_parser.Then(
-		pair_parser.SeparatedBy(comma_parser, 0, math.MaxInt32)).Skip(right_brace_parser).Map(func(rawPairs any) any {
-		pairs := rawPairs.([]pair)
+		pair_parser.SeparatedBy(comma_parser, 0, math.MaxInt32)).Skip(right_brace_parser).Map(func(rawValues any) any {
+		values := rawValues.([]any)
 		dict := Dict{}
-		for _, pair := range pairs {
+		for _, rawPair := range values {
+			pair, ok := rawPair.(pair)
+			if !ok {
+				panic("must be pair")
+			}
 			dict[pair.key] = pair.value
 		}
 		return dict
@@ -59,7 +62,7 @@ func ParseJson(text string) (Value, error) {
 }
 
 func main() {
-	test_json := `"hi"`
+	test_json := `{"a": 1, "b": true, "c": [1, 2, 3], "d": {}, "e": []}`
 	result, err := ParseJson(test_json)
 	if err != nil {
 		panic(err)
