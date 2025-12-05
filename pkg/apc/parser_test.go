@@ -6,16 +6,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSkip(t *testing.T) {
-	ctx := NewStringContext("ab")
-	result, err := Exact('a').Skip(Exact('b')).ParseToEof(ctx)
+func TestGenerate(t *testing.T) {
+	ctx := NewStringContext("4Hfour")
+	result, err := Int64.Skip(Exact('H')).Generate(func(rawValue any) *Parser {
+		value := rawValue.(int64)
+		return AnyChar.Times(int(value), int(value))
+	}).ParseToEof(ctx)
 	assert.NoError(t, err)
-	assert.Equal(t, 'a', result)
-}
-
-func TestThen(t *testing.T) {
-	ctx := NewStringContext("ab")
-	result, err := Exact('a').Then(Exact('b')).ParseToEof(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, 'b', result)
+	assert.Equal(t, []any{"f", "o", "u", "r"}, result)
 }

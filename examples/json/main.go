@@ -22,7 +22,7 @@ func ParseJson(text string) (Value, error) {
 		apc.ExactStr("false").Bind(false),
 		apc.ExactStr("null").Bind(nil))
 	simple_value_parser := apc.AnyOf(
-		apc.Float, apc.Int, apc.DoubleQuotedString, keyword_parser)
+		apc.Float64, apc.Int64, apc.DoubleQuotedString, keyword_parser)
 
 	left_bracket_parser := apc.Exact('[').Skip(apc.OptionalWhitespace)
 	right_bracket_parser := apc.Exact(']').Skip(apc.OptionalWhitespace)

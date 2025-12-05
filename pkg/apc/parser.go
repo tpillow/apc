@@ -60,6 +60,20 @@ func (parser *Parser) Map(transform func(value any) any) *Parser {
 	})
 }
 
+func (parser *Parser) Generate(parserGen func(value any) *Parser) *Parser {
+	return NewParser(parser.Description, func(ctx Context) (any, error) {
+		result, err := parser.Parse(ctx)
+		if err != nil {
+			return nil, err
+		}
+		nextResult, err := parserGen(result).Parse(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return nextResult, err
+	})
+}
+
 func (parser *Parser) Index(index int) *Parser {
 	return parser.MapSlice(func(values []any) any {
 		if index < 0 {
