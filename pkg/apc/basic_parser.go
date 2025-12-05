@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-func Exact(expectToken any) *Parser {
-	desc := fmt.Sprintf("exactly '%v'", expectToken)
+func Exact(expect any) *Parser {
+	desc := fmt.Sprintf("exactly '%v'", toOutputAny(expect))
 	return NewParser(desc, func(ctx Context) (any, error) {
 		token := ctx.Peek()
-		if token == expectToken {
+		if token == expect {
 			return ctx.Pop(), nil
 		}
 		return nil, ParseError{
@@ -41,9 +41,9 @@ func Seq(parsers ...*Parser) *Parser {
 
 	parserDescriptions := []string{}
 	for _, parser := range parsers {
-		parserDescriptions = append(parserDescriptions, fmt.Sprintf("(%s)", parser.Description))
+		parserDescriptions = append(parserDescriptions, parser.Description)
 	}
-	desc := fmt.Sprintf("sequence of %d parsers: %s", len(parsers), strings.Join(parserDescriptions, ", "))
+	desc := fmt.Sprintf("sequence of %d parsers: ( %s )", len(parsers), strings.Join(parserDescriptions, ", "))
 
 	return NewParser(desc, func(ctx Context) (any, error) {
 		results := []any{}
@@ -72,9 +72,9 @@ func AnyOf(parsers ...*Parser) *Parser {
 
 	parserDescriptions := []string{}
 	for _, parser := range parsers {
-		parserDescriptions = append(parserDescriptions, fmt.Sprintf("(%s)", parser.Description))
+		parserDescriptions = append(parserDescriptions, parser.Description)
 	}
-	desc := fmt.Sprintf("any of %d parsers: %s", len(parsers), strings.Join(parserDescriptions, ", "))
+	desc := fmt.Sprintf("any of %d parsers: ( %s )", len(parsers), strings.Join(parserDescriptions, ", "))
 
 	return NewParser(desc, func(ctx Context) (any, error) {
 		var err error

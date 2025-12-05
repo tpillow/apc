@@ -24,21 +24,21 @@ func ParseJson(text string) (Value, error) {
 	simple_value_parser := apc.AnyOf(
 		apc.Float64, apc.Int64, apc.DoubleQuotedString, keyword_parser)
 
-	left_bracket_parser := apc.Exact('[').Skip(apc.OptionalWhitespace)
-	right_bracket_parser := apc.Exact(']').Skip(apc.OptionalWhitespace)
-	left_brace_parser := apc.Exact('{').Skip(apc.OptionalWhitespace)
-	right_brace_parser := apc.Exact('}').Skip(apc.OptionalWhitespace)
-	comma_parser := apc.Exact(',').Skip(apc.OptionalWhitespace)
-	colon_parser := apc.Exact(':').Skip(apc.OptionalWhitespace)
+	left_bracket_parser := apc.Exact('[')
+	right_bracket_parser := apc.Exact(']')
+	left_brace_parser := apc.Exact('{')
+	right_brace_parser := apc.Exact('}')
+	comma_parser := apc.Exact(',')
+	colon_parser := apc.Exact(':')
 
 	value_parser := apc.NewFutureParser()
 	list_parser := left_bracket_parser.Then(
-		value_parser.SeparatedBy(comma_parser, 0, math.MaxInt32)).Skip(right_bracket_parser)
+		value_parser.SeparatedBy(comma_parser, 0, math.MaxInt32)).Skip(right_bracket_parser).Describe("array")
 	pair_parser := apc.Seq(apc.DoubleQuotedString.Skip(colon_parser), value_parser).Map(func(rawValues any) any {
 		values := rawValues.([]any)
 		key := values[0].(string)
 		return pair{Key(key), Value(values[1])}
-	})
+	}).Describe("key-value pair")
 	dict_parser := left_brace_parser.Then(
 		pair_parser.SeparatedBy(comma_parser, 0, math.MaxInt32)).Skip(right_brace_parser).Map(func(rawValues any) any {
 		values := rawValues.([]any)
@@ -51,21 +51,23 @@ func ParseJson(text string) (Value, error) {
 			dict[pair.key] = pair.value
 		}
 		return dict
-	})
+	}).Describe("object")
 
 	value_parser.Become(
-		apc.AnyOf(simple_value_parser, list_parser, dict_parser).Skip(apc.OptionalWhitespace).Describe("JSON value"))
-	parser := apc.OptionalWhitespace.Then(value_parser).Skip(apc.OptionalWhitespace)
+		apc.AnyOf(simple_value_parser, list_parser, dict_parser).Describe("JSON value"))
+	parser := value_parser
 
 	ctx := apc.NewStringContext(text)
 	return parser.ParseToEof(ctx)
 }
 
 func main() {
-	test_json := `{"a": 1, "b": true, "c": [1, 2, 3], "d": {}, "e": []}`
+	//test_json := `{"a": 1, "b": true, "c": [1, 2, 3], "d": {}, "e": []}`
+	test_json := `{"a":1,"b":true,"c":[1,2,3],"d":{},"e":[]}`
 	result, err := ParseJson(test_json)
 	if err != nil {
-		panic(err)
+		fmt.Printf("ERROR: %s\n", err)
+		return
 	}
 	fmt.Printf("RESULT: %v\n", result)
 }
