@@ -5,11 +5,7 @@ import (
 	"strings"
 )
 
-func Eof() Parser {
-	return Exact(EofToken{})
-}
-
-func Exact(expectToken any) Parser {
+func Exact(expectToken any) *Parser {
 	desc := fmt.Sprintf("exactly '%v'", expectToken)
 	return NewParser(desc, func(ctx Context) (any, error) {
 		token := ctx.Peek()
@@ -26,19 +22,23 @@ func Exact(expectToken any) Parser {
 	})
 }
 
-func Succeed(value any) Parser {
+func Eof() *Parser {
+	return Exact(EofToken{})
+}
+
+func Succeed(value any) *Parser {
 	return NewParser("always successful", func(ctx Context) (any, error) {
 		return value, nil
 	})
 }
 
-func Fail(err error) Parser {
+func Fail(err error) *Parser {
 	return NewParser(fmt.Sprintf("always failing with error '%s'", err), func(ctx Context) (any, error) {
 		return nil, err
 	})
 }
 
-func Seq(parsers ...Parser) Parser {
+func Seq(parsers ...*Parser) *Parser {
 	if len(parsers) < 1 {
 		panic("Seq parser must have at least 1 parser")
 	}
@@ -69,7 +69,7 @@ func Seq(parsers ...Parser) Parser {
 	})
 }
 
-func AnyOf(parsers ...Parser) Parser {
+func AnyOf(parsers ...*Parser) *Parser {
 	if len(parsers) < 1 {
 		panic("Alt parser must have at least 1 parser")
 	}

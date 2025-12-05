@@ -5,7 +5,7 @@ import (
 	"regexp"
 )
 
-func ExactStr(expectStr string) Parser {
+func ExactStr(expectStr string) *Parser {
 	if len(expectStr) <= 0 {
 		panic("MatchStr requires a string with length > 0")
 	}
@@ -32,7 +32,7 @@ func ExactStr(expectStr string) Parser {
 
 		for i := 0; i < len(expectStr); i++ {
 			token := ctx.Pop()
-			if expectStr[i] != token {
+			if rune(expectStr[i]) != token {
 				endLoc := ctx.CurLocation()
 				ctx.SetLocation(startLoc)
 				return nil, ParseError{
@@ -49,10 +49,11 @@ func ExactStr(expectStr string) Parser {
 	})
 }
 
-func RegexGroup(description string, pattern string, groupIndex int) Parser {
+func RegexGroup(pattern string, groupIndex int) *Parser {
 	regex := regexp.MustCompile("^" + pattern)
+	desc := fmt.Sprintf("regex '%s'", pattern)
 
-	return NewParser(description, func(ctx Context) (any, error) {
+	return NewParser(desc, func(ctx Context) (any, error) {
 		runeCtx, ok := ctx.(*runeSliceContext)
 		if !ok {
 			panic("MatchStr requires a sliceContext")
@@ -65,27 +66,28 @@ func RegexGroup(description string, pattern string, groupIndex int) Parser {
 		if matches == nil {
 			return "", ParseError{
 				Up:            nil,
-				Expected:      "regex to match",
+				Expected:      desc,
 				Unexpected:    "unmatched regex",
 				StartLocation: startLoc,
 				EndLocation:   ctx.CurLocation(),
 			}
 		}
-		matchGroup := matches[groupIndex]
-		if len(matchGroup) <= 0 {
+		fullMatchGroup := matches[0]
+		desiredMatchGroup := matches[groupIndex]
+		if len(fullMatchGroup) <= 0 {
 			panic("a Regex Parser cannot have a 0 length match")
 		}
 
-		for i := 0; i < len(matchGroup); i++ {
+		for i := 0; i < len(fullMatchGroup); i++ {
 			if IsEofToken(ctx.Pop()) {
 				panic("unreachable")
 			}
 		}
 
-		return matchGroup, nil
+		return desiredMatchGroup, nil
 	})
 }
 
-func Regex(description string, pattern string) Parser {
-	return RegexGroup(description, pattern, 0)
+func Regex(pattern string) *Parser {
+	return RegexGroup(pattern, 0)
 }

@@ -4,6 +4,10 @@ type Location interface{}
 
 type EofToken struct{}
 
+func (EofToken) String() string {
+	return "<<EOF>>"
+}
+
 func IsEofToken(thing any) bool {
 	_, ok := thing.(EofToken)
 	return ok

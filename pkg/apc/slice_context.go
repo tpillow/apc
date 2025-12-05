@@ -1,9 +1,15 @@
 package apc
 
+import "fmt"
+
 type SliceLocation struct {
 	Index   int
 	LineNum int
 	ColNum  int
+}
+
+func (loc SliceLocation) String() string {
+	return fmt.Sprintf("%d:%d:(#%d)", loc.LineNum, loc.ColNum, loc.Index)
 }
 
 func (loc SliceLocation) next(token any) SliceLocation {
