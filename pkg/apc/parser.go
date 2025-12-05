@@ -110,7 +110,7 @@ func (parser *Parser) Describe(description string) *Parser {
 
 func (parser *Parser) Become(other *Parser) {
 	if parser.ParseFunc != nil {
-		panic("cannot call Become on a parser with a non-nil ParseFunc")
+		panic("cannot call Become on a parser with a non-nil ParseFunc (Become can only be called at most once)")
 	}
 	parser.Description = other.Description
 	parser.ParseFunc = other.ParseFunc
