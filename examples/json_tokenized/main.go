@@ -7,19 +7,29 @@ import (
 )
 
 const (
-	TokenNull = iota
-	TokenInt
-	TokenFloat
-	TokenStr
-	TokenBool
+	TokenNull  apc.TokenType = "null"
+	TokenInt   apc.TokenType = "integer"
+	TokenFloat apc.TokenType = "float"
+	TokenStr   apc.TokenType = "string"
+	TokenBool  apc.TokenType = "bool"
 )
 
 type Key string
 type Value any
 type Dict map[Key]Value
 
-func TokenizeJson(text string) (apc.Token, error) {
-	return apc.Token{}, nil
+func TokenizeJson(text string) (apc.Context, error) {
+	ctx := apc.NewStringContext(text)
+	rawResults, err := apc.AnyOf().Many().ParseToEof(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	results := []apc.Token{}
+	for _, res := range rawResults {
+		results = append(results, res.(Token))
+	}
+	return result, nil
 }
 
 func ParseJson(text string) (Value, error) {
