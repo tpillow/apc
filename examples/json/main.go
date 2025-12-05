@@ -64,7 +64,6 @@ func ParseJson(text string) (Value, error) {
 
 func main() {
 	test_json := `{"a": 1, "b": true, "c": [1, 2, 3], "d": {}, "e": []}`
-	//test_json := `{"a":1,"b":true,"c":[1,2,3],"d":{},"e":[]}`
 	result, err := ParseJson(test_json)
 	if err != nil {
 		fmt.Printf("ERROR: %s\n", err)

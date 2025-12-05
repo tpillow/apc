@@ -5,21 +5,25 @@ import (
 	"strings"
 )
 
-func Exact(expect any) *Parser {
-	desc := fmt.Sprintf("exactly '%v'", toOutputAny(expect))
-	return NewParser(desc, func(ctx Context) (any, error) {
-		token := ctx.Peek()
-		if token == expect {
+func Test(description string, testFunc func(value any) bool) *Parser {
+	return NewParser(description, func(ctx Context) (any, error) {
+		value := ctx.Peek()
+		if testFunc(value) {
 			return ctx.Pop(), nil
 		}
 		return nil, ParseError{
 			Up:            nil,
-			Expected:      desc,
-			Unexpected:    token,
+			Expected:      description,
+			Unexpected:    value,
 			StartLocation: ctx.CurLocation(),
 			EndLocation:   ctx.CurLocation(),
 		}
 	})
+}
+
+func Exact(expect any) *Parser {
+	desc := fmt.Sprintf("exactly '%v'", toOutputAny(expect))
+	return Test(desc, func(value any) bool { return value == expect })
 }
 
 func Succeed(value any) *Parser {
