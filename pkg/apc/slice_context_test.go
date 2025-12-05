@@ -9,8 +9,8 @@ import (
 func TestEmptyContext(t *testing.T) {
 	ctx := NewStringContext("")
 	assert.True(t, ContextIsEof(ctx))
-	assert.True(t, IsEofToken(ctx.Peek()))
-	assert.True(t, IsEofToken(ctx.Pop()))
+	assert.True(t, IsEofValue(ctx.Peek()))
+	assert.True(t, IsEofValue(ctx.Pop()))
 }
 
 func TestNonEmptyContext(t *testing.T) {
@@ -22,6 +22,6 @@ func TestNonEmptyContext(t *testing.T) {
 	assert.Equal(t, 'b', ctx.Peek())
 	assert.Equal(t, 'b', ctx.Pop())
 	assert.True(t, ContextIsEof(ctx))
-	assert.True(t, IsEofToken(ctx.Peek()))
-	assert.True(t, IsEofToken(ctx.Pop()))
+	assert.True(t, IsEofValue(ctx.Peek()))
+	assert.True(t, IsEofValue(ctx.Pop()))
 }

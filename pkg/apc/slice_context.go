@@ -13,7 +13,7 @@ func (loc SliceLocation) String() string {
 }
 
 func (loc SliceLocation) next(token any) SliceLocation {
-	if IsEofToken(token) {
+	if IsEofValue(token) {
 		return loc
 	}
 

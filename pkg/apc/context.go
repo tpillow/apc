@@ -8,7 +8,7 @@ func (EofValue) String() string {
 	return "<<EOF>>"
 }
 
-func IsEofToken(thing any) bool {
+func IsEofValue(thing any) bool {
 	_, ok := thing.(EofValue)
 	return ok
 }
@@ -21,5 +21,5 @@ type Context interface {
 }
 
 func ContextIsEof(ctx Context) bool {
-	return IsEofToken(ctx.Peek())
+	return IsEofValue(ctx.Peek())
 }

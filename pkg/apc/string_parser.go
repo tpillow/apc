@@ -79,7 +79,7 @@ func RegexGroup(pattern string, groupIndex int) *Parser {
 		}
 
 		for i := 0; i < len(fullMatchGroup); i++ {
-			if IsEofToken(ctx.Pop()) {
+			if IsEofValue(ctx.Pop()) {
 				panic("unreachable")
 			}
 		}
