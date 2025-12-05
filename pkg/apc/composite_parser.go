@@ -6,6 +6,16 @@ func (parser *Parser) Bind(value any) *Parser {
 	return parser.Map(func(_ any) any { return value })
 }
 
+func (parser *Parser) MapSlice(transform func(values []any) any) *Parser {
+	return parser.Map(func(rawValues any) any {
+		values, ok := rawValues.([]any)
+		if !ok {
+			panic("MapSlice parser must have a result of type []any")
+		}
+		return transform(values)
+	})
+}
+
 func (parser *Parser) Head() *Parser {
 	return parser.Index(0)
 }

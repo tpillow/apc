@@ -61,11 +61,7 @@ func (parser *Parser) Map(transform func(value any) any) *Parser {
 }
 
 func (parser *Parser) Index(index int) *Parser {
-	return parser.Map(func(rawValues any) any {
-		values, ok := rawValues.([]any)
-		if !ok {
-			panic("cannot use Index when parse result is not []any")
-		}
+	return parser.MapSlice(func(values []any) any {
 		if index < 0 {
 			index = len(values) + index
 		}
@@ -81,21 +77,14 @@ func (parser *Parser) Index(index int) *Parser {
 
 // TODO: rethink this? genericize? multi-param?
 func (first *Parser) ConcatSlices(second *Parser) *Parser {
-	return Seq(first, second).Map(func(results any) any {
-		resultsSlice, ok := results.([]any)
+	return Seq(first, second).MapSlice(func(results []any) any {
+		resultA, ok := results[0].([]any)
 		if !ok {
-			panic("unreachable")
+			panic("ConcatSlices input parsers must produce a result of type []any")
 		}
-		if len(resultsSlice) != 2 {
-			panic("unreachable")
-		}
-		resultA, ok := resultsSlice[0].([]any)
+		resultB, ok := results[1].([]any)
 		if !ok {
-			panic("ConcatSlices input parsers must produce a []any")
-		}
-		resultB, ok := resultsSlice[1].([]any)
-		if !ok {
-			panic("ConcatSlices input parsers must produce a []any")
+			panic("ConcatSlices input parsers must produce a result of type []any")
 		}
 		return append(resultA, resultB...)
 	})
