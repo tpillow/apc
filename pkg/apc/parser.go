@@ -4,6 +4,10 @@ import (
 	"fmt"
 )
 
+type MapFunc func(value any) any
+type MapSliceFunc func(values []any) any
+type ParserGeneratorFunc func(value any) *Parser
+
 type ParseFunc func(ctx Context) (any, error)
 
 type Parser struct {
@@ -20,6 +24,10 @@ func NewParser(description string, parseFunc ParseFunc) *Parser {
 
 func NewFutureParser() *Parser {
 	return NewParser("", nil)
+}
+
+func (parser *Parser) Builder() *Builder {
+	return NewBuilder(parser)
 }
 
 func (parser *Parser) Parse(ctx Context) (any, error) {
@@ -54,10 +62,10 @@ func (parser *Parser) Parse(ctx Context) (any, error) {
 }
 
 func (parser *Parser) ParseToEof(ctx Context) (any, error) {
-	return parser.Skip(Eof).Parse(ctx)
+	return Skip(parser, Eof).Parse(ctx)
 }
 
-func (parser *Parser) Peek() *Parser {
+func Peek(parser *Parser) *Parser {
 	desc := fmt.Sprintf("peeking parser of %s", parser.Description)
 	return NewParser(desc, func(ctx Context) (any, error) {
 		startLoc := ctx.CurLocation()
@@ -74,7 +82,7 @@ func (parser *Parser) Peek() *Parser {
 	})
 }
 
-func (parser *Parser) Map(transform func(value any) any) *Parser {
+func Map(parser *Parser, transform MapFunc) *Parser {
 	return NewParser(parser.Description, func(ctx Context) (any, error) {
 		result, err := parser.Parse(ctx)
 		if err != nil {
@@ -84,7 +92,7 @@ func (parser *Parser) Map(transform func(value any) any) *Parser {
 	})
 }
 
-func (parser *Parser) Generate(parserGen func(value any) *Parser) *Parser {
+func Generate(parser *Parser, parserGen ParserGeneratorFunc) *Parser {
 	return NewParser(parser.Description, func(ctx Context) (any, error) {
 		result, err := parser.Parse(ctx)
 		if err != nil {
@@ -98,8 +106,8 @@ func (parser *Parser) Generate(parserGen func(value any) *Parser) *Parser {
 	})
 }
 
-func (parser *Parser) Index(index int) *Parser {
-	return parser.MapSlice(func(values []any) any {
+func Index(parser *Parser, index int) *Parser {
+	return MapSlice(parser, func(values []any) any {
 		if index < 0 {
 			index = len(values) + index
 		}
@@ -114,8 +122,8 @@ func (parser *Parser) Index(index int) *Parser {
 }
 
 // TODO: rethink this? genericize? multi-param?
-func (first *Parser) ConcatSlices(second *Parser) *Parser {
-	return Seq(first, second).MapSlice(func(results []any) any {
+func ConcatSlices(first *Parser, second *Parser) *Parser {
+	return MapSlice(Seq(first, second), func(results []any) any {
 		resultA, ok := results[0].([]any)
 		if !ok {
 			panic("ConcatSlices input parsers must produce a result of type []any")
@@ -128,7 +136,7 @@ func (first *Parser) ConcatSlices(second *Parser) *Parser {
 	})
 }
 
-func (parser *Parser) Optional(defaultValue any) *Parser {
+func Optional(parser *Parser, defaultValue any) *Parser {
 	desc := fmt.Sprintf("optional %s", parser.Description)
 	return NewParser(desc, func(ctx Context) (any, error) {
 		startLoc := ctx.CurLocation()
@@ -141,7 +149,7 @@ func (parser *Parser) Optional(defaultValue any) *Parser {
 	})
 }
 
-func (parser *Parser) Describe(description string) *Parser {
+func Describe(parser *Parser, description string) *Parser {
 	parser.Description = description
 	return parser
 }
@@ -154,7 +162,7 @@ func (parser *Parser) Become(other *Parser) {
 	parser.ParseFunc = other.ParseFunc
 }
 
-func (parser *Parser) Times(min int, max int) *Parser {
+func Times(parser *Parser, min int, max int) *Parser {
 	if min < 0 {
 		panic("Times parser min must be >= 0")
 	}

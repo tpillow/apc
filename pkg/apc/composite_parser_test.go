@@ -8,14 +8,14 @@ import (
 
 func TestSkip(t *testing.T) {
 	ctx := NewStringContext("ab")
-	result, err := Exact('a').Skip(Exact('b')).ParseToEof(ctx)
+	result, err := NewBuilder(Exact('a')).Skip(Exact('b')).Build().ParseToEof(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, 'a', result)
 }
 
 func TestThen(t *testing.T) {
 	ctx := NewStringContext("ab")
-	result, err := Exact('a').Then(Exact('b')).ParseToEof(ctx)
+	result, err := NewBuilder(Exact('a')).Then(Exact('b')).Build().ParseToEof(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, 'b', result)
 }
