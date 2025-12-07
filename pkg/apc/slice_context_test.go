@@ -7,14 +7,14 @@ import (
 )
 
 func TestEmptyContext(t *testing.T) {
-	ctx := NewStringContext("")
+	ctx := NewStringContext("<string>", "")
 	assert.True(t, ctx.IsEof())
 	assert.Panics(t, func() { ctx.Peek() })
 	assert.Panics(t, func() { ctx.Pop() })
 }
 
 func TestNonEmptyContext(t *testing.T) {
-	ctx := NewStringContext("ab")
+	ctx := NewStringContext("<string>", "ab")
 	assert.False(t, ctx.IsEof())
 	assert.Equal(t, 'a', ctx.Peek())
 	assert.Equal(t, 'a', ctx.Pop())

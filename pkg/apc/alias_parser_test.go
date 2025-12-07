@@ -7,7 +7,7 @@ import (
 )
 
 func TestFloat(t *testing.T) {
-	ctx := NewStringContext("034.022")
+	ctx := NewStringContext("<string>", "034.022")
 	result, err := Float64.ParseToEof(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, 34.022, result)

@@ -1,7 +1,5 @@
 package apc
 
-type Location interface{}
-
 type Context interface {
 	Peek() any
 	Pop() any

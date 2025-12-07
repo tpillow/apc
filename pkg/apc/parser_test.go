@@ -7,7 +7,7 @@ import (
 )
 
 func TestGenerate(t *testing.T) {
-	ctx := NewStringContext("4Hfour")
+	ctx := NewStringContext("<string>", "4Hfour")
 	result, err := NewBuilder(Int64).Skip(Exact('H')).Generate(func(rawValue any) *Parser {
 		value := rawValue.(int64)
 		return NewBuilder(AnyChar).Times(int(value), int(value)).Build()

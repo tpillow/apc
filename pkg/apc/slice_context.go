@@ -1,39 +1,8 @@
 package apc
 
-import "fmt"
-
-type SliceLocation struct {
-	Index   int
-	LineNum int
-	ColNum  int
-}
-
-func (loc SliceLocation) String() string {
-	return fmt.Sprintf("%d:%d:(#%d)", loc.LineNum, loc.ColNum, loc.Index)
-}
-
-func (loc SliceLocation) next(token any) SliceLocation {
-	lineNum := loc.LineNum
-	colNum := loc.ColNum
-	if r, ok := token.(rune); ok {
-		if r == '\n' {
-			lineNum += 1
-			colNum = 0
-		} else {
-			colNum += 1
-		}
-	}
-
-	return SliceLocation{
-		Index:   loc.Index + 1,
-		LineNum: lineNum,
-		ColNum:  colNum,
-	}
-}
-
 type sliceContext struct {
 	source           []any
-	location         SliceLocation
+	location         Location
 	inBetweenParser  *Parser
 	runningPreParser bool
 }
@@ -43,10 +12,11 @@ type runeSliceContext struct {
 	sourceAsRuneSlice []rune
 }
 
-func NewSliceContext(source []any) Context {
+func NewSliceContext(sourceName string, source []any) Context {
 	return &sliceContext{
 		source: source,
-		location: SliceLocation{
+		location: Location{
+			Name:    sourceName,
 			Index:   0,
 			LineNum: 1,
 			ColNum:  0,
@@ -56,20 +26,20 @@ func NewSliceContext(source []any) Context {
 	}
 }
 
-func NewRuneSliceContext(source []rune) Context {
+func NewRuneSliceContext(sourceName string, source []rune) Context {
 	sourceAny := make([]any, len(source))
 	for i := 0; i < len(source); i++ {
 		sourceAny[i] = source[i]
 	}
 
 	return &runeSliceContext{
-		sliceContext:      NewSliceContext(sourceAny).(*sliceContext),
+		sliceContext:      NewSliceContext(sourceName, sourceAny).(*sliceContext),
 		sourceAsRuneSlice: source,
 	}
 }
 
-func NewStringContext(source string) Context {
-	return NewRuneSliceContext([]rune(source))
+func NewStringContext(sourceName string, source string) Context {
+	return NewRuneSliceContext(sourceName, []rune(source))
 }
 
 func (ctx *sliceContext) IsEof() bool {
@@ -96,12 +66,8 @@ func (ctx *sliceContext) CurLocation() Location {
 	return ctx.location
 }
 
-func (ctx *sliceContext) SetLocation(rawLoc Location) {
-	loc, ok := rawLoc.(SliceLocation)
-	if !ok {
-		panic("sliceContext SetLocation must take a SliceLocation type")
-	}
-	ctx.location = loc
+func (ctx *sliceContext) SetLocation(location Location) {
+	ctx.location = location
 }
 
 func (ctx *sliceContext) SetPreParser(parser *Parser) {

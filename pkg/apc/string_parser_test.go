@@ -7,7 +7,7 @@ import (
 )
 
 func TestExactStr(t *testing.T) {
-	ctx := NewStringContext("abc")
+	ctx := NewStringContext("<string>", "abc")
 	result, err := ExactStr("abc").ParseToEof(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", result)
