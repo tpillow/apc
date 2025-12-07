@@ -9,9 +9,15 @@ import (
 
 func TestEofPositive(t *testing.T) {
 	ctx := NewStringContext("")
-	result, err := Eof.ParseToEof(ctx)
+	result, err := Eof().ParseToEof(ctx)
 	assert.NoError(t, err)
-	assert.Equal(t, EofValue{}, result)
+	assert.Equal(t, nil, result)
+}
+
+func TestEofNegative(t *testing.T) {
+	ctx := NewStringContext("a")
+	_, err := Eof().ParseToEof(ctx)
+	assert.Error(t, err)
 }
 
 func TestExact(t *testing.T) {
@@ -19,12 +25,6 @@ func TestExact(t *testing.T) {
 	result, err := Exact('a').ParseToEof(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, 'a', result)
-}
-
-func TestEofNegative(t *testing.T) {
-	ctx := NewStringContext("a")
-	_, err := Eof.ParseToEof(ctx)
-	assert.Error(t, err)
 }
 
 func TestSucceed(t *testing.T) {

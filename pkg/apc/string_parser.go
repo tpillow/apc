@@ -5,6 +5,8 @@ import (
 	"regexp"
 )
 
+const EofString = "<<EOF>>"
+
 func ExactStr(expectStr string) *Parser {
 	if len(expectStr) <= 0 {
 		panic("MatchStr requires a string with length > 0")
@@ -24,7 +26,7 @@ func ExactStr(expectStr string) *Parser {
 			return nil, ParseError{
 				Up:            nil,
 				Expected:      desc,
-				Unexpected:    EofValue{},
+				Unexpected:    EofString,
 				StartLocation: startLoc,
 				EndLocation:   ctx.CurLocation(),
 			}
@@ -79,9 +81,7 @@ func RegexGroup(pattern string, groupIndex int) *Parser {
 		}
 
 		for i := 0; i < len(fullMatchGroup); i++ {
-			if IsEofValue(ctx.Pop()) {
-				panic("unreachable")
-			}
+			ctx.Pop()
 		}
 
 		return desiredMatchGroup, nil

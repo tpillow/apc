@@ -6,7 +6,6 @@ import (
 )
 
 var (
-	Eof                = Describe(Exact(EofValue{}), "<<EOF>>")
 	Whitespace         = Describe(Regex(`\s+`), "whitespace")
 	OptionalWhitespace = Optional(Whitespace, "")
 	AnyChar            = Describe(Regex(`.`), "any character")

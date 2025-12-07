@@ -8,20 +8,20 @@ import (
 
 func TestEmptyContext(t *testing.T) {
 	ctx := NewStringContext("")
-	assert.True(t, ContextIsEof(ctx))
-	assert.True(t, IsEofValue(ctx.Peek()))
-	assert.True(t, IsEofValue(ctx.Pop()))
+	assert.True(t, ctx.IsEof())
+	assert.Panics(t, func() { ctx.Peek() })
+	assert.Panics(t, func() { ctx.Pop() })
 }
 
 func TestNonEmptyContext(t *testing.T) {
 	ctx := NewStringContext("ab")
-	assert.False(t, ContextIsEof(ctx))
+	assert.False(t, ctx.IsEof())
 	assert.Equal(t, 'a', ctx.Peek())
 	assert.Equal(t, 'a', ctx.Pop())
-	assert.False(t, ContextIsEof(ctx))
+	assert.False(t, ctx.IsEof())
 	assert.Equal(t, 'b', ctx.Peek())
 	assert.Equal(t, 'b', ctx.Pop())
-	assert.True(t, ContextIsEof(ctx))
-	assert.True(t, IsEofValue(ctx.Peek()))
-	assert.True(t, IsEofValue(ctx.Pop()))
+	assert.True(t, ctx.IsEof())
+	assert.Panics(t, func() { ctx.Peek() })
+	assert.Panics(t, func() { ctx.Pop() })
 }

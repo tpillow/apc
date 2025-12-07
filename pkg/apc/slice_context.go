@@ -13,10 +13,6 @@ func (loc SliceLocation) String() string {
 }
 
 func (loc SliceLocation) next(token any) SliceLocation {
-	if IsEofValue(token) {
-		return loc
-	}
-
 	lineNum := loc.LineNum
 	colNum := loc.ColNum
 	if r, ok := token.(rune); ok {
@@ -76,12 +72,16 @@ func NewStringContext(source string) Context {
 	return NewRuneSliceContext([]rune(source))
 }
 
+func (ctx *sliceContext) IsEof() bool {
+	return ctx.location.Index >= len(ctx.source)
+}
+
 func (ctx *sliceContext) Peek() any {
 	if ctx.location.Index < 0 {
 		panic("sliceContext location.Index must be >= 0")
 	}
-	if ctx.location.Index >= len(ctx.source) {
-		return EofValue{}
+	if ctx.IsEof() {
+		panic("cannot Peek when at EOF")
 	}
 	return ctx.source[ctx.location.Index]
 }

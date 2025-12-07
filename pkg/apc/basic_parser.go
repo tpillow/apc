@@ -7,6 +7,16 @@ import (
 
 func Test(description string, testFunc func(value any) bool) *Parser {
 	return NewParser(description, func(ctx Context) (any, error) {
+		if ctx.IsEof() {
+			return nil, ParseError{
+				Up:            nil,
+				Expected:      description,
+				Unexpected:    EofString,
+				StartLocation: ctx.CurLocation(),
+				EndLocation:   ctx.CurLocation(),
+			}
+		}
+
 		value := ctx.Peek()
 		if testFunc(value) {
 			return ctx.Pop(), nil
@@ -24,6 +34,21 @@ func Test(description string, testFunc func(value any) bool) *Parser {
 func Exact(expect any) *Parser {
 	desc := fmt.Sprintf("exactly '%v'", toOutputAny(expect))
 	return Test(desc, func(value any) bool { return value == expect })
+}
+
+func Eof() *Parser {
+	return NewParser(EofString, func(ctx Context) (any, error) {
+		if ctx.IsEof() {
+			return nil, nil
+		}
+		return nil, ParseError{
+			Up:            nil,
+			Expected:      EofString,
+			Unexpected:    ctx.Peek(),
+			StartLocation: ctx.CurLocation(),
+			EndLocation:   ctx.CurLocation(),
+		}
+	})
 }
 
 func Succeed(value any) *Parser {
@@ -58,7 +83,7 @@ func Seq(parsers ...*Parser) *Parser {
 				return nil, ParseError{
 					Up:            err,
 					Expected:      desc,
-					Unexpected:    ctx.Peek(),
+					Unexpected:    GetContextUnexpected(ctx),
 					StartLocation: startLoc,
 					EndLocation:   ctx.CurLocation(),
 				}
@@ -101,7 +126,7 @@ func AnyOf(parsers ...*Parser) *Parser {
 		return nil, ParseError{
 			Up:            err,
 			Expected:      desc,
-			Unexpected:    ctx.Peek(),
+			Unexpected:    GetContextUnexpected(ctx),
 			StartLocation: concreteStartLoc,
 			EndLocation:   ctx.CurLocation(),
 		}

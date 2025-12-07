@@ -51,7 +51,7 @@ func (parser *Parser) Parse(ctx Context) (any, error) {
 		return nil, ParseError{
 			Up:            err,
 			Expected:      fmt.Sprintf("pre-parser %s to match", preParser.Description),
-			Unexpected:    ctx.Peek(),
+			Unexpected:    GetContextUnexpected(ctx),
 			StartLocation: startLoc,
 			EndLocation:   ctx.CurLocation(),
 		}
@@ -62,9 +62,10 @@ func (parser *Parser) Parse(ctx Context) (any, error) {
 }
 
 func (parser *Parser) ParseToEof(ctx Context) (any, error) {
-	return Skip(parser, Eof).Parse(ctx)
+	return Skip(parser, Eof()).Parse(ctx)
 }
 
+// TODO: error, what? correct?
 func Peek(parser *Parser) *Parser {
 	desc := fmt.Sprintf("peeking parser of %s", parser.Description)
 	return NewParser(desc, func(ctx Context) (any, error) {
@@ -75,7 +76,7 @@ func Peek(parser *Parser) *Parser {
 		return result, ParseError{
 			Up:            err,
 			Expected:      desc,
-			Unexpected:    ctx.Peek(),
+			Unexpected:    GetContextUnexpected(ctx),
 			StartLocation: startLoc,
 			EndLocation:   endLoc,
 		}
@@ -190,7 +191,7 @@ func Times(parser *Parser, min int, max int) *Parser {
 				return nil, ParseError{
 					Up:            err,
 					Expected:      desc,
-					Unexpected:    ctx.Peek(),
+					Unexpected:    GetContextUnexpected(ctx),
 					StartLocation: startLoc,
 					EndLocation:   ctx.CurLocation(),
 				}
