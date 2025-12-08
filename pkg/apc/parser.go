@@ -2,73 +2,54 @@ package apc
 
 import (
 	"fmt"
+	"slices"
 )
 
-type MapFunc func(value any) any
-type MapSliceFunc func(values []any) any
-type ParserGeneratorFunc func(value any) *Parser
+const EofString = "<<EOF>>"
 
-type ParseFunc func(ctx Context) (any, error)
+type MapFunc[IT, OT any] func(value IT) OT
+type MapSliceFunc[IT, OT any] func(values []IT) OT
+type ParserGeneratorFunc[IT, VT, OT any] func(value VT) *Parser[IT, OT]
 
-type Parser struct {
+type ParseFunc[IT, OT any] func(ctx Context[IT]) (OT, error)
+
+// TODO: make interface...
+type Parser[IT, OT any] struct {
 	Description string
-	ParseFunc   ParseFunc
+	ParseFunc   ParseFunc[IT, OT]
 }
 
-func NewParser(description string, parseFunc ParseFunc) *Parser {
-	return &Parser{
+func NewParser[IT, OT any](description string, parseFunc ParseFunc[IT, OT]) *Parser[IT, OT] {
+	return &Parser[IT, OT]{
 		Description: description,
 		ParseFunc:   parseFunc,
 	}
 }
 
-func NewFutureParser() *Parser {
-	return NewParser("", nil)
+func NewFutureParser[IT, OT any]() *Parser[IT, OT] {
+	return NewParser[IT, OT]("", nil)
 }
 
-func (parser *Parser) Builder() *Builder {
+func (parser *Parser[IT, OT]) Builder() *Builder[IT, OT] {
 	return NewBuilder(parser)
 }
 
-func (parser *Parser) Parse(ctx Context) (any, error) {
+func (parser *Parser[IT, OT]) Parse(ctx Context[IT]) (OT, error) {
 	if parser.ParseFunc == nil {
 		panic("cannot use a Parser whose ParseFunc is nil")
 	}
 
-	if ctx.IsRunningPreParser() {
-		return parser.ParseFunc(ctx)
-	}
-
-	preParser := ctx.GetPreParser()
-	if preParser == nil {
-		return parser.ParseFunc(ctx)
-	}
-
-	ctx.SetRunningPreParser(true)
-	startLoc := ctx.CurLocation()
-	_, err := preParser.Parse(ctx)
-	if err != nil {
-		return nil, ParseError{
-			Up:            err,
-			Expected:      fmt.Sprintf("pre-parser %s to match", preParser.Description),
-			Unexpected:    GetContextUnexpected(ctx),
-			StartLocation: startLoc,
-			EndLocation:   ctx.CurLocation(),
-		}
-	}
-	ctx.SetRunningPreParser(false)
-
 	return parser.ParseFunc(ctx)
 }
 
-func (parser *Parser) ParseToEof(ctx Context) (any, error) {
-	return Skip(parser, Eof()).Parse(ctx)
+func (parser *Parser[IT, OT]) ParseToEof(ctx Context[IT]) (OT, error) {
+	return Skip(parser, Eof[IT]()).Parse(ctx)
 }
 
 // TODO: error, what? correct?
-func Peek(parser *Parser) *Parser {
+func Peek[IT, OT any](parser *Parser[IT, OT]) *Parser[IT, OT] {
 	desc := fmt.Sprintf("peeking parser of %s", parser.Description)
-	return NewParser(desc, func(ctx Context) (any, error) {
+	return NewParser(desc, func(ctx Context[IT]) (OT, error) {
 		startLoc := ctx.CurLocation()
 		result, err := parser.Parse(ctx)
 		endLoc := ctx.CurLocation()
@@ -83,32 +64,32 @@ func Peek(parser *Parser) *Parser {
 	})
 }
 
-func Map(parser *Parser, transform MapFunc) *Parser {
-	return NewParser(parser.Description, func(ctx Context) (any, error) {
+func Map[IT, OT, OT2 any](parser *Parser[IT, OT], transform MapFunc[OT, OT2]) *Parser[IT, OT2] {
+	return NewParser(parser.Description, func(ctx Context[IT]) (OT2, error) {
 		result, err := parser.Parse(ctx)
 		if err != nil {
-			return nil, err
+			return newT[OT2](), err
 		}
 		return transform(result), nil
 	})
 }
 
-func Generate(parser *Parser, parserGen ParserGeneratorFunc) *Parser {
-	return NewParser(parser.Description, func(ctx Context) (any, error) {
+func Generate[IT, OT, OT2 any](parser *Parser[IT, OT], parserGen ParserGeneratorFunc[IT, OT, OT2]) *Parser[IT, OT2] {
+	return NewParser(parser.Description, func(ctx Context[IT]) (OT2, error) {
 		result, err := parser.Parse(ctx)
 		if err != nil {
-			return nil, err
+			return newT[OT2](), err
 		}
 		nextResult, err := parserGen(result).Parse(ctx)
 		if err != nil {
-			return nil, err
+			return newT[OT2](), err
 		}
 		return nextResult, err
 	})
 }
 
-func Index(parser *Parser, index int) *Parser {
-	return MapSlice(parser, func(values []any) any {
+func Index[IT, OT any](parser *Parser[IT, []OT], index int) *Parser[IT, OT] {
+	return MapSlice(parser, func(values []OT) OT {
 		if index < 0 {
 			index = len(values) + index
 		}
@@ -123,23 +104,19 @@ func Index(parser *Parser, index int) *Parser {
 }
 
 // TODO: rethink this? genericize? multi-param?
-func ConcatSlices(first *Parser, second *Parser) *Parser {
-	return MapSlice(Seq(first, second), func(results []any) any {
-		resultA, ok := results[0].([]any)
-		if !ok {
-			panic("ConcatSlices input parsers must produce a result of type []any")
-		}
-		resultB, ok := results[1].([]any)
-		if !ok {
-			panic("ConcatSlices input parsers must produce a result of type []any")
-		}
-		return append(resultA, resultB...)
+func ConcatSlices[IT, OT any](parsers ...*Parser[IT, []OT]) *Parser[IT, []OT] {
+	if len(parsers) <= 0 {
+		panic("ConcatSlices requires at least 1 parser")
+	}
+
+	return MapSlice(Seq(parsers...), func(results [][]OT) []OT {
+		return slices.Concat(results...)
 	})
 }
 
-func Optional(parser *Parser, defaultValue any) *Parser {
+func Optional[IT, OT any](parser *Parser[IT, OT], defaultValue OT) *Parser[IT, OT] {
 	desc := fmt.Sprintf("optional %s", parser.Description)
-	return NewParser(desc, func(ctx Context) (any, error) {
+	return NewParser(desc, func(ctx Context[IT]) (OT, error) {
 		startLoc := ctx.CurLocation()
 		result, err := parser.Parse(ctx)
 		if err != nil {
@@ -150,12 +127,14 @@ func Optional(parser *Parser, defaultValue any) *Parser {
 	})
 }
 
-func Describe(parser *Parser, description string) *Parser {
+func Describe[IT, OT any](parser *Parser[IT, OT], description string) *Parser[IT, OT] {
+	// TODO: when parser intf, must change
 	parser.Description = description
 	return parser
 }
 
-func (parser *Parser) Become(other *Parser) {
+func (parser *Parser[IT, OT]) Become(other *Parser[IT, OT]) {
+	// TODO: when parser intf, must change
 	if parser.ParseFunc != nil {
 		panic("cannot call Become on a parser with a non-nil ParseFunc (Become can only be called at most once)")
 	}
@@ -163,7 +142,7 @@ func (parser *Parser) Become(other *Parser) {
 	parser.ParseFunc = other.ParseFunc
 }
 
-func Times(parser *Parser, min int, max int) *Parser {
+func Times[IT, OT any](parser *Parser[IT, OT], min int, max int) *Parser[IT, []OT] {
 	if min < 0 {
 		panic("Times parser min must be >= 0")
 	}
@@ -176,8 +155,8 @@ func Times(parser *Parser, min int, max int) *Parser {
 
 	desc := fmt.Sprintf("%s %d to %d times", parser.Description, min, max)
 
-	return NewParser(desc, func(ctx Context) (any, error) {
-		results := []any{}
+	return NewParser(desc, func(ctx Context[IT]) ([]OT, error) {
+		results := []OT{}
 
 		for len(results) < max {
 			startLoc := ctx.CurLocation()

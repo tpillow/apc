@@ -5,17 +5,15 @@ import (
 	"regexp"
 )
 
-const EofString = "<<EOF>>"
-
-func ExactStr(expectStr string) *Parser {
+func ExactStr(expectStr string) *Parser[rune, string] {
 	if len(expectStr) <= 0 {
 		panic("MatchStr requires a string with length > 0")
 	}
 
 	desc := fmt.Sprintf("exactly '%s'", expectStr)
 
-	return NewParser(desc, func(ctx Context) (any, error) {
-		runeCtx, ok := ctx.(*runeSliceContext)
+	return NewParser(desc, func(ctx Context[rune]) (string, error) {
+		runeCtx, ok := ctx.(*sliceContext[rune])
 		if !ok {
 			panic("MatchStr requires a sliceContext")
 		}
@@ -23,7 +21,7 @@ func ExactStr(expectStr string) *Parser {
 		startLoc := runeCtx.location
 		remainingLen := len(runeCtx.source) - startLoc.Index
 		if remainingLen < len(expectStr) {
-			return nil, ParseError{
+			return "", ParseError{
 				Up:            nil,
 				Expected:      desc,
 				Unexpected:    EofString,
@@ -37,7 +35,7 @@ func ExactStr(expectStr string) *Parser {
 			if rune(expectStr[i]) != token {
 				endLoc := ctx.CurLocation()
 				ctx.SetLocation(startLoc)
-				return nil, ParseError{
+				return "", ParseError{
 					Up:            nil,
 					Expected:      desc,
 					Unexpected:    token,
@@ -51,18 +49,18 @@ func ExactStr(expectStr string) *Parser {
 	})
 }
 
-func RegexGroup(pattern string, groupIndex int) *Parser {
+func RegexGroup(pattern string, groupIndex int) *Parser[rune, string] {
 	regex := regexp.MustCompile("^" + pattern)
 	desc := fmt.Sprintf("regex '%s'", pattern)
 
-	return NewParser(desc, func(ctx Context) (any, error) {
-		runeCtx, ok := ctx.(*runeSliceContext)
+	return NewParser(desc, func(ctx Context[rune]) (string, error) {
+		runeCtx, ok := ctx.(*sliceContext[rune])
 		if !ok {
 			panic("MatchStr requires a sliceContext")
 		}
 
-		startLoc := runeCtx.sliceContext.location
-		remaining := string(runeCtx.sourceAsRuneSlice[startLoc.Index:])
+		startLoc := runeCtx.location
+		remaining := string(runeCtx.source[startLoc.Index:])
 		matches := regex.FindStringSubmatch(remaining)
 
 		if matches == nil {
@@ -88,6 +86,6 @@ func RegexGroup(pattern string, groupIndex int) *Parser {
 	})
 }
 
-func Regex(pattern string) *Parser {
+func Regex(pattern string) *Parser[rune, string] {
 	return RegexGroup(pattern, 0)
 }

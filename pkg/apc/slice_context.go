@@ -1,19 +1,12 @@
 package apc
 
-type sliceContext struct {
-	source           []any
-	location         Location
-	inBetweenParser  *Parser
-	runningPreParser bool
+type sliceContext[IT any] struct {
+	source   []IT
+	location Location
 }
 
-type runeSliceContext struct {
-	*sliceContext
-	sourceAsRuneSlice []rune
-}
-
-func NewSliceContext(sourceName string, source []any) Context {
-	return &sliceContext{
+func NewSliceContext[IT any](sourceName string, source []IT) Context[IT] {
+	return &sliceContext[IT]{
 		source: source,
 		location: Location{
 			Name:    sourceName,
@@ -21,32 +14,18 @@ func NewSliceContext(sourceName string, source []any) Context {
 			LineNum: 1,
 			ColNum:  0,
 		},
-		inBetweenParser:  nil,
-		runningPreParser: false,
 	}
 }
 
-func NewRuneSliceContext(sourceName string, source []rune) Context {
-	sourceAny := make([]any, len(source))
-	for i := 0; i < len(source); i++ {
-		sourceAny[i] = source[i]
-	}
-
-	return &runeSliceContext{
-		sliceContext:      NewSliceContext(sourceName, sourceAny).(*sliceContext),
-		sourceAsRuneSlice: source,
-	}
+func NewStringContext(sourceName string, source string) Context[rune] {
+	return NewSliceContext(sourceName, []rune(source))
 }
 
-func NewStringContext(sourceName string, source string) Context {
-	return NewRuneSliceContext(sourceName, []rune(source))
-}
-
-func (ctx *sliceContext) IsEof() bool {
+func (ctx *sliceContext[IT]) IsEof() bool {
 	return ctx.location.Index >= len(ctx.source)
 }
 
-func (ctx *sliceContext) Peek() any {
+func (ctx *sliceContext[IT]) Peek() IT {
 	if ctx.location.Index < 0 {
 		panic("sliceContext location.Index must be >= 0")
 	}
@@ -56,32 +35,16 @@ func (ctx *sliceContext) Peek() any {
 	return ctx.source[ctx.location.Index]
 }
 
-func (ctx *sliceContext) Pop() any {
+func (ctx *sliceContext[IT]) Pop() IT {
 	val := ctx.Peek()
 	ctx.location = ctx.location.next(val)
 	return val
 }
 
-func (ctx *sliceContext) CurLocation() Location {
+func (ctx *sliceContext[IT]) CurLocation() Location {
 	return ctx.location
 }
 
-func (ctx *sliceContext) SetLocation(location Location) {
+func (ctx *sliceContext[IT]) SetLocation(location Location) {
 	ctx.location = location
-}
-
-func (ctx *sliceContext) SetPreParser(parser *Parser) {
-	ctx.inBetweenParser = parser
-}
-
-func (ctx *sliceContext) GetPreParser() *Parser {
-	return ctx.inBetweenParser
-}
-
-func (ctx *sliceContext) SetRunningPreParser(running bool) {
-	ctx.runningPreParser = running
-}
-
-func (ctx *sliceContext) IsRunningPreParser() bool {
-	return ctx.runningPreParser
 }

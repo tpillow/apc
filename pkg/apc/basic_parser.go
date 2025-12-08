@@ -5,10 +5,10 @@ import (
 	"strings"
 )
 
-func Test(description string, testFunc func(value any) bool) *Parser {
-	return NewParser(description, func(ctx Context) (any, error) {
+func Test[IT any](description string, testFunc func(value IT) bool) *Parser[IT, IT] {
+	return NewParser(description, func(ctx Context[IT]) (IT, error) {
 		if ctx.IsEof() {
-			return nil, ParseError{
+			return newT[IT](), ParseError{
 				Up:            nil,
 				Expected:      description,
 				Unexpected:    EofString,
@@ -21,7 +21,7 @@ func Test(description string, testFunc func(value any) bool) *Parser {
 		if testFunc(value) {
 			return ctx.Pop(), nil
 		}
-		return nil, ParseError{
+		return newT[IT](), ParseError{
 			Up:            nil,
 			Expected:      description,
 			Unexpected:    value,
@@ -31,17 +31,17 @@ func Test(description string, testFunc func(value any) bool) *Parser {
 	})
 }
 
-func Exact(expect any) *Parser {
+func Exact[IT comparable](expect IT) *Parser[IT, IT] {
 	desc := fmt.Sprintf("exactly '%v'", toOutputAny(expect))
-	return Test(desc, func(value any) bool { return value == expect })
+	return Test(desc, func(value IT) bool { return value == expect })
 }
 
-func Eof() *Parser {
-	return NewParser(EofString, func(ctx Context) (any, error) {
+func Eof[IT any]() *Parser[IT, IT] {
+	return NewParser(EofString, func(ctx Context[IT]) (IT, error) {
 		if ctx.IsEof() {
-			return nil, nil
+			return newT[IT](), nil
 		}
-		return nil, ParseError{
+		return newT[IT](), ParseError{
 			Up:            nil,
 			Expected:      EofString,
 			Unexpected:    ctx.Peek(),
@@ -51,19 +51,19 @@ func Eof() *Parser {
 	})
 }
 
-func Succeed(value any) *Parser {
-	return NewParser("always successful", func(ctx Context) (any, error) {
+func Succeed[IT, OT any](value OT) *Parser[IT, OT] {
+	return NewParser("always successful", func(ctx Context[IT]) (OT, error) {
 		return value, nil
 	})
 }
 
-func Fail(err error) *Parser {
-	return NewParser(fmt.Sprintf("always failing with error '%s'", err), func(ctx Context) (any, error) {
-		return nil, err
+func Fail[IT any](err error) *Parser[IT, IT] {
+	return NewParser(fmt.Sprintf("always failing with error '%s'", err), func(ctx Context[IT]) (IT, error) {
+		return newT[IT](), err
 	})
 }
 
-func Seq(parsers ...*Parser) *Parser {
+func Seq[IT, OT any](parsers ...*Parser[IT, OT]) *Parser[IT, []OT] {
 	if len(parsers) < 1 {
 		panic("Seq parser must have at least 1 parser")
 	}
@@ -74,8 +74,8 @@ func Seq(parsers ...*Parser) *Parser {
 	}
 	desc := fmt.Sprintf("sequence of %d parsers: ( %s )", len(parsers), strings.Join(parserDescriptions, ", "))
 
-	return NewParser(desc, func(ctx Context) (any, error) {
-		results := []any{}
+	return NewParser(desc, func(ctx Context[IT]) ([]OT, error) {
+		results := []OT{}
 		for _, parser := range parsers {
 			startLoc := ctx.CurLocation()
 			result, err := parser.Parse(ctx)
@@ -94,7 +94,50 @@ func Seq(parsers ...*Parser) *Parser {
 	})
 }
 
-func AnyOf(parsers ...*Parser) *Parser {
+type Result2[T1, T2 any] struct {
+	Value1 T1
+	Value2 T2
+}
+
+func Seq2[IT, OT, OT2 any](parser1 *Parser[IT, OT], parser2 *Parser[IT, OT2]) *Parser[IT, Result2[OT, OT2]] {
+	parserDescriptions := []string{
+		parser1.Description, parser2.Description,
+	}
+	desc := fmt.Sprintf("sequence of 2 parsers: ( %s )", strings.Join(parserDescriptions, ", "))
+
+	return NewParser(desc, func(ctx Context[IT]) (Result2[OT, OT2], error) {
+		startLoc := ctx.CurLocation()
+		result1, err := parser1.Parse(ctx)
+		if err != nil {
+			return Result2[OT, OT2]{}, ParseError{
+				Up:            err,
+				Expected:      desc,
+				Unexpected:    GetContextUnexpected(ctx),
+				StartLocation: startLoc,
+				EndLocation:   ctx.CurLocation(),
+			}
+		}
+
+		startLoc = ctx.CurLocation()
+		result2, err := parser2.Parse(ctx)
+		if err != nil {
+			return Result2[OT, OT2]{}, ParseError{
+				Up:            err,
+				Expected:      desc,
+				Unexpected:    GetContextUnexpected(ctx),
+				StartLocation: startLoc,
+				EndLocation:   ctx.CurLocation(),
+			}
+		}
+
+		return Result2[OT, OT2]{
+			Value1: result1,
+			Value2: result2,
+		}, nil
+	})
+}
+
+func AnyOf[IT, OT any](parsers ...*Parser[IT, OT]) *Parser[IT, OT] {
 	if len(parsers) < 1 {
 		panic("Alt parser must have at least 1 parser")
 	}
@@ -105,13 +148,13 @@ func AnyOf(parsers ...*Parser) *Parser {
 	}
 	desc := fmt.Sprintf("any of %d parsers: ( %s )", len(parsers), strings.Join(parserDescriptions, ", "))
 
-	return NewParser(desc, func(ctx Context) (any, error) {
+	return NewParser(desc, func(ctx Context[IT]) (OT, error) {
 		var err error
 		concreteStartLoc := ctx.CurLocation()
 
 		for i, parser := range parsers {
 			startLoc := ctx.CurLocation()
-			var result any
+			var result OT
 			result, err = parser.Parse(ctx)
 			if err != nil {
 				if i == len(parsers)-1 {
@@ -123,7 +166,7 @@ func AnyOf(parsers ...*Parser) *Parser {
 			return result, nil
 		}
 
-		return nil, ParseError{
+		return newT[OT](), ParseError{
 			Up:            err,
 			Expected:      desc,
 			Unexpected:    GetContextUnexpected(ctx),

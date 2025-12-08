@@ -9,14 +9,14 @@ import (
 
 func TestEofPositive(t *testing.T) {
 	ctx := NewStringContext("<string>", "")
-	result, err := Eof().ParseToEof(ctx)
+	result, err := Eof[rune]().ParseToEof(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, nil, result)
 }
 
 func TestEofNegative(t *testing.T) {
 	ctx := NewStringContext("<string>", "a")
-	_, err := Eof().ParseToEof(ctx)
+	_, err := Eof[rune]().ParseToEof(ctx)
 	assert.Error(t, err)
 }
 
@@ -29,7 +29,7 @@ func TestExact(t *testing.T) {
 
 func TestSucceed(t *testing.T) {
 	ctx := NewStringContext("<string>", "")
-	result, err := Succeed(6).ParseToEof(ctx)
+	result, err := Succeed[rune, int](6).ParseToEof(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, 6, result)
 }
@@ -37,16 +37,14 @@ func TestSucceed(t *testing.T) {
 func TestFail(t *testing.T) {
 	ctx := NewStringContext("<string>", "")
 	expectError := fmt.Errorf("error")
-	_, err := Fail(expectError).ParseToEof(ctx)
+	_, err := Fail[rune](expectError).ParseToEof(ctx)
 	assert.Error(t, err)
 }
 
 func TestSeq(t *testing.T) {
 	ctx := NewStringContext("<string>", "abc")
-	result, err := Seq(Exact('a'), Exact('b'), Exact('c')).ParseToEof(ctx)
+	results, err := Seq(Exact('a'), Exact('b'), Exact('c')).ParseToEof(ctx)
 	assert.NoError(t, err)
-	results, ok := result.([]any)
-	assert.True(t, ok)
 	assert.Len(t, results, 3)
 	assert.Equal(t, 'a', results[0])
 	assert.Equal(t, 'b', results[1])
